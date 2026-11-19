@@ -5,7 +5,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { Projector, errorInfoOfV2, errorInfoOf, toolItem } from '../packages/opencode-bridge/src/projection.js'
-import { attributeTurns, beforeRevert, compactionMessageId, compactionPartId, reasoningPartId, textPartId, toV1Message, toV1Messages, toV1Session, toolPart, toolPartId } from '../packages/opencode-bridge/src/v2/history.js'
+import { attributeTurns, beforeRevert, compactionMessageId, compactionPartId, readMessages, reasoningPartId, textPartId, toV1Message, toV1Messages, toV1Session, toolPart, toolPartId } from '../packages/opencode-bridge/src/v2/history.js'
+import { V2Api } from '../packages/opencode-bridge/src/v2/api.js'
 import { agentSwitched, assistant, compaction, idle, modelSwitched, msgId, reasoning, shell, synthetic, system, text, tool, user } from './fixtures/v2-history.mjs'
 
 const SES = 'ses_hist'
@@ -16,6 +17,33 @@ const project = (messages, { meta = {}, busy = false, revert = null, cwd = '/w' 
   return { projector, turns: projector.turns({ busy }) }
 }
 const itemTypes = (turn) => turn.items.map((item) => item.type)
+
+test('message history follows cursors beyond the general list cap', async () => {
+  const api = Object.create(V2Api.prototype)
+  api.page = async (_path, { cursor, limit }) => {
+    const offset = Number(cursor ?? 0)
+    return offset === 1000 ? { data: ['newest'], next: null } : { data: Array(limit).fill(offset), next: String(offset + 1) }
+  }
+  const history = await readMessages(api, SES)
+  assert.equal(history.length, 200001)
+  assert.equal(history.at(-1), 'newest')
+})
+
+test('a prompt with only a skill still has a visible skill in reloaded history', () => {
+  const { turns } = project([user('msg_only', 5, '', { skills: [{ id: 'review' }] }), idle('msg_end', 6)])
+  assert.deepEqual(turns[0].items[0].content, [{ type: 'skill', name: 'review', path: '' }])
+})
+
+test('OpenCode 1.x history projects completed structured answers without a text part', () => {
+  const projector = new Projector({ threadId: SES, cwd: '/w', meta: { repairedCreated: { u: 1 } } })
+  projector.load([
+    { info: { id: 'u', role: 'user', time: { created: 4 } }, parts: [{ id: 'p', type: 'text', text: 'Prompt' }] },
+    { info: { id: 'a', role: 'assistant', parentID: 'u', structured: { answer: 'fixed' }, time: { created: 2, completed: 3 } }, parts: [] },
+  ])
+  const [turn] = projector.turns()
+  assert.equal(turn.status, 'completed')
+  assert.equal(turn.items.at(-1).text, '{"answer":"fixed"}')
+})
 
 // ---------------------------------------------------------------- entries
 
@@ -62,7 +90,7 @@ test('user messages: text, inline files as data: urls, agents mentioned in the t
   assert.deepEqual(entry.parts, [
     { id: 'msg_u:text:0', type: 'text', text: 'look @explore' },
     { type: 'file', mime: 'text/plain', url: 'data:text/plain;base64,aGk=', filename: 'note.txt' },
-    { type: 'file', mime: 'image/png', url: 'file:///w/shot.png' },
+    { type: 'file', mime: 'image/png', url: 'data:image/png;base64,AAAA' },
     { type: 'agent', name: 'general' },
   ])
   const note = toV1Message(synthetic('msg_s', 6, '<subagent …>', { description: 'done' }))

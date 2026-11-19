@@ -3,7 +3,7 @@
   "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
   "generator": "scripts/extract-code-editor-v4.mjs",
   "sharedGraph": "cds-core",
-  "cdsCoreManifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+  "cdsCoreManifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd",
   "areas": [
     "desktop",
     "side-chat",
@@ -18419,6 +18419,16 @@
       "cdsCoreModule": "shared-frame.mjs"
     },
     {
+      "binding": "shared-2-CsjIBQD8.js#K8",
+      "adapter": "side-chat-chrome.mjs",
+      "cdsCoreModule": "shared-2.mjs"
+    },
+    {
+      "binding": "shared-2-CsjIBQD8.js#q8",
+      "adapter": "side-chat-chrome.mjs",
+      "cdsCoreModule": "shared-2.mjs"
+    },
+    {
       "binding": "preload-helper-BBljBeZo.js#e",
       "adapter": "preview-element-serialization.mjs",
       "cdsCoreModule": "browser-preload-helper.mjs"
@@ -19157,6 +19167,21 @@
       "binding": "shared-25-D-aF0gt9.js#yd",
       "adapter": "preview-element-chip.mjs",
       "cdsCoreModule": "shared-25.mjs"
+    },
+    {
+      "binding": "shared-2-CsjIBQD8.js#_m",
+      "adapter": "preview-element-chip.mjs",
+      "cdsCoreModule": "shared-2.mjs"
+    },
+    {
+      "binding": "shared-2-CsjIBQD8.js#Tm",
+      "adapter": "preview-element-chip.mjs",
+      "cdsCoreModule": "shared-2.mjs"
+    },
+    {
+      "binding": "shared-2-CsjIBQD8.js#Hm",
+      "adapter": "preview-element-chip.mjs",
+      "cdsCoreModule": "shared-2.mjs"
     },
     {
       "binding": "shared-frame-CJdE5Ria.js#J9",

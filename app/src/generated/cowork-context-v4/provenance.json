@@ -13,15 +13,15 @@
   },
   "sharedGraph": {
     "area": "cds-core",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   },
   "linkedAreas": {
     "cowork-progress-v4": "e5501ac28f6c72be0c01e5278e0b22159f48d63e1a3a61349e0c4eca8bd504a7",
     "cowork-runs-v4": "36747ecf18d29dbe605aa00ab14dbb71e5da94489ed6f4df52b792c190b3bc4f",
-    "cowork-session-states-v4": "955fce000263969e89c7b0af2998fd16daad0c4c14abd14c1e8d98a298cd4528",
+    "cowork-session-states-v4": "ea737624026a8cba9e1df161889c05b0a7250355af5dc3a16deba39537353dc6",
     "cowork-session-actions": "66ab43b3aba5bb460e83e5273a5d9bf5d1d6d5b0176282194995f626d3284f77",
     "cowork-live-v4": "12017680f7224cad4104cd89b5424b0c8174a9295b1394ce4eadc732b336fc24",
-    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c"
+    "routines-shared-v4": "79aa397be0c7daa4745103bbe2ea06fdcdbade14633a50d27248c2aea2b31649"
   },
   "requiredLinks": {
     "c21f11e6d-Cyj5xu_D.js#eC": "cowork-progress-v4",

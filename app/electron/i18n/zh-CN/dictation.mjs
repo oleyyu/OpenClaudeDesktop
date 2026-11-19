@@ -11,6 +11,7 @@ export default {
   'Hold to record': '按住说话',
   'Right-click for microphone settings': '右键点按可设置麦克风',
   'Listening...': '正在听...',
+  'Connecting...': '正在连接...',
   'Dictation isn’t available': '听写不可用',
   'Dictation isn’t available in this build of the app': '这个版本的应用不能使用听写',
   'Dictation needs macOS': '听写需要 macOS',

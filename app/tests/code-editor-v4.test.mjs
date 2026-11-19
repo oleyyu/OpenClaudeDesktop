@@ -40,7 +40,7 @@ test('manifest: 4.16336.0, cds-core shared graph, desktop ported, the other five
   assert.equal(manifest.referenceVersion, referenceVersion);
   assert.equal(manifest.referenceSnapshot, 'snapshots/claude-4.16336.0-20261104');
   assert.equal(manifest.sharedGraph, 'cds-core');
-  assert.equal(manifest.cdsCoreManifestSha256, '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c');
+  assert.equal(manifest.cdsCoreManifestSha256, 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd');
   assert.ok(manifest.areas.includes('desktop'));
   assert.deepEqual([...manifest.areas, ...manifest.pendingAreas].sort(), ['desktop', 'side-chat', 'preview-element', 'preview-shell-a', 'preview-shell-b', 'preview-sketch'].sort());
   const desktop = JSON.parse(read('src/generated/code-editor-v4/areas/desktop.json'));

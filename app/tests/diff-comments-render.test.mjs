@@ -77,7 +77,7 @@ test('saved, draft and outdated comments render as cards under their row', () =>
   // r8pa-02: c44d00c7f Fc / c82eca2bd st — the label row `flex items-center gap-1.5` with the CDS Badge neutral xs.
   assert.match(html, /data-comment-key="additions:2"[\s\S]*?<span class="flex items-center gap-1\.5">Lines 1–2<span data-cds="Badge" data-size="xs"[^>]*><span[^>]*>Outdated</);
   assert.doesNotMatch(html.slice(removedCard, addedRow), /Outdated/);
-  assert.match(html, /data-comment-key="additions:3"[\s\S]*?<textarea aria-label="Comment on line 3" placeholder="Tell Claude what to change"/);
+  assert.match(html, /data-comment-key="additions:3"[\s\S]*?<textarea aria-label="Comment on line 3" placeholder="Tell DeepSeek what to change"/); // fix-r2 U-14 (E83), was Claude
   assert.match(html, /aria-label="Edit comment"/);
 });
 

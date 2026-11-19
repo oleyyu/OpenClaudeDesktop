@@ -81,10 +81,12 @@ test('SSR: the knowledge region — header, Add files trigger, empty card, tiles
   assert.match(empty, /^<div class="w-full px-\[1\.375rem\] py-4 flex flex-col gap-2 mb-1" data-project-knowledge="">/);
   assert.ok(!empty.includes('role="region"'));
   assert.ok(official.cf2.includes('s(Jt,{className:"flex flex-col gap-2 mb-1",children:[W,G,q,Y]})'));
-  assert.match(empty, /<div class="h-6 w-full flex flex-row items-center justify-between gap-4"><h3 class="text-secondary font-base-bold">Files<\/h3>/);
+  assert.match(empty, /<div class="h-6 w-full flex flex-row items-center justify-between gap-4"><h3 class="text-secondary text-body-medium">Files<\/h3>/);
   assert.match(empty, /data-testid="project-doc-uploader-dropdown-trigger"/);
   assert.match(empty, /aria-label="Add files"/);
   assert.match(empty, /<div class="max-w-\[14\.5rem\]">Add PDFs, documents, or other text to reference in this project\.<\/div>/);
+  // 4.16336.0 c52b32660: the empty card's type is text-caption-regular (3.6556.2 font-small).
+  assert.match(empty, /<div class="text-center h-\[10rem\] bg-surface-0 rounded-2xl flex flex-col gap-3 items-center justify-center text-muted-as-secondary text-caption-regular">/);
   assert.ok(!empty.includes('role="progressbar"'));
   const loading = region({});
   assert.ok(loading.includes('<div class="h-[10rem] w-full bg-surface-0 rounded-2xl"></div>'));
@@ -177,7 +179,9 @@ test('zh-CN: every string this lane renders is translated (R9)', () => {
     'Failed to upload file {filename}. Project knowledge exceeds maximum. Remove files to continue.', 'Failed to upload file', 'File type not supported here',
     'Something went wrong while deleting. Refresh the page and try again', 'Chat', 'Cowork', 'Composer mode', 'Add to project', 'Change project', 'No projects yet',
     'Remove from project', 'Set project instructions', 'Save instructions', 'Clear instructions',
-    'Think step by step and show reasoning for complex problems. Use specific examples.', 'Error saving instructions, please try again later', 'Project instructions'])
+    'Think step by step and show reasoning for complex problems. Use specific examples.', 'Error saving instructions, please try again later', 'Project instructions',
+    // library-pages r3-02: the remove confirmation (c9260427e I).
+    'Remove {name}?', 'Remove file', 'This can’t be undone.'])
     assert.equal(typeof zh[key], 'string', key);
   assert.equal(zh['{pctUsed}% of project capacity used'].includes('{pctUsed}'), true);
   assert.equal(zh['Failed to upload file {filename}. Project knowledge exceeds maximum. Remove files to continue.'].includes('{filename}'), true);

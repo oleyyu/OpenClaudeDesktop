@@ -13,19 +13,19 @@
   },
   "sharedGraph": {
     "area": "cds-core",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   },
   "linkedAreas": {
-    "chat-projects-v4": "397c2214e00334df6904f376e61a97d2867b7fd66f3606c5563de57535c392b2",
-    "code-composer-v4": "dc5bfba3750b5f0468cadcf5b6123fe59ce856daf14f6aebf5b1bce1c2f1cf64",
-    "cowork-scheduled-v4": "1af355ba22cc6cee9062edb2710c581d7808d95812d240d343ad995cf96ceb78",
-    "frame-sidebar-nav": "f050559d8d4736a10e502efd30f166d28900e800b146c6c8749608a326966487",
-    "proposal-group-v4": "373e3ed4e243fdfea94253655f55063a894ac1a21187f4fd5eb8745eea61bc83",
-    "r3b-transcript-v4": "6bcda4070823d55dfc00e8a5641c8a4dce1d0aa39d0dd5370fb853532dcd2301",
+    "chat-projects-v4": "dcdb13b9ee31784b1d462d7ef142a2acb586d341fab7d7542a98203bec81abc9",
+    "code-composer-v4": "8bc461c9b527667c1f1a21a7c06600bd549fda04b0af793429305de8580ca20d",
+    "cowork-scheduled-v4": "6397e9a488ca12cbfed6715092e9e2f349a23dc8b9d904c1edd6f15c4a9b8921",
+    "frame-sidebar-nav": "130fb0fd5b7c760333f4e8868dcdce5d1cdfdc4877c3876625469f07c2855cbc",
+    "proposal-group-v4": "b61c81b10a01dec674d5635cde4f94981ffee8db70ba71b0d61ad8092f2fc8c9",
+    "r3b-transcript-v4": "96ab7cb70bf9a0b7ef8d8b094a5fb28b0590b51672b51eda7d56e765df33c2c8",
     "titlebar": "8a99c5c6a464578ba13c6b81c3a5cc4ca8079d4f2f47db7f268e520c78e5372f",
-    "turn-plan-v4": "120180f4946ca49f0a8cb0302a85c1ff5f155733e1ef1bb35000ece88b1ceb2e",
+    "turn-plan-v4": "eeaa54a1891ff3941efa4271bcfdb9d96822919883beaadc87efc537e58e49cc",
     "session-rail-changes-v4": "fd23545a7c4be524493f74e75d69170c3538554b15051026bb8622d8240903bf",
-    "working-line-v4": "25610753870c1d676d772810433ca78b2413b2d93418b0e3ea8a904875d1deaa"
+    "working-line-v4": "a8643190175e64a76ad6b902c7071978a35e8bbca3aae07bc90f0b7e3f8e94a1"
   },
   "roots": [
     {

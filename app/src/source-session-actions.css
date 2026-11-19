@@ -32,6 +32,9 @@
    bg-fill-ghost-hover text-primary, the rest text-secondary; the empty row italic text-muted. */
 .session-action-dialog.rewind-picker{max-width:32rem}
 .rewind-picker-list{display:flex;flex-direction:column;gap:3px;margin:0 calc(-1 * var(--cds-pad-xl)) calc(-1 * var(--cds-pad-xl));padding:0 var(--cds-pad-xl) var(--cds-pad-xl);max-height:calc(50vh + var(--cds-pad-xl));overflow-y:auto;list-style:none;outline:none}
+/* U-54: the listbox takes focus on open; like the official list (outline-none only) it draws no focus ring — the
+   dialog-wide :focus-visible shadow above was clipped to a 1px line by the scroll body its negative margins reach. */
+.session-action-dialog .rewind-picker-list:focus-visible{box-shadow:none}
 .rewind-picker-option{border-radius:5px;padding:5px var(--cds-pad-sm);color:var(--cds-text-secondary);cursor:default}
 .rewind-picker-option[data-selected]{background:var(--cds-fill-ghost-hover);color:var(--cds-text-primary)}
 .rewind-picker-label{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:var(--cds-font-size-body);line-height:var(--cds-leading-body)}

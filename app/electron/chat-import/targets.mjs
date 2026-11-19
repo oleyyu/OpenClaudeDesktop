@@ -48,7 +48,7 @@ export const PREFIX_MAX_TURNS = 2000;
 export const PREFIX_MAX_BYTES = 16 * 1024 * 1024;
 // A Code session's default developer instructions on a core without capabilities.customization (src/main.jsx
 // thread/start, routine-runner.mjs CODE_ROUTINE_INSTRUCTIONS): an imported session starts with them too.
-export const DEFAULT_INSTRUCTIONS = "You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. Do not claim to be Claude.";
+export const DEFAULT_INSTRUCTIONS = "You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. For Dynamic Workflow requests, look up and call mcp__code_desktop__Workflow when available. Do not claim to be Claude.";
 // The warning codes importInto reports (the page maps them to sentences, src/import-history-model.mjs importWarnings).
 export const WARNINGS = Object.freeze(["truncated", "secrets-redacted", "fork-failed", "native-failed", "inject-failed", "title-not-set", "no-display-history"]);
 // The core whose own store each source is (fork), where the source's session id is the core's thread id and the fork

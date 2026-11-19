@@ -50,10 +50,11 @@ export const providerRankV2 = (provider) => (provider?.id === 'opencode' && prov
 export class CatalogV2 extends ModelCatalog {
   /**
    * @param {() => Promise<import('./api.js').V2Api>} api - the started server's V2Api
-   * @param {{ location: () => string }} options - the folder the lists are asked for
+   * @param {{ location: () => string, declared?: () => Map<string, Set<string>> }} options - the folder the lists are asked
+   *   for; declared: the custom providers' listed models (models.js declaredModels)
    */
-  constructor(api, { location }) {
-    super(() => this.fetchV2(), { rank: providerRankV2 })
+  constructor(api, { location, declared }) {
+    super(() => this.fetchV2(), { rank: providerRankV2, declared })
     this.api = api
     this.location = location
     this.serverDefault = null

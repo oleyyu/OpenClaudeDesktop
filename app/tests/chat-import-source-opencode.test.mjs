@@ -19,6 +19,24 @@ const kinds = session => session.items.map(item => item.kind);
 const texts = (session, kind) => session.items.filter(item => item.kind === kind).map(item => item.parts.map(part => part.text ?? '').join(''));
 const J = JSON.stringify;
 
+test('v2 import hides the staged revert boundary and everything after it', () => {
+  const db = new DatabaseSync(':memory:');
+  try {
+    db.exec(`${V1_TABLES}
+      CREATE TABLE session_v2 (id text PRIMARY KEY, revert text);
+      INSERT INTO session_v2 VALUES ('ses_hidden', NULL);`);
+    const row = db.prepare('INSERT INTO session_message VALUES (?,?,?,?,?,?,?)');
+    for (let n = 1; n <= 4; n++) row.run(`m${n}`, 'ses_hidden', 'user', n, n, n, J({ text: `line ${n}` }));
+    const stage = db.prepare('UPDATE session_v2 SET revert = ?');
+    stage.run(J({ messageID: 'm3' }));
+    assert.deepEqual(texts(opencode.readDatabase(db, 'ses_hidden'), 'user'), ['line 1', 'line 2']);
+    assert.equal(opencode.listDatabase(db, 'synthetic.db', {})[0].messageCount, 2);
+    stage.run(J({ messageID: 'm1' }));
+    assert.deepEqual(opencode.readDatabase(db, 'ses_hidden').items, []);
+    assert.deepEqual(opencode.listDatabase(db, 'synthetic.db', {}), []);
+  } finally { db.close(); }
+});
+
 const V1_TABLES = `
   CREATE TABLE session (id text PRIMARY KEY, project_id text NOT NULL, workspace_id text, parent_id text, slug text NOT NULL DEFAULT '', directory text NOT NULL,
     path text, title text NOT NULL, version text NOT NULL, model text, agent text, time_created integer NOT NULL, time_updated integer NOT NULL, time_archived integer);

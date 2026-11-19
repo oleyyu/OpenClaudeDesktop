@@ -212,8 +212,9 @@ test('question card: secondary Skip precedes the primary, has no keycap, and fol
   assert.match(skip, /^ type="button" data-cds="Button"[^>]*>.*>Skip<\/span>$/);
   assert.doesNotMatch(skip, /data-cds="Shortcut"/);
   assert.doesNotMatch(submit.slice(0, submit.indexOf('>')), /\sdisabled=""/);
-  // The runtime preselects options[0]: its row wears st.
-  assert.match(html(), /bg-\[light-dark\(var\(--cds-surface-popover\),var\(--cds-alpha-2\)\)\][^"]*"><div class="flex flex-col gap-0\.5 min-w-0 flex-1 select-text"><div class="text-body text-primary[^"]*">Alpha</);
+  // The runtime preselects options[0]: its row wears st (mt in 4.16336.0). chat-cowork-1to1 r2 (cowork-r2-02): the row is
+  // c9ed5627b _t over c2f6611a3 hr, whose text column is `relative flex min-w-0 flex-1 flex-col select-text gap-0.5` with an id.
+  assert.match(html(), /bg-\[light-dark\(var\(--cds-surface-popover\),var\(--cds-alpha-2\)\)\][^"]*"><div id="[^"]+" class="relative flex min-w-0 flex-1 flex-col select-text gap-0\.5"><div class="text-body text-primary[^"]*">Alpha</);
   assert.match(footerButtons(html({ isActive: false })).at(-2), /^ type="button" disabled=""/);
   assert.match(footerButtons(html({ menuOpen: true })).at(-2), /^ type="button" disabled=""/);
   void runtime.submit(ticket, null, () => new Promise(() => {}), { getVisibleThreadId: () => 'T' });

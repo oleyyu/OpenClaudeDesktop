@@ -52,11 +52,14 @@ export function startSetupCards(rows, intl, { onChoose, onSetWorktree, onOpenSes
 export function SourceCodeStart({ ready, folders, folder, onSelect, onChoose, chooseOpen, call, onError,
   savedEnvironments = EMPTY, selectedEnvironmentId, onSelectEnvironment, inSplitWindow = false,
   sessions = EMPTY, workspace, worktree, onSetWorktree, starting, onOpenSession, onTake, onFocusComposer,
-  onStartBesideDraft }) {
+  onStartBesideDraft, showTasks = true }) {
   const intl = useStartIntl();
   const labelContext = useHomeLabelContext();
   const [slot, setSlot] = useState(null);
-  const { items, settled, remove } = useTaskBacklog(folder || null, call, onError);
+  // U-31: shared-20 Eb `environments && !hasExtraPanes ? "card" : "chips"`; cc43287c9 passes the card
+  // `tasksFolder: placement === "card" ? folder : null`, so with an extra pane open the tasks are the chips under the
+  // composer only (main.jsx afterComposer), never both.
+  const { items, settled, remove } = useTaskBacklog(showTasks ? folder || null : null, call, onError);
   const [git, setGit] = useState(null);
   useEffect(() => {
     if (!folder || !workspace?.isRepo || !call) return;

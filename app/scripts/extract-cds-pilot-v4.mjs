@@ -3187,6 +3187,36 @@ function withWave8d(modules) {
   return out;
 }
 // ---- end wave 8d ----
+// ---- wave cc2 (cds-integrate/merge-pins-wavecc2.mjs, stage 15cc; chat-cowork-1to1-20261117 r2 Core step) ----
+// cds-wavecc2: base-ui Menu.CheckboxItem (vendor-frame Fp), the official UserMessage compound (shared-3 Bd) and the module state
+// its closure brings into cds-core (wavecc2/inputs/decisions.json) are published under their own local (linkExports; named in
+// extract-cds-core-v4.mjs publicNames from pins.merge.wavecc2), in fragment order (11). Their closures land in existing modules:
+// no new chunks, statements, adapters or globals.
+const WAVECC2_LINK_EXPORTS = [
+  ["vendor-frame-BckkO60Y.js", "Fp"], // BaseMenuCheckboxItem (pure)
+  ["shared-3-IQTrO7Gx.js", "Bd"], // UserMessage (pure)
+  ["shared-2-CsjIBQD8.js", "km"], // ctx_shared2_km (state context)
+  ["shared-2-CsjIBQD8.js", "zm"], // state_shared2_zm (state reassigned)
+  ["shared-2-CsjIBQD8.js", "Bm"], // writer_shared2_Bm (writer state-writer)
+  ["shared-2-CsjIBQD8.js", "W8"], // state_shared2_W8 (state reassigned)
+  ["shared-2-CsjIBQD8.js", "G8"], // writer_shared2_G8 (writer state-writer)
+  ["shared-2-CsjIBQD8.js", "Q8"], // state_shared2_Q8 (state collection)
+  ["shared-2-CsjIBQD8.js", "Y5"], // ctx_shared2_Y5 (state context)
+  ["shared-2-CsjIBQD8.js", "X5"], // ctx_shared2_X5 (state context)
+  ["shared-3-IQTrO7Gx.js", "ll"], // ctx_shared3_ll (state context)
+];
+function withWavecc2(modules) {
+  const out = modules.map((m) => ({ ...m, ...(m.linkExports ? { linkExports: [...m.linkExports] } : {}), ...(m.carryStatements ? { carryStatements: [...m.carryStatements] } : {}) }));
+  for (const [source, local] of WAVECC2_LINK_EXPORTS) {
+    const m = out.find((x) => x.source === source);
+    if (!m) throw Error(`wave cc2: ${source} is not a cds-core module`);
+    if (m.exports?.[local] !== undefined) throw Error(`wave cc2: ${source}#${local} is exported as ${m.exports[local]}`);
+    if (m.linkExports?.includes(local)) throw Error(`wave cc2: ${source}#${local} is already a linkExport`);
+    m.linkExports = [...(m.linkExports ?? []), local];
+  }
+  return out;
+}
+// ---- end wave cc2 ----
 export const config = {
   name: "CDS pilot v4",
   generator: "extract-cds-pilot-v4.mjs",
@@ -3251,7 +3281,7 @@ export const config = {
   // the lanes' union minus locals already exported as roots (overlays' _m is CdsTooltipProvider, display's Xu is
   // CdsButton).
   // wave 4: the lists below plus WAVE4_ADDITIONS / WAVE4_MODULES (withWave4, generated block above).
-  modules: withWave8d(withWave8c(withWave8b(withWave8a(withWave8s(withWave8(withWave7(withWave6(withWave5b(withWave5(withWave4([
+  modules: withWavecc2(withWave8d(withWave8c(withWave8b(withWave8a(withWave8s(withWave8(withWave7(withWave6(withWave5b(withWave5(withWave4([
     {
       source: official.sharedFrame,
       target: "shared-frame.mjs",
@@ -3553,7 +3583,7 @@ export const config = {
     // name `animations` (sM reads `e?.animations`), like c86ccec3d; c04b2e418 is the Separator chunk.
     { source: "cf2613ee5-Btwr9m9F.js", target: "cf2613ee5-Btwr9m9F.js", exports: { e: "animations" }, features: { e: ["thinking: {", "frameCount: 7,", "speed: 40"] } },
     { source: "c04b2e418-B9im5gUL.js", target: "c04b2e418.mjs", exports: { o: "CdsSeparator" }, features: { o: ['"data-cds": "Separator"', "orientation: l", "ref: o,"] } },
-  ]))))))))))),
+  ])))))))))))),
   // wave 8: platform globals the official o11y runtime reads (WAVE8_EXTRA_GLOBALS, generated block above).
   extraGlobals: WAVE8_EXTRA_GLOBALS,
 };

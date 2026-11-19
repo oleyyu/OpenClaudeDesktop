@@ -149,7 +149,8 @@ test('a multiSelect question draws checkbox marks with nothing preselected; a to
   runtime.selectOption(ticket, 'kinds', 'UI');
   runtime.selectOption(ticket, 'kinds', 'Live');
   const toggled = card();
-  assert.deepEqual([...toggled.matchAll(/<button type="button" aria-pressed="(true|false)" class="flex items-center gap-sm rounded-\[5px\]/g)].map(match => match[1]), ['false', 'true', 'true']);
+  // chat-cowork-1to1 r2 (cowork-r2-02): 4.16336.0 hr spreads data-question-answer after aria-pressed.
+  assert.deepEqual([...toggled.matchAll(/<button type="button" aria-pressed="(true|false)" data-question-answer="" class="flex items-center gap-sm rounded-\[5px\]/g)].map(match => match[1]), ['false', 'true', 'true']);
   // A single-select question keeps the options[0] preselection and draws keycaps, not checkboxes.
   const single = structuredClone(request);
   single.bridgeApproval.instanceId = 'f07-single';
@@ -159,7 +160,8 @@ test('a multiSelect question draws checkbox marks with nothing preselected; a to
   const radios = render(SourceQuestionCard, { runtime: other, request: single, respond: async () => ({}), getVisibleThreadId: () => 'T' });
   assert.equal(count(radios, CHECKBOX), 0);
   assert.equal(count(radios, '<span class="pointer-events-none flex pointer-coarse:hidden">'), 4);
-  assert.match(radios, /var\(--cds-fill-secondary-ring\)\]"><div class="flex flex-col gap-0\.5 min-w-0 flex-1 select-text"><div [^>]*>Unit</);
+  // chat-cowork-1to1 r2 (cowork-r2-02): 4.16336.0 hr's text column (`relative … select-text gap-0.5`, with its id).
+  assert.match(radios, /var\(--cds-fill-secondary-ring\)\] focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus"><div id="[^"]+" class="relative flex min-w-0 flex-1 flex-col select-text gap-0\.5"><div [^>]*>Unit</);
 });
 
 test('the Mode list follows nE/aE: Auto, Manual, Accept edits, Plan, Bypass permissions; the trigger shows the full label', () => {

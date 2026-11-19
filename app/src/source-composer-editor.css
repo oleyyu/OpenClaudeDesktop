@@ -1,4 +1,6 @@
-.sc-composer .sc-input.ProseMirror{position:relative;white-space:pre-wrap;overflow-wrap:break-word;overflow-y:auto;}
+.sc-composer .sc-input.ProseMirror{position:relative;white-space:pre-wrap;overflow-wrap:break-word;}
+/* U-30: c6a992d55 .ProseMirror sets no overflow; only the [data-cds=ChatComposerEditor] wrapper (max-h-96 overflow-y-auto)
+   scrolls. overflow-y:auto here made the one-line editor a scroll box that a baseline-aligned mention chip overflowed. */
 .sc-composer .sc-input.ProseMirror p{margin:0;min-height:20px;}
 /* W14-code r3 gen-final-3: no host placeholder ::before. Every .sc-composer editor is the Code / side-session shell's
    (the side chat renders that card too since css3-side-chat-composer, cccc2cf0a UF fp = c227f4d5e jF), and the shell

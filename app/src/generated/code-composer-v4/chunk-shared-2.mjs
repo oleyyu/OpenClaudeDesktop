@@ -2,7 +2,8 @@
 // Edit the extractor or its adapter modules, never this file.
 import { safeLocalStorage as we } from "../cds-core/shared-0.mjs";
 import { v as Ep } from "./chunk-vendor-all.mjs";
-import { useContext as x, createContext as y } from "react";
+import { useContext as x } from "react";
+import { km, zm } from "../cds-core/shared-2.mjs";
 import {
   useCdsIsoLayoutEffect as F,
   asElementNode as de,
@@ -38,7 +39,6 @@ function pm(e) {
 }
 var ym = "data-cds-composer-attachments";
 var bm = "data-cds-composer-attachments-row";
-var km = y(null);
 function Am() {
   return x(km);
 }
@@ -67,35 +67,6 @@ function Lm(e) {
 function Rm(e) {
   let t = Lm(e);
   t && Im(t, e);
-}
-var zm = !1;
-function Bm(e, t) {
-  let n = e.closest(`[${_m}]`),
-    r = t.isConnected ? t.parentElement : null,
-    i = n && r ? Lm(n) : null,
-    a = i ? V(i) : void 0;
-  if (!n || !r || !i || !a) {
-    e.focus();
-    return;
-  }
-  zm = !0;
-  try {
-    e.focus({ preventScroll: !0 });
-  } finally {
-    zm = !1;
-  }
-  let o = () => {
-      e.matches(":focus") && Im(i, n);
-    },
-    s = a.setTimeout(o, 300),
-    c = new a.MutationObserver(() => {
-      t.isConnected || (l(), o());
-    }),
-    l = () => {
-      (a.clearTimeout(s), c.disconnect());
-    };
-  (c.observe(r, { childList: !0 }),
-    e.addEventListener("blur", l, { once: !0 }));
 }
 function Vm(e, t) {
   let $ = J9(4),
@@ -379,4 +350,4 @@ var k1 = Ep((e, t) => ({
 function A1(e) {
   return e.startIsWaiting ? "idle" : e.status;
 }
-export { k1, Am, Vm, bm, pm, Bm, um, ym, km, Rm };
+export { k1, Am, Vm, bm, pm, um, ym, Rm };

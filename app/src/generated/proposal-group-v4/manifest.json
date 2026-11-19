@@ -743,7 +743,13 @@
         "Km",
         "Wm"
       ],
-      "heldByViewTabs": []
+      "heldByViewTabs": [
+        "Gm",
+        "Hm",
+        "Km",
+        "Vm",
+        "Wm"
+      ]
     },
     {
       "target": "shared-0.mjs",

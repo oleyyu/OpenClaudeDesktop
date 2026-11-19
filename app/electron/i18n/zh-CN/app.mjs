@@ -136,6 +136,9 @@ export default {
   'New': '新增',
   'Improved': '改进',
   'Fixed': '修复',
+  // U-19: common.mjs's 'New' (新建, the button) wins the merge, so the group label is keyed by its message id
+  // (cb63ed069 I EGsjZ8G4k5; electron/i18n tId).
+  '#EGsjZ8G4k5': '新增',
 
   // Menus (composer env, folder, add, titlebar, account, connection)
   'Working directory': '工作目录',
@@ -426,6 +429,8 @@ export default {
   'Switched transcript view to Normal.': '对话记录视图已切换为“普通”。',
   // W14-code r3 r3-composer-04: cc43287c9 OV / DV, the default-view nudge.
   'Make {mode} your default view?': '要把“{mode}”设为默认视图吗？',
+  // U-17: the session menu's Transcript view row (cc43287c9 41fOlD8UGe).
+  'Make {mode} the default': '将“{mode}”设为默认',
   'You’ve picked {mode} in more than one session. You can change the default anytime in Settings.': '你已在多个会话中选择了“{mode}”。你可以随时在设置中更改默认视图。',
   'Make default': '设为默认',
   '{mode} is now the default view.': '“{mode}”现在是默认视图。',

@@ -246,7 +246,7 @@ export function SourceCoresSettings({ boot, busy = false, coreBusy = busy, deskt
     ]}/>
     <SettingsGroup title={t('Extension packs')} rowErrors={rowErrors} showErrorReason rows={[
       ...packs.map(pack => settingRow(`pack-${pack.id}`, <span className="cores-title"><SourceBrandLogo brand={coreForEngine(pack.id).brand} size={28} className="cores-logo" />{pack.name}<span className="cores-vendor">{pack.vendor}</span><span className="ccmd-badge">{pack.version}</span></span>,
-        <span className="cores-desc"><span>{pack.description || pack.models}</span><span className="ccmd-path" title={pack.dir}>{tail(pack.dir)}</span></span>,
+        <span className="cores-desc"><span>{t(pack.description || pack.models)}</span><span className="ccmd-path" title={pack.dir}>{tail(pack.dir)}</span></span>,
         <div className="ccmd-actions"><SourceSettingsButton size="sm" variant="ghost" disabled={!!pending} data-pack-remove={pack.id}
           onClick={() => removePack(pack)}>{t('Remove')}</SourceSettingsButton></div>)),
       ...bundled.map(offer => settingRow(`bundled-${offer.id}`, <span className="cores-title"><SourceBrandLogo brand={offer.brand} size={28} className="cores-logo" />{offer.name}<span className="cores-vendor">{offer.vendor}</span><span className="ccmd-badge">{t('Included')}</span></span>,

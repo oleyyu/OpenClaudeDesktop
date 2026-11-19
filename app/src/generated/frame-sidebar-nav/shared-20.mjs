@@ -19,6 +19,7 @@ import {
   useIncognitoMode as er,
   useAnalytics as fa,
   useOptionalCurrentAccount as mn,
+  useOptionalCommandPaletteToggle as tf,
   useDialogPreloadProps as vi,
   useApiFetcher as vt,
 } from "../../frame-sidebar-nav-adapter.mjs";
@@ -134,7 +135,7 @@ import {
   AV as ur,
   cp as zn,
 } from "./shared-1.mjs";
-import { Nn as rf, Zn as tf } from "./shared-100.mjs";
+import { Nn as rf } from "./shared-100.mjs";
 import {
   Rt as Wp,
   wt as Xp,

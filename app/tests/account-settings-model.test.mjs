@@ -98,7 +98,7 @@ test("home: a DeepSeek core without a key gets the key card; the ChatGPT card is
   assert.match(main, /const signInPrompt = boot\?\.connected && onboarding !== "signin" \? coreSignInPrompt\(boot\.account, boot\.core\) : null;/);
   const card = main.slice(main.indexOf('data-testid="core-sign-in-card"'), main.indexOf('t("Sign in in your browser to continue.")'));
   assert.match(card, /<span className="connection-card-title">\{t\("Sign in to \{name\}", \{ name: signInPrompt\.name \}\)\}<\/span>/);
-  assert.match(card, /signInPrompt\.action === "login" \? \(signInBrowser\?\.label \? t\(signInBrowser\.label\) : $/);
+  assert.match(card, /signInPrompt\.action === "login" \? \(signInPending \? pendingSignIn\(boot\.auth\.login, signInPrompt\.name\)\.text : signInBrowser\?\.label \? t\(signInBrowser\.label\) : $/);
   assert.match(main, /const signInBrowser = signInCore\?\.login\?\.browser\?\.\[0\] \|\| null;/);
   assert.match(main, /call\("login", \{ type: signInBrowser\?\.type \|\| "chatgpt", \.\.\.\(signInBrowser\?\.provider \? \{ codeDesktop: \{ provider: signInBrowser\.provider \} \} : \{\}\) \}\)/);
   assert.doesNotMatch(main, /Continue with your ChatGPT account\./, "no hardcoded ChatGPT body");
@@ -128,7 +128,7 @@ test("no-key wiring: composer warning + account refresh, a one-line send guard, 
   const send = main.slice(main.indexOf("async function send({ priority, title } = {}) {"), main.indexOf("const parsed = parseSessionCommand(draft, commandContext);", main.indexOf("async function send({ priority, title } = {}) {")));
   assert.match(send, /\n\s+if \(boot\?\.account\?\.deepseek && !boot\.account\.account\) return;/);
   assert.doesNotMatch(send, /setDraft|thread\/start|turn\/start/, "the guard keeps the draft and starts nothing");
-  assert.match(main, /\{boot\?\.account\?\.deepseek && <SourceMenu\.Item icon="Key" data-testid="user-menu-deepseek-key" onClick=\{\(\) => setSettings\("preferences"\)\}>\{t\("DeepSeek API key"\)\}<\/SourceMenu\.Item>\}/);
+  assert.match(main, /\{boot\?\.account\?\.deepseek && <CdsDropdown\.Item icon="Key" data-testid="user-menu-deepseek-key" onClick=\{\(\) => setSettings\("account#account"\)\}>\{t\("DeepSeek API key"\)\}<\/CdsDropdown\.Item>\}/);
 });
 
 // A Codex custom endpoint (Settings › Models): account/read reports requiresOpenaiAuth false and no account.

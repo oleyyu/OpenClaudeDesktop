@@ -169,7 +169,7 @@ test('Workflow tool scripts: meta first, plain JS, no with/import()/await using,
   assert.match(tool.parseWorkflowScript('export const meta={name:"a",description:"b"};\nawait using x=null').error, /await using/);
   assert.match(tool.parseWorkflowScript('export const meta={name:"a",description:"b"};\nconst x: string = "a"').error, /plain JavaScript/);
   for (const [body, clock] of [['return Date.now()', true], ['return Math.random()', true], ['return new Date()', true], ['return new Date', true], ['return new Date(0)', false],
-    ['const s="Date.now()"', false], ['// Math.random()', false], ['return `${Date.now()}`', true], ['return `Date.now()`', false], ['obj.Date.now()', false], ['const f=Date?.now', true]])
+    ['const s="Date.now()"', false], ['// Math.random()', false], ['return `${Date.now()}`', true], ['return `Date.now()`', false], ['obj.Date.now()', false], ['return /Date.now/.test("x")', false], ['return 20 / Date.now()', true], ['const f=Date?.now', true]])
     assert.equal(tool.readsClock(body), clock, body);
   assert.equal(tool.NONDETERMINISTIC, 'Workflow scripts must be deterministic: Date.now()/Math.random()/new Date() are unavailable (breaks resume). Stamp results after the workflow returns, or pass timestamps via args.');
 });

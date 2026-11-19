@@ -513,6 +513,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     if (!state || thread.prompt) return
     clearTimeout(state.timer)
     thread.agentTurn = null
+    settleStale(thread)
     clearTimeout(thread.liveUsage?.timer)
     thread.liveUsage = null
     thread.agentTurnUntil = state.idleClose && status === 'completed' ? Date.now() + 60000 : 0
@@ -632,6 +633,24 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     try { return adapter.hasSavedSession(ctx, thread.id) !== false } catch { return true }
   }
 
+  /**
+   * A change the thread's agent process read at launch (connectors, keys, sign-in, skills, settings): an idle thread
+   * restarts at its next turn; one in a turn keeps its process until the turn ends (staleAfterTurn, settleStale).
+   */
+  function markStale(thread) {
+    if (thread.running) thread.staleAfterTurn = true
+    else thread.hostKey = 'stale'
+  }
+  function staleAll() {
+    for (const thread of threads.values()) markStale(thread)
+  }
+  /** A change that came during the turn, applied now that the turn has ended. */
+  function settleStale(thread) {
+    if (!thread.staleAfterTurn || thread.running) return
+    thread.staleAfterTurn = false
+    if (thread.host) thread.hostKey = 'stale'
+  }
+
   /** Starts (or restarts) the thread's agent process for its current settings (one start at a time per thread). */
   async function ensureHost(thread, options = {}) {
     while (thread.ensuring) { try { await thread.ensuring } catch {} }
@@ -641,6 +660,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
 
   async function startHost(thread, { create = false, keepRunning = false, restarted = false } = {}) {
     await prepare()
+    settleStale(thread)
     const config = launchConfig(thread)
     const key = keyOf(config)
     if (thread.host && !thread.host.exited && thread.sessionReady && (thread.hostKey === key || keepRunning)) return thread.host
@@ -665,6 +685,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     thread.hostKey = key
     thread.hostConfig = config
     thread.deferredKey = null
+    // A fresh process reads the current settings: a change pending from a turn is in it.
+    thread.staleAfterTurn = false
     thread.sandboxed = wrapped.sandboxed
     thread.sessionReady = false
     settleOnExit(host, launch)
@@ -2421,6 +2443,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     let note = turnNote
     const state = thread.prompt
     thread.prompt = null
+    settleStale(thread)
     clearTimeout(thread.liveUsage?.timer)
     thread.liveUsage = null
     abortTurnRequests(thread, 'Turn ended.')
@@ -3287,9 +3310,32 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
    * (adapter.mcpLoginStatus, every 2 s for 10 minutes) that ends in Codex's mcpServer/oauthLogin/completed. Idle
    * threads relaunch so the new tokens reach them.
    */
+  /**
+   * The connector a sign-in or sign-out names, looked up with the session's folder (params.threadId, else an absolute
+   * params.cwd) so a project's own connectors are found too.
+   */
+  function mcpServerNamed(params) {
+    if (typeof params?.name !== 'string') return { server: null, threadId: null }
+    const threadId = typeof params.threadId === 'string' && params.threadId ? params.threadId : null
+    const cwd = threadId ? threads.get(threadId)?.cwd ?? store.get(threadId)?.cwd ?? null : typeof params.cwd === 'string' && path.isAbsolute(params.cwd) ? params.cwd : null
+    return { server: mcpServersFor(cwd).find((entry) => entry.name === params.name) ?? null, threadId }
+  }
+
+  /**
+   * Where the agent runs a connector's sign-in (adapter.mcpLogin / mcpLogout): a user connector on the utility host
+   * (null), a project's own on that session's process, which runs in the project and so knows it.
+   */
+  async function mcpManageHost(server, threadId) {
+    if (server.source !== 'project') return null
+    const thread = threadId ? await openThread(threadId).catch(() => null) : null
+    if (!thread) throw new RpcError(METHOD_NOT_FOUND, adapter.mcpSignInHint?.(server) || `${adapter.name} signs in to ${server.name} itself the first time it uses it.`)
+    return thread.host && !thread.host.exited && thread.sessionReady ? thread.host : ensureHost(thread, { keepRunning: true })
+  }
+
   const mcpLogins = new Map()
-  async function mcpLogin(server) {
-    const result = await adapter.mcpLogin(ctx, server)
+  async function mcpLogin(server, threadId = null) {
+    const host = await mcpManageHost(server, threadId)
+    const result = await adapter.mcpLogin(ctx, server, { host })
     const watch = Symbol(server.name)
     mcpLogins.set(server.name, watch)
     void (async () => {
@@ -3297,14 +3343,14 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       let outcome = null
       while (Date.now() < deadline && mcpLogins.get(server.name) === watch) {
         await new Promise((resolve) => setTimeout(resolve, 2000))
-        try { outcome = await adapter.mcpLoginStatus?.(ctx, server) } catch (error) { log(`MCP sign-in ${server.name}: ${error?.message ?? error}`) }
+        try { outcome = await adapter.mcpLoginStatus?.(ctx, server, { host: host && !host.exited ? host : null }) } catch (error) { log(`MCP sign-in ${server.name}: ${error?.message ?? error}`) }
         if (outcome?.state === 'succeeded' || outcome?.state === 'failed') break
       }
       if (mcpLogins.get(server.name) !== watch) return
       mcpLogins.delete(server.name)
       const success = outcome?.state === 'succeeded'
-      if (success) for (const thread of threads.values()) if (!thread.running) { thread.hostKey = 'stale' }
-      notify('mcpServer/oauthLogin/completed', { name: server.name, threadId: null, success, ...(success ? {} : { error: outcome?.error || `${adapter.name} didn’t finish signing in to ${server.name}.` }) })
+      if (success) staleAll()
+      notify('mcpServer/oauthLogin/completed', { name: server.name, threadId, success, ...(success ? {} : { error: outcome?.error || `${adapter.name} didn’t finish signing in to ${server.name}.` }) })
     })()
     return { authorizationUrl: result.authorizationUrl }
   }
@@ -3400,6 +3446,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
 
   /** A sign-in or sign-out: the models (and their efforts) the account offers are discovered again. */
   function accountChanged() {
+    // Open sessions run on the credentials their process started with: they restart onto the new ones.
+    staleAll()
     store.setCache('modelRows', null)
     store.setCache('modelEfforts', null)
     accountProfile = null
@@ -3416,7 +3464,6 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       if (!apiKey || apiKey.length > 4096 || /[\x00-\x1f\x7f]/.test(apiKey)) throw new RpcError(INVALID_PARAMS, 'Enter a valid API key.')
       try { await adapter.connectProvider(ctx, { template: params?.codeDesktop?.template, apiKey }) }
       catch (error) { throw new RpcError(INVALID_PARAMS, error?.message ?? String(error)) }
-      for (const thread of threads.values()) if (!thread.running) thread.hostKey = 'stale'
       accountChanged()
       return { type: 'apiKey' }
     }
@@ -3740,7 +3787,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
           await adapter.installSkill(ctx, { url, slug })
         } else await adapter.deleteSkill(ctx, { slug })
         notify('skills/changed', {})
-        for (const thread of threads.values()) if (!thread.running) thread.hostKey = 'stale'
+        staleAll()
         return { slug }
       }
       case 'feedback/upload': {
@@ -3772,10 +3819,13 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       case 'config/batchWrite': {
         requireAgent()
         if (!adapter.writeMcpServer) throw new RpcError(METHOD_NOT_FOUND, `${adapter.name} connectors are edited in its own config.`)
+        // The session's folder (threadId, else an absolute cwd): removing a project's own connector edits that project's file.
+        const threadId = typeof params.threadId === 'string' && params.threadId ? params.threadId : null
+        const cwd = threadId ? threads.get(threadId)?.cwd ?? store.get(threadId)?.cwd ?? null : typeof params.cwd === 'string' && path.isAbsolute(params.cwd) ? params.cwd : null
         for (const edit of Array.isArray(params.edits) ? params.edits : []) {
           const match = /^mcp_servers\.(.+)$/.exec(String(edit?.keyPath ?? ''))
           if (!match) throw invalidParams(`Only mcp_servers.<name> can be written on ${adapter.name}.`)
-          adapter.writeMcpServer(ctx, match[1], edit.value ?? null)
+          adapter.writeMcpServer(ctx, match[1], edit.value ?? null, { cwd })
         }
         clearMcpCache(); promptCommandCache.clear()
         return { status: 'ok', version: String(Date.now()), filePath: (adapter.mcpConfigFile ?? adapter.configFile)?.(agentEnv) ?? null, overriddenMetadata: null }
@@ -3783,24 +3833,24 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       case 'config/mcpServer/reload':
         clearMcpCache(); promptCommandCache.clear()
         // Idle loaded threads pick the new servers up with a fresh process.
-        for (const thread of threads.values()) if (!thread.running) { thread.hostKey = 'stale' }
+        staleAll()
         return {}
       case 'mcpServerStatus/list':
         requireAgent()
         return mcpStatusList(params)
       case 'mcpServer/oauth/login': {
-        const server = typeof params?.name === 'string' ? mcpServersFor(null).find((entry) => entry.name === params.name) : null
-        if (server && adapter?.mcpLogin) return mcpLogin(server)
+        const { server, threadId } = adapter ? mcpServerNamed(params) : { server: null, threadId: null }
+        if (server && adapter?.mcpLogin) return mcpLogin(server, threadId)
         throw new RpcError(METHOD_NOT_FOUND, (server && adapter?.mcpSignInHint?.(server)) || `${adapter?.name ?? 'This core'} signs in to MCP servers itself the first time it uses them.`)
       }
       // Sign out of a connector the agent signed in to (adapter.mcpLogout: Qwen's clear-auth).
       case 'codeDesktop/mcpServer/logout': {
         requireAgent()
-        const server = typeof params?.name === 'string' ? mcpServersFor(null).find((entry) => entry.name === params.name) : null
+        const { server, threadId } = mcpServerNamed(params)
         if (!server) throw invalidParams(`There is no connector named ${params?.name ?? ''}.`)
         if (!adapter.mcpLogout) throw new RpcError(METHOD_NOT_FOUND, `${adapter.name} has no connector sign-out.`)
-        await adapter.mcpLogout(ctx, server)
-        for (const thread of threads.values()) if (!thread.running) { thread.hostKey = 'stale' }
+        await adapter.mcpLogout(ctx, server, { host: await mcpManageHost(server, threadId) })
+        staleAll()
         return {}
       }
       case 'skills/list':
@@ -3814,7 +3864,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         await prepare()
         await adapter.setSkillEnabled(ctx, skill.name, params.enabled === true, { ...skill, cwd: params.cwd ?? null })
         // Idle loaded threads read their skills again with a fresh process.
-        for (const thread of threads.values()) if (!thread.running) thread.hostKey = 'stale'
+        staleAll()
         notify('skills/changed', {})
         return { effectiveEnabled: params.enabled === true }
       }
@@ -3875,7 +3925,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         notify('codeDesktop/plugin/changed', { reason: op })
         notify('skills/changed', {})
         clearMcpCache(); promptCommandCache.clear()
-        for (const thread of threads.values()) if (!thread.running) thread.hostKey = 'stale'
+        staleAll()
         return { status: 'ok', application: 'applied', requestId, name: value }
       }
       // One MCP server of an installed plugin on or off (adapter.pluginServerToggle: Kimi's setMcpServerEnabled).
@@ -3889,7 +3939,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         catch (error) { throw new RpcError(SERVER_ERROR, `${adapter.name}: ${String(error?.message || error).trim().slice(-2000)}`) }
         clearMcpCache(); promptCommandCache.clear()
         notify('codeDesktop/plugin/changed', { reason: 'mcpServer' })
-        for (const thread of threads.values()) if (!thread.running) thread.hostKey = 'stale'
+        staleAll()
         return { status: 'ok', name, server, enabled: params.enabled }
       }
       case 'codeDesktop/plugin/cancelInstall':
@@ -3908,7 +3958,11 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         const cwd = await normalizeCwd(params.cwd)
         adapter.trustWorkspace(ctx, cwd)
         clearMcpCache(); promptCommandCache.clear()
-        for (const thread of threads.values()) if (thread.cwd === cwd && !thread.running && thread.host && !thread.host.exited) void stopHost(thread).catch(() => {})
+        for (const thread of threads.values()) {
+          if (thread.cwd !== cwd) continue
+          if (thread.running) thread.staleAfterTurn = true
+          else if (thread.host && !thread.host.exited) void stopHost(thread).catch(() => {})
+        }
         return { trusted: true, cwd }
       }
       case 'codeDesktop/mentions/list': {
@@ -3933,7 +3987,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         const result = await adapter.runMigration(ctx, { configOnly: params?.configOnly === true })
         // Moved config, connectors and sessions: idle sessions restart, caches and the session list are read again.
         clearMcpCache(); promptCommandCache.clear()
-        for (const thread of threads.values()) if (!thread.running) thread.hostKey = 'stale'
+        staleAll()
         return { complete: result?.complete !== false, log: typeof result?.log === 'string' ? result.log.slice(0, 2000) : null }
       }
       case 'codeDesktop/hooks/setEnabled': {
@@ -3943,7 +3997,10 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         const cwd = typeof params.cwd === 'string' && path.isAbsolute(params.cwd) ? params.cwd : null
         adapter.setHookEnabled(ctx, cwd, params.key, params.enabled)
         // A running agent read its hooks when it started: idle sessions restart with the change.
-        for (const thread of threads.values()) if (!thread.running && thread.host && !thread.host.exited) void stopHost(thread).catch(() => {})
+        for (const thread of threads.values()) {
+          if (thread.running) thread.staleAfterTurn = true
+          else if (thread.host && !thread.host.exited) void stopHost(thread).catch(() => {})
+        }
         return { key: params.key, enabled: params.enabled }
       }
       case 'hooks/list':
@@ -4307,8 +4364,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         try { value = coreSettingValue(def, params.value ?? null) } catch (error) { throw invalidParams(error.message) }
         const file = adapter.coreSettings.file(agentEnv)
         try { writeCoreSetting(def.key, value) } catch (error) { throw invalidParams(error?.message ?? String(error)) }
-        // Idle loaded threads pick the change up with a fresh process; a running one at its next launch.
-        for (const thread of threads.values()) if (!thread.running) thread.hostKey = 'stale'
+        // Loaded threads pick the change up with a fresh process (a running one once its turn has ended).
+        staleAll()
         return { file, settings: coreSettingsView(defs, readCoreSettings()) }
       }
       case 'thread/goal/get': {

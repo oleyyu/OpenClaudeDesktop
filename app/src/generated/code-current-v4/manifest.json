@@ -4,11 +4,11 @@
   "generator": "scripts/extract-code-current-v4.mjs",
   "area": "code-current:base",
   "sharedGraph": "cds-core",
-  "sharedGraphManifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+  "sharedGraphManifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd",
   "linkedGraphs": {
-    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "routines-shared-v4": "79aa397be0c7daa4745103bbe2ea06fdcdbade14633a50d27248c2aea2b31649",
     "r3b-tasks": "c688c59960a0542885a98d1626187fd2170cc1c2854fb916f6b815d2e1367d20",
-    "code-composer-v4": "dc5bfba3750b5f0468cadcf5b6123fe59ce856daf14f6aebf5b1bce1c2f1cf64"
+    "code-composer-v4": "8bc461c9b527667c1f1a21a7c06600bd549fda04b0af793429305de8580ca20d"
   },
   "linkedGraphModules": {
     "routines-shared-v4": {
@@ -96,12 +96,12 @@
       "composer-row-chin.mjs": "f6cb7894ca9d6ae51bbfa9230e3e5fca8390b91263910acd6bf17b95c66594f5",
       "keyboard-activation.mjs": "75dbed0e79fc4718f116cade303c193072d84b681bead73cdc928b8e8fe41ad6",
       "chat-composer-frame.mjs": "da597ce1315044a0f5680f14ad52d8c1a859d66980866d2a55bfcb4b224ccdf1",
-      "chat-composer-attachments.mjs": "7fa3065276e192023a141f061058763f6b3217b9e4115e6fb1788338117ad9a8",
+      "chat-composer-attachments.mjs": "ddec9f264fbf867e76828c61698f40d0dcf8af9489bdf034e8a285003c55a653",
       "chat-composer-attachment-transition.mjs": "71e17c065f8adbbd0352e118c22fb17833bb1d5fa68c740242ed15f2ffc7226c",
       "chat-composer-dock.mjs": "092149efa3cb6f62678d7ce82e37b4ed93eff9441e05570e667fc4d5f1a2dc18",
       "chat-composer-presence.mjs": "73cde938754a892e2c876dd68ea10dad1dcebeae19a9fef0d8284c425e2a524c",
       "chat-composer-layout.mjs": "f5a8a09c119776998d6cc72aa18f272c33716c701e6ec72fbefa01180b5bcae3",
-      "chat-composer-shell.mjs": "121cedcb5eef0ca781f3d47f0dff4d39dd3db4fdc6fc66138520629459556c73",
+      "chat-composer-shell.mjs": "5dddf5bc81485766b38a9811b88e51793bf1068d104f28fdb9139f4421c904c7",
       "chat-composer-placeholder-timing.mjs": "c6bbedd51f85f4d38e78083248d9379601335163f0e23b7894c9a68dc9234ae3",
       "composer-add-menu.mjs": "6ba24e14ae4f53d8836e0a55c77d15a294e8af093c30f824f5dd6edc1cda61e7",
       "menu-collision-padding.mjs": "f512e8f88b3d8d9c883a4e076fdeadda4327552e4c44b58059361550ff6be73a",
@@ -117,7 +117,7 @@
       "chunk-shared-0.mjs": "0b897c985fc5fdcf57a9505b7312756555ae40f56120921572b03a822d4044a1",
       "chunk-shared-1.mjs": "08f0a6b272678e7b26dffb9ca14a875898a40a5268517a21749c0d7f20ddb0ae",
       "chunk-shared-18.mjs": "2dfce20223b54c0fb6ad157bafa4225c7b819fefe762da9b2e4bba3f008d326b",
-      "chunk-shared-2.mjs": "8e436d30e5e2c8317ed303be756a18a38c231c9224b60aae13d2bd28cb137cc2",
+      "chunk-shared-2.mjs": "df5623fd794b450dc7d303967aea88a5693ca5cb75554f9432ccf4221f223837",
       "chunk-shared-3.mjs": "ca95a9742af45eb8a19630339f0bf0f075b27a43ccdcd46bd42979a4cd203c48",
       "chunk-shared-33.mjs": "f9d4745afe96b38c38fe0eaf13ecbd6c783aac9123773b9d542a39e20b7c4e5d",
       "chunk-shared-frame.mjs": "3f7ac351740e88525683f353e5b05bc87da2e802c025f2924cadc73c47214de3",
@@ -13615,7 +13615,19 @@
         "Xc": "shared-2-TF8v67kg.js#xm",
         "Uc": "shared-2-TF8v67kg.js#hm"
       },
-      "heldByCdsCore": [],
+      "heldByCdsCore": [
+        "xl",
+        "Bc",
+        "bl",
+        "Gc",
+        "Xc",
+        "Wc",
+        "Uc",
+        "Jc",
+        "Yc",
+        "Kc",
+        "qc"
+      ],
       "heldByLinked": [
         "xl",
         "Bc",

@@ -261,7 +261,9 @@ function OverflowSearch({ overflow, row, pick, onClose }) {
       className="!border-transparent !bg-transparent !shadow-none compact:!ps-2 comfortable:!ps-2.5" />
     <div className="-mx-[var(--cds-menu-gutter,0.25rem)] mt-[var(--cds-menu-gutter,0.25rem)] mb-1 h-px bg-border" />
   </>;
-  return <SourceMenu.Popup label={t("More models")} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu" initialHighlight={null} onKeyDown={keyDown} header={header}>
+  // U-32: shared-frame PD (SearchablePopup) defaults stableWhileOpen to true: the side settled on open is kept while
+  // the rows narrow, so "No matches" does not flip the child across the parent menu.
+  return <SourceMenu.Popup label={t("More models")} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu" initialHighlight={null} onKeyDown={keyDown} header={header} stableWhileOpen>
     {shown.length > 0
       ? <SourceMenu.Group>{shown.map((model) => row(model, false))}</SourceMenu.Group>
       : <div className="sm-model-empty" role="status">{t("No matches")}</div>}

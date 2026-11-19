@@ -86,7 +86,7 @@ export function documentInput(entry) {
   return { type: "text", text: documentBlock({ name: entry?.name, path: entry?.path, text: converted.text, pages: converted.pages, truncated: converted.truncated }), text_elements: [] };
 }
 
-function parseChain(text, start) {
+function parseChain(text, start, includeText) {
   const documents = [];
   let at = start;
   while (at < text.length) {
@@ -97,19 +97,22 @@ function parseChain(text, start) {
     const close = text.indexOf(CLOSE, bodyAt);
     if (close < 0) return null;
     const pages = /\bpages="(\d+)"/.exec(open[3] || "");
-    documents.push({ name: unescapeAttribute(open[1]), path: unescapeAttribute(open[2]), ...(pages ? { pages: Number(pages[1]) } : {}) });
+    const truncated = /\btruncated="true"/.test(open[3] || "");
+    const body = includeText ? text.slice(bodyAt, close) : "";
+    documents.push({ name: unescapeAttribute(open[1]), path: unescapeAttribute(open[2]), ...(pages ? { pages: Number(pages[1]) } : {}),
+      ...(includeText ? { text: truncated && body.endsWith(TRUNCATED_MARK) ? body.slice(0, -TRUNCATED_MARK.length).trimEnd() : body, truncated } : {}) });
     at = close + CLOSE.length;
   }
   return documents;
 }
 
 /** The text without its trailing document blocks, and the documents in order ({name, path, pages?}). */
-export function splitDocumentBlocks(text) {
+export function splitDocumentBlocks(text, { includeText = false } = {}) {
   const value = typeof text === "string" ? text : "";
   if (!value.includes(`<${DOCUMENT_TAG} name="`)) return { text: value, documents: [] };
   OPENER.lastIndex = 0;
   for (let match = OPENER.exec(value); match; match = OPENER.exec(value)) {
-    const documents = parseChain(value, match.index);
+    const documents = parseChain(value, match.index, includeText);
     if (documents?.length) return { text: value.slice(0, match.index), documents };
   }
   return { text: value, documents: [] };

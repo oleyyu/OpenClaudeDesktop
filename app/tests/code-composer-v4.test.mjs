@@ -130,7 +130,8 @@ test('each root is the 4.16336.0 binding its chunk exports under the proved alia
     'chat-composer-dock.mjs': { am: 'yy', mm: 'dy' }, 'chat-composer-presence.mjs': { Ud: 'Bm', yd: null, Od: 'Um', Dd: 'Gm' },
     'chat-composer-layout.mjs': { Np: 'wy', Pp: 'Ty', kp: 'Uy', Cp: 'Py', jp: 'Ly', Dp: 'zy', yp: 'Iy', Sp: 'Oy', Ip: 'My', Lp: 'Jy', Ep: 'Yy',
       Kp: 'jy', Rp: 'Zy', zp: 'By', Hp: 'Vy', Up: 'Hy', Wp: 'Ny', xp: 'ky' },
-    'chat-composer-shell.mjs': { _m: 'Nm', xm: 'Mm', mm: 'Fm', pm: 'Im', Bm: 'Am', zm: 'km' }, 'chat-composer-placeholder-timing.mjs': { UQ: 'n' },
+    // marlin-chin (U-MARLIN): Bp (exported Pm) is shared-8's `Df(GQ)`, the Chin part marker the Chat marlin chin uses.
+    'chat-composer-shell.mjs': { _m: 'Nm', xm: 'Mm', mm: 'Fm', pm: 'Im', Bm: 'Am', zm: 'km', Bp: 'Pm' }, 'chat-composer-placeholder-timing.mjs': { UQ: 'n' },
     'composer-add-menu.mjs': { SJ: null, CJ: null, vJ: null }, 'menu-collision-padding.mjs': { OJ: 'Cn' }, 'composer-object-url.mjs': { mg: 'eo' },
     'composer-attachment-tiles.mjs': { Go: null, qo: null, Jo: null, Ko: null, Oc: null, Wo: null, Ho: null, Po: null },
     'composer-held-text-dialog.mjs': { fs: null }, 'code-pane-experimental.mjs': { BC: 'wp' }, 'composer-intake-split.mjs': { bg: 'Ph', Eh: 'Cg' },

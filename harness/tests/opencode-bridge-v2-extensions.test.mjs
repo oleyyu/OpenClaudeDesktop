@@ -108,7 +108,7 @@ test('agent files in v2 frontmatter: permissions under v2 names, the prompt as t
 })
 
 test('core settings and capabilities on 2.x: web search is config (on by default), no background sub-agent switch, no codesearch', () => {
-  assert.deepEqual(coreSettingDefs(OC2).map((def) => [def.key, def.kind, def.default]), [['websearch.enabled', 'config', true]])
+  assert.deepEqual(coreSettingDefs(OC2).map((def) => [def.key, def.kind, def.default]), [['websearch.enabled', 'config', true], ['models.zen', 'config', true]])
   assert.deepEqual(coreSettingsEnv({ coreSettings: { 'websearch.enabled': true, 'subagents.background': true } }, OC2), {})
   // 1.x untouched.
   assert.deepEqual(coreSettingDefs(FLAVORS.opencode).map((def) => def.key), ['websearch.enabled', 'subagents.background'])
@@ -120,9 +120,15 @@ test('coreSettings/write on 2.x: web search off is the overlay\'s websearch:fals
   const { bridge, spawns } = await v2Bridge()
   try {
     const read = await bridge.handle('codeDesktop/coreSettings/read', {})
-    assert.deepEqual(read.settings.map((row) => row.key), ['websearch.enabled'])
+    assert.deepEqual(read.settings.map((row) => row.key), ['websearch.enabled', 'models.zen'])
     await bridge.handle('codeDesktop/coreSettings/write', { key: 'websearch.enabled', value: false })
     assert.equal(JSON.parse(fs.readFileSync(bridge.config.configPath, 'utf8')).websearch, false)
+    assert.equal(spawns.length, 1, 'no restart')
+    // OpenCode Zen models off: OpenCode's own provider denied in the overlay; back on, the policy is gone.
+    await bridge.handle('codeDesktop/coreSettings/write', { key: 'models.zen', value: false })
+    assert.deepEqual(JSON.parse(fs.readFileSync(bridge.config.configPath, 'utf8')).policies, [{ action: 'provider.use', resource: 'opencode', effect: 'deny' }])
+    await bridge.handle('codeDesktop/coreSettings/write', { key: 'models.zen', value: null })
+    assert.equal(JSON.parse(fs.readFileSync(bridge.config.configPath, 'utf8')).policies, undefined)
     assert.equal(spawns.length, 1, 'no restart')
     await assert.rejects(bridge.handle('codeDesktop/coreSettings/write', { key: 'subagents.background', value: true }), /Unknown setting/)
   } finally { await bridge.stop() }

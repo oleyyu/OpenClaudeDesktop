@@ -5,6 +5,9 @@
 .ss-usage-header h2{margin:0}
 .ss-usage-header .ss-close{position:static;flex-shrink:0}
 .ss-settings-dialog[data-usage=true] .ss-content{padding:calc(1.5rem * var(--cds-rem-scale,1))}
+/* U-38: the Settings shell's sticky fade (settings-lite.css) spans its 32px side padding; here the padding is 1.5rem on
+   every side, so the fade follows it (a wider fade overflowed the box by 8px and drew a horizontal scrollbar). */
+.ss-settings-dialog[data-usage=true] .sl-pane[data-customize=false]>.ss-content.sl-content:before{top:calc(-1.5rem * var(--cds-rem-scale,1));margin:calc(-1.5rem * var(--cds-rem-scale,1)) calc(-1.5rem * var(--cds-rem-scale,1)) calc(1.5rem * var(--cds-rem-scale,1) - 8px)}
 .source-usage{min-width:0;color:var(--cds-text-primary)}
 .source-usage h3{margin:0}
 .su-heading{display:flex;align-items:baseline;gap:calc(.75rem * var(--cds-rem-scale,1));margin-bottom:calc(2rem * var(--cds-rem-scale,1))}

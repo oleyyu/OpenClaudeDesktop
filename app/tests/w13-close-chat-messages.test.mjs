@@ -123,10 +123,15 @@ test('SSR: a Chat prompt’s actions are s4’s — user-message-actions, Edit b
   assert.ok(s4.includes('"data-testid":"user-message-retry"') && s4.includes('je.onRetry("human_message_hover",k.uuid)'));
   const chat = { onRetry: () => {}, onEdit: () => {}, versions: { selectedOption: 1, nOptions: 2, previous: 'r', next: null }, onVersion: () => {} };
   const html = renderToStaticMarkup(h(userActions.SourceUserActions, { sessionKey: 'v1', itemId: 'u1', text: 'Hi', interacted: true, chat }));
-  assert.match(html, /^<div class="sua-row" data-user-actions-id="u1" data-testid="user-message-actions">/);
+  // chat-conversation r2-04: the row is 4.16336.0 cc1aae219's `Ff.Actions` (shared-2 MessageActions, working-line-v4 m7) — was the
+  // host's sua-row — and Copy carries the official "user-message-copy" testid (wn); realized once the row was interacted with.
+  assert.match(html, /^<div data-cds="MessageActions" data-reveal="fade" role="toolbar"[^>]* data-testid="user-message-actions" data-user-actions-id="u1">/);
   const ids = [...html.matchAll(/data-testid="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(ids, ['user-message-actions', 'user-message-retry', 'user-message-edit', 'user-message-previous-version', 'user-message-next-version']);
-  assert.match(html, /data-testid="user-message-retry" aria-label="Retry"/);
+  assert.deepEqual(ids, ['user-message-actions', 'user-message-retry', 'user-message-edit', 'user-message-copy', 'user-message-previous-version', 'user-message-next-version']);
+  const deferred = renderToStaticMarkup(h(userActions.SourceUserActions, { sessionKey: 'v1', itemId: 'u1', text: 'Hi', chat, heading: 'You said: Hi' }));
+  assert.match(deferred, /data-deferred=""/);
+  assert.match(deferred, /aria-label="Show message actions for You said: Hi"/);
+  assert.match(html, /aria-label="Retry" data-testid="user-message-retry"/); // r2-04: the generated ChatRetryAction (shared-4 ev) attribute order
   assert.ok(html.indexOf('user-message-edit') < html.indexOf('aria-label="Copy"'));
   assert.ok(html.indexOf('aria-label="Copy"') < html.indexOf('user-message-previous-version'));
   assert.match(html, /aria-label="Edit"/);
@@ -175,7 +180,7 @@ test('SSR: the reply toolbar ends with r1’s Ic.Timestamp (revealOnHover) when 
   assert.ok(r1.includes('h(Ic.Timestamp,{date:x.created_at,locale:Le.locale,revealOnHover:!0})'));
   assert.ok(official('shared-2-').includes('i8=Object.assign(r8,{Attachments:th,Actions:R6,Timestamp:R6.Timestamp,'));
   const at = Date.UTC(2026, 9, 1, 12, 0, 0);
-  const html = renderToStaticMarkup(h(actions.SourceChatMessageActions, { conversationUuid: 't1', itemId: 'i1', text: 'Hi', onRetry: () => {}, createdAt: at }));
+  const html = renderToStaticMarkup(h(actions.SourceChatMessageActions, { conversationUuid: 't1', itemId: 'i1', text: 'Hi', onRetry: () => {}, createdAt: at, last: true /* chat-conversation r1-01: alwaysVisible, not deferred */ }));
   assert.match(html, /<time [^>]*data-cds-reveal-on-hover=""[^>]*data-cds="RelativeTime" datetime="2026-10-01T12:00:00.000Z"/i);
   assert.ok(html.indexOf('action-bar-retry') < html.indexOf('<time'));
   assert.doesNotMatch(renderToStaticMarkup(h(actions.SourceChatMessageActions, { conversationUuid: 't1', itemId: 'i1', text: 'Hi' })), /<time/);

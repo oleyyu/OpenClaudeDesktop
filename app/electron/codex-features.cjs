@@ -15,8 +15,19 @@ const HIDDEN_BETA = new Set(["worktrees", "prevent_idle_sleep"]);
 const FEATURE_NAME = /^[a-z0-9_]{1,64}$/;
 const TIMEOUT = 15000;
 
+// The beta features' on/off as experimentalFeature/list reports them.
+const betaFeatures = (features) => (Array.isArray(features?.data) ? features.data : [])
+  .filter((feature) => feature && typeof feature.name === "string" && feature.stage === "beta" && !HIDDEN_BETA.has(feature.name) && FEATURE_NAME.test(feature.name));
+const betaSignature = (features) => Object.fromEntries(betaFeatures(features).map((feature) => [feature.name, feature.enabled === true]));
+
 function createCodexFeatures({ getClient }) {
   const offered = new Set();
+  // Codex reads features.<name> when it starts (enablement/set doesn't reach the running process), so a beta switch needs
+  // a restart. Remember, per Codex process, the beta features it started with — taken before the first beta write while
+  // it runs; a process spawned after the last write read the current config.toml — so read() still reports
+  // restartPending after Settings was closed and opened again, and a switch turned back needs none (model-settings.cjs
+  // startedWith does the same for custom providers).
+  const startedWith = new WeakMap();
   const owner = async () => {
     const client = getClient();
     await client.start();
@@ -32,15 +43,17 @@ function createCodexFeatures({ getClient }) {
     ]);
     const list = (Array.isArray(features?.data) ? features.data : []).filter((feature) => feature && typeof feature.name === "string");
     const memories = list.find((feature) => feature.name === "memories") ?? null;
-    const beta = list.filter((feature) => feature.stage === "beta" && !HIDDEN_BETA.has(feature.name) && FEATURE_NAME.test(feature.name))
+    const beta = betaFeatures(features)
       .map((feature) => ({ name: feature.name, displayName: typeof feature.displayName === "string" && feature.displayName ? feature.displayName : feature.name,
         description: typeof feature.description === "string" ? feature.description : "", enabled: feature.enabled === true }));
     offered.clear();
     for (const feature of beta) offered.add(feature.name);
     if (memories) offered.add("memories");
     const settings = config?.config?.memories && typeof config.config.memories === "object" ? config.config.memories : {};
+    const started = client.child ? startedWith.get(client.child) : undefined;
     return {
       beta,
+      restartPending: !!started && beta.some((feature) => (started[feature.name] ?? false) !== feature.enabled),
       memories: memories ? {
         enabled: memories.enabled === true,
         // Codex's defaults when config.toml leaves them out: both on (memories.rs MemoriesToml defaults).
@@ -52,6 +65,8 @@ function createCodexFeatures({ getClient }) {
   async function setFeature(name, enabled) {
     if (typeof name !== "string" || !offered.has(name) || typeof enabled !== "boolean") throw new Error("Unknown feature.");
     const client = await owner();
+    if (name !== "memories" && client.child && !startedWith.has(client.child))
+      startedWith.set(client.child, betaSignature(await client.request("experimentalFeature/list", { limit: 200 }, TIMEOUT)));
     // build_feature_enabled_edit: on is `true`; off clears a default-off feature. Memories also clears the legacy key.
     const edits = [{ keyPath: `features.${name}`, value: enabled ? true : null, mergeStrategy: "replace" }];
     if (name === "memories") edits.push({ keyPath: "features.memory_tool", value: enabled ? true : null, mergeStrategy: "replace" });

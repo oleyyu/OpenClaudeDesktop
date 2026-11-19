@@ -56,7 +56,13 @@ test('the generator is current (--check)', async () => {
   // w13-close-chat-composer: + oD / dD (the placeholder rotation), WH / jH (KH's rows), shared-28 wE / TE / hE;
   // regions-chat: + OU (4.16336.0 NH's right-to-left tail part); integration-3 review-0 P1: + FQ / AK / chinEnd (the chin end's call).
   // relink C2 S1: + gO / fO / gD (the card's outer shell; literals in card.mjs).
-  assert.deepEqual(Object.keys(manifest.roots).sort(), ['$H', 'KH', 'NH', 'OU', 'QH', 'XI', 'ZH', 'dn', 'kH', 'lD', 'oD', 'dD', 'WH', 'jH', 'wE', 'TE', 'hE', 'FQ', 'AK', 'chinEnd', 'gO', 'fO', 'gD'].sort());
+  assert.deepEqual(Object.keys(manifest.roots).sort(), ['$H', 'KH', 'NH', 'OU', 'QH', 'XI', 'ZH', 'dn', 'kH', 'lD', 'oD', 'dD', 'WH', 'jH', 'wE', 'TE', 'hE', 'FQ', 'AK', 'chinEnd', 'gO', 'fO', 'gD',
+    // chat-home r1-02/03: + VR / GR / WR / tz / JR and OR / MR / NR / PR / kR (the send action, send-action.mjs).
+    'VR', 'GR', 'WR', 'tz', 'JR', 'OR', 'MR', 'NR', 'PR', 'kR',
+    // chat-cowork-1to1 r3 chat-home-r3-05: + BD (the classic editor's attributes, card.mjs chatComposerEditor).
+    'BD',
+    // marlin-chin (U-MARLIN): + GQ / KQ / HQ / lC / mC / PT / tO (the marlin chin, chin.mjs) and t_ / n_ / k_ (its chin-mic slot).
+    'GQ', 'KQ', 'HQ', 'lC', 'mC', 'PT', 'tO', 't_', 'n_', 'k_'].sort());
   // The real 4.16336.0 locals the features locate.
   assert.deepEqual(Object.fromEntries(Object.entries(manifest.roots).map(([key, root]) => [key, `${root.source}#${root.local}`])), {
     XI: 'shared-8-BqfCbkJd.js#gI', lD: 'shared-9-BgdM6Y1f.js#QD', kH: 'shared-8-BqfCbkJd.js#CU', ZH: 'shared-8-BqfCbkJd.js#GU',
@@ -64,13 +70,22 @@ test('the generator is current (--check)', async () => {
     KH: 'shared-8-BqfCbkJd.js#BU', dn: 'c6eb5f8cf-DNzkXANb.js#_n', oD: 'shared-9-BgdM6Y1f.js#YD', dD: 'shared-9-BgdM6Y1f.js#eO',
     WH: 'shared-8-BqfCbkJd.js#RU', jH: 'shared-8-BqfCbkJd.js#TU', wE: 'shared-33-DtdykY0y.js#rS', TE: 'shared-33-DtdykY0y.js#iS',
     hE: 'shared-33-DtdykY0y.js#Jx', FQ: 'shared-8-BqfCbkJd.js#FQ', AK: 'shared-8-BqfCbkJd.js#AK', chinEnd: 'shared-19-UalAfDtn.js#kw',
-    gO: 'shared-9-BgdM6Y1f.js#gO', fO: 'shared-9-BgdM6Y1f.js#fO', gD: 'shared-9-BgdM6Y1f.js#gD' });
+    gO: 'shared-9-BgdM6Y1f.js#gO', fO: 'shared-9-BgdM6Y1f.js#fO', gD: 'shared-9-BgdM6Y1f.js#gD', BD: 'shared-9-BgdM6Y1f.js#BD',
+    ...Object.fromEntries(['VR', 'GR', 'WR', 'tz', 'JR', 'OR', 'MR', 'NR', 'PR', 'kR'].map((k) => [k, `shared-8-BqfCbkJd.js#${k}`])),
+    ...Object.fromEntries(['GQ', 'KQ', 'HQ'].map((k) => [k, `shared-8-BqfCbkJd.js#${k}`])),
+    ...Object.fromEntries(['lC', 'mC', 'PT'].map((k) => [k, `shared-36-fqRFYwOb.js#${k}`])),
+    ...Object.fromEntries(['tO', 't_', 'n_', 'k_'].map((k) => [k, `shared-9-BgdM6Y1f.js#${k}`])) });
   for (const root of Object.values(manifest.roots))
     assert.equal(root.sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(v1, 'assets/v1', root.source))).digest('hex'), root.source);
   // The RTL label's two class constants, resolved through shared-8's imports.
   assert.deepEqual(Object.fromEntries(Object.entries(manifest.resolved).map(([key, r]) => [key, `${r.source}:${r.export}=${r.local}`])),
-    { labelRtlBaseAlign: 'shared-33-DtdykY0y.js:ni=pI', labelRtlPartBidi: 'shared-183-B2N6Zy4J.js:P=d0', cardActionsGap: 'shared-3-IQTrO7Gx.js:Fc=Lp' });
-  assert.deepEqual(manifest.modules.map((m) => m.target), ['card.mjs', 'messages.mjs', 'model-selector.mjs']);
+    { labelRtlBaseAlign: 'shared-33-DtdykY0y.js:ni=pI', labelRtlPartBidi: 'shared-183-B2N6Zy4J.js:P=d0', cardActionsGap: 'shared-3-IQTrO7Gx.js:Fc=Lp',
+      sendTestId: 'shared-1-D1bGaTaN.js:Ab=hp', sendMotionStyle: 'shared-36-fqRFYwOb.js:_r=MT',
+      // chat-home-r3-05: BD's data-testid (shared-1 mp "chat-input") and kind attribute (yp "data-composer-editor").
+      editorTestId: 'shared-1-D1bGaTaN.js:Mb=mp', editorKindAttribute: 'shared-1-D1bGaTaN.js:Pb=yp',
+      // marlin-chin: mC's gap constant (a private numeric binding of shared-36).
+      marlinBandGap: 'shared-36-fqRFYwOb.js:undefined=pC' });
+  assert.deepEqual(manifest.modules.map((m) => m.target), ['card.mjs', 'chin.mjs', 'messages.mjs', 'model-selector.mjs', 'send-action.mjs']);
 });
 
 test('relink C2 S1: the card shell literals are shared-9 gO / fO\'s (raw chunk text) and the host reads them from card.mjs', async () => {
@@ -196,9 +211,11 @@ test('loading and no-model states use $H\'s copy', () => {
 });
 
 test('reply placeholder is "Reply to Claude…"; a new chat rotates lD\'s placeholders (dD fade) over the empty editor', () => {
-  assert.match(render({ current: true }), /placeholder="Reply to Claude…"/);
-  assert.doesNotMatch(render({ current: true }), /placeholder="Reply"/);
-  assert.match(render({ mode: 'cowork', current: true }), /placeholder="Reply to Claude…"/);
+  // U-MARLIN (2026-11-18): a Chat conversation's marlin card takes shared-36 PT's "Reply" (an external conversation); the
+  // old non-marlin assertion was XI's "Reply to Claude…" (persona: "Reply to DeepSeek…"). Cowork keeps the classic copy.
+  assert.match(render({ current: true }), /placeholder="Reply"/);
+  assert.doesNotMatch(render({ current: true }), /placeholder="Reply to DeepSeek…"/);
+  assert.match(render({ mode: 'cowork', current: true }), /placeholder="Reply to DeepSeek…"/);
   // w13-close-chat-composer (composer-shell-02): the editor's own placeholder steps aside for dD's overlay.
   const fresh = render({});
   assert.match(fresh, /contentEditable="true" placeholder=""/);

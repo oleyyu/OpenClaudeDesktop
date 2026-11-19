@@ -226,11 +226,13 @@ test('cov1-03: branch empty states and "(Ant only)" live only in the Code routin
   const local = fs.readFileSync(path.join(app, 'src/source-routines.jsx'), 'utf8');
   assert.match(local, /CoworkUpsertScheduledTaskModal as OriginalRoutineForm \} from '\.\/source-routine-cowork-page-adapters\.jsx';/);
   const wrapper = fs.readFileSync(path.join(app, 'src/source-routine-cowork-page-adapters.jsx'), 'utf8');
-  assert.match(wrapper, /import \{ ScheduledTaskDetail, UpsertScheduledTaskModal \} from '\.\/generated\/cowork-scheduled\/index\.mjs';/);
-  const coworkForm = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/cowork-scheduled/manifest.json'), 'utf8')).modules
+  // library-pages-r1-03: the wrapper mounts the 4.16336.0 form (cowork-scheduled-v4 c97b955f1 Xa); the old assertion named
+  // the 3.6556.2 cowork-scheduled graph.
+  assert.match(wrapper, /import \{ ScheduledTaskDetail, UpsertScheduledTaskModal \} from '\.\/generated\/cowork-scheduled-v4\/index\.mjs';/);
+  const coworkForm = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/cowork-scheduled-v4/manifest.json'), 'utf8')).modules
     .filter(entry => entry.source.startsWith('c97b955f1-'));
   assert.equal(coworkForm.length, 1);
-  const generated = fs.readFileSync(path.join(app, 'src/generated/cowork-scheduled', coworkForm[0].target), 'utf8');
+  const generated = fs.readFileSync(path.join(app, 'src/generated/cowork-scheduled-v4', coworkForm[0].target), 'utf8');
   for (const text of ['No branches', '(Ant only)']) assert.equal(generated.includes(text), false, text);
 });
 

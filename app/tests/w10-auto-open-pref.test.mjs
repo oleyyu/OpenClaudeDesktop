@@ -233,7 +233,8 @@ test('SSR Settings › Code › Browser: the row sits between Open links and Kee
   const loading = settingIds(loadingHtml), from = loading.indexOf('agentPreview');
   assert.deepEqual(loading.slice(from, from + 5), ['agentPreview', 'previewLinks', 'launchAutoOpenFiles', 'previewStorage', 'previewAllowedSites']);
   assert.equal(rowTag(loadingHtml), 'ss-row invisible');
-  assert.match(control(loadingHtml, 'Auto-open files Claude writes'), /disabled/);
+  // fix-r2 U-14 (E83): the label names the running assistant (DeepSeek by default), was Claude.
+  assert.match(control(loadingHtml, 'Auto-open files DeepSeek writes'), /disabled/);
   assert.equal(count(ion('c71860c77-C3tXoNVw.js'), 'className:f?void 0:"invisible"'), 1);
   store.connect(true);
   const html = page();
@@ -242,11 +243,11 @@ test('SSR Settings › Code › Browser: the row sits between Open links and Kee
   assert.equal(rowTag(html), 'ss-row');
   assert.match(html, /HTML, images, PDFs, and videos Claude writes open in the Preview pane\./);
   assert.doesNotMatch(html, /open in the built-in browser\./);
-  const toggle = control(html, 'Auto-open files Claude writes');
+  const toggle = control(html, 'Auto-open files DeepSeek writes');
   assert.match(toggle, /aria-checked="true"/);
   assert.doesNotMatch(toggle, /disabled/);
   store.connect(false);
-  assert.match(control(page(), 'Auto-open files Claude writes'), /aria-checked="false"/);
+  assert.match(control(page(), 'Auto-open files DeepSeek writes'), /aria-checked="false"/);
   // Browser tools off hides it with the other sub-rows (official `c && …`).
   assert.equal(settingIds(page({ agentPreview: false })).includes('launchAutoOpenFiles'), false);
 });

@@ -174,6 +174,7 @@ export default {
   "{time} of {total}": "{time} / {total}",
   "Couldn’t play this video": "无法播放此视频",
   "Reply": "回复",
+  "Write a message\u2026": "写条消息\u2026",
   "{count} {noun}": "{count} {noun}",
   "Search emoji": "搜索表情",
   "Emoji": "表情",

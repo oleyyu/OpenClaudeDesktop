@@ -117,7 +117,7 @@ const adapterTable = {
     // N: the claude.ai chat artifact preview (published screenshot or a markdown / code excerpt). V renders it only for
     // source "chat"; the host items are source "cowork" (local files), so it is unreachable.
     N: { name: 'ChatArtifactPreview', features: ['{ title: t, type: r, preview: i, publishedArtifactUuid: a } = e,', '`/public/artifacts/${a}/screenshot`'],
-      boundary: 'claude.ai chat artifact previews (published screenshot, markdown excerpt) are not shown: host items are local cowork files (source "cowork"); null.' },
+      boundary: 'Chat artifact previews follow the original (markdown / text / code excerpt from previewText, else the type icon) in src/source-artifact-chat-preview.jsx; no published screenshot (no claude.ai publishing).' },
   },
 };
 

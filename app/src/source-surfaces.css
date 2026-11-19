@@ -2,11 +2,14 @@
    only connect the existing application frame and ProseMirror host to that layout. */
 .source-chat-tile-content[data-surface]:not([data-surface="code"])[data-home] .source-transcript-frame { display: none; }
 .surface-greeting { flex: 0 0 auto; }
-/* shared-19 composer card Ti = p("isolate", Ne, …): Ne is "max-w-2xl" (42rem) with voyage_composer_marlin off, the same
-   width as the below-composer slot (src/source-cowork-home.jsx). */
+/* shared-19 composer card Ti = p("isolate", Ne, …): 4.16336.0 ED `Be = H ?? (Ie ? "mx-auto w-full max-w-[40rem]" :
+   "mx-auto w-full max-w-2xl")`, Ie = Wi() (the marlin gate) && no project && no space. U-MARLIN (src/composer-marlin.mjs,
+   on): 40rem, the same width as the below-composer slot (src/source-cowork-home.jsx); the zone carries
+   data-composer-marlin (source-composer.jsx) from that one host answer, so off falls back to max-w-2xl (42rem). */
 .source-chat-tile-content[data-surface]:not([data-surface="code"]) .composer-zone {
   width: 100%; max-width: 42rem; padding: 0; margin-inline: auto; gap: 0; flex: 0 0 auto;
 }
+.source-chat-tile-content[data-surface]:not([data-surface="code"]) .composer-zone[data-composer-marlin] { max-width: 40rem; }
 .source-chat-tile-content[data-surface]:not([data-surface="code"]):not([data-home]) .composer-zone { margin-bottom: 16px; max-width: 768px; }
 .surface-form { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: transparent; }
 .source-chat-editor .sc-input { display: block; width: 100%; min-height: 0; max-height: none; margin: 0; padding: 0; border: 0; outline: none; background: transparent; color: inherit; font: inherit; line-height: inherit; border-radius: 0; }
@@ -16,6 +19,9 @@
 .source-chat-composer .surface-folder-trigger .ssb-content { overflow: hidden; }
 .source-chat-composer .surface-folder-trigger .ssb-content > span { overflow: hidden; text-overflow: ellipsis; }
 .source-chat-tile-content:not([data-surface="code"]) .source-chat-body { flex-direction: row; }
+/* chat-home r1-06: shared-23 TT's frame (`flex h-full flex-row|flex-col`) sits where the conversation column was, inside the
+   host's row-flex chat body, so it takes the column's place (grow, shrink below content) as .conversation did. */
+.source-chat-body [data-new-page-layout-rendered] { flex: 1 1 0%; min-width: 0; min-height: 0; }
 .source-chat-tile-content[data-surface]:not([data-surface="code"]) .source-transcript-content { --chat-body: 16px; --chat-leading: 1.6; }
 
 .source-sidebar[data-surface]:not([data-surface="code"]) .traffic-space { display: none; }
@@ -40,6 +46,8 @@
 
 .source-chat-tile-content:not([data-surface="code"])[data-section="routines"] .conversation { padding: 0; justify-content: flex-start; }
 .surface-routines { width: 100%; padding-bottom: 24px; }
+/* U-21: with a run-error banner above the detail, the detail (its own scroller, h-full) takes the height that is left. */
+.surface-routines[data-run-errors] { display: flex; flex-direction: column; }
 
 /* Installed shared-23 NH serif preset: user sans, assistant serif. */
 .source-chat-tile-content:not([data-surface="code"]) .source-assistant-message .source-markdown { font-family: var(--font-serif); }

@@ -200,18 +200,20 @@ try{
  await fs.writeFile(path.join(main.dir,'fixture-threads.json'),JSON.stringify({next:900,threads:Object.fromEntries(Object.entries(threads).map(([k,v])=>[k,{...v,cwd:main.workspace}]))}));
  await launch(main.dir);
  await page.getByText(D.dark).first().waitFor();
+ // 0.3 opens the environment picker on a fresh home; close it for the shot.
+ await page.keyboard.press('Escape');await page.mouse.click(5,600);
  await shot('home.png');
  await page.getByText(D.dark).first().click();
  await page.getByText(D.done).waitFor();
  // The tool group's header (the official v2e summary, its wording follows the group's members).
- await page.locator('[data-tool-group] button').first().click();
+ await (await page.locator('[data-tool-group] button').count()?page.locator('[data-tool-group] button'):page.getByText(D.group).locator('visible=true')).first().click({force:true});
  await shot('session.png');
  const editor=page.locator('[data-cds="ChatComposerEditor"]').first();
  await editor.focus();await page.keyboard.insertText('/');
  await shot('slash-commands.png');
  await page.keyboard.press('Escape');await editor.press('Meta+A');await editor.press('Backspace');
  await page.keyboard.press('Meta+,');
- await page.locator('.ss-nav').getByText(T('Models'),{exact:true}).first().click();
+ await page.locator('.ss-nav, [role=dialog]').getByText(T('Models'),{exact:true}).first().click();
  await shot('settings-models.png');
  await close();
  }

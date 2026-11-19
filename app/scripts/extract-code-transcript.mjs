@@ -273,12 +273,22 @@ const serviceAdapters = {
   // a finished workflow's output file through (k1e → D1e `ple.readFile?.(e.id, s, {automatic: !0})`). No such client here
   // (source-code-feed-adapters.jsx localSessionClient): readFile is absent, the card keeps the task's own progress.
   'cef1e6037-C9OZ_iaL.js#Z': { name: 'localSessionClient', features: ['cancelQueuedNeedsConfirm: !1,', 'fetchTail: !1,'] },
+  // fix-r2 U-34: shared-7 jg, the 3.6556.2 editor prefs store ("epitaxy-editor-prefs", persisted) the reply prose reads its
+  // text size from (pP / Hg). The desktop has one such store per renderer (4.16336.0 shared-36 Om, which settings writes);
+  // a second copy here never saw a settings change until a reload. The host answers the one store settings-pages-v4
+  // slices (source-code-transcript-adapters.jsx useTranscriptEditorPrefsStore).
+  'shared-7-DBAgAi5H.js#jg': { name: 'useTranscriptEditorPrefsStore', features: ['chatTextSize: Sg(Ag.chatTextSize) ? Ag.chatTextSize : "m",', 'setTranscriptWidth: (t) => e({ transcriptWidthChoice: t }),'] },
 };
 const localAdapters = { ...TRANSCRIPT_ROWS_LOCAL_ADAPTERS, ...lazyAdapters, ...serviceAdapters };
 // Top-level statements the selected code relies on that the slicer does not carry by itself (a loop filling a table):
 // c7b19a753 (the alluvium parser): its inline character classes — `pe` (the inline markers, `for (let e of fe)
 // pe[e.charCodeAt(0)] = 1`, without which no emphasis, code span or link is ever parsed) and `le` (ASCII punctuation).
 const CHUNK_EXTRAS = {
+  // fix-r2 U-35: c19e90103's table expand store (Fg, exported Z; c96d752d0 Aat `[An] = I(Xm)`), its context (Ig, exported
+  // X; Aat `f(Jm.Provider, {value: An, …})`) and the expanded table dialog (zg, exported Y; Aat `f(Ym, {store: An})`). The
+  // host's Code transcript provides them as Aat does (source-code-transcript.jsx), so a wide table gets "Expand table".
+  'c19e90103-BQFzF8EA.js': { exports: { Fg: 'createTableExpandStore', Ig: 'TableExpandStoreContext', zg: 'TableExpandDialog' },
+    features: { Fg: ['show: (t) => e({ snapshot: t, open: !0 }),'], Ig: ['T(null)'], zg: ['{ store: t } = e,', 'size: "3xl",'] } },
   'c7b19a753-Damdv4oQ.js': { carryStatements: ['for(let e of fe)pe[e.charCodeAt(0)]=1', 'for(let e=0;e<128;e++)ce.test(String.fromCharCode(e))&&(le[e]=1)'] },
   // W14-code r2 R2T-01: c856385e2 `wt = Ct.Provider`, the session's contained image loader (c5259f582 provides it as
   // `containedImageLoader`); c96d752d0 fF reads it (`r = Fh()`, Fh = Tt) to load a user entry's pathImage items. The host

@@ -17,3 +17,16 @@
   flex: 1 1 auto;
   border-inline-start: 0;
 }
+/* U-05: in a session body under 768px (data-panel-narrow, session-panel-narrow.mjs) the panel overlays the conversation
+   from the end edge instead of taking its width; the body is the overlays' containing block (c21f11e6d's absolute
+   aside / backdrop sit in the session body). */
+.source-chat-body[data-panel-narrow] { position: relative; }
+.chat-artifact-panel[data-overlay] {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 20;
+  flex: none;
+  width: min(100%, 720px);
+  min-width: 0;
+}

@@ -136,7 +136,8 @@ test('r5 review r5-composer-02: Code registers the whole dock column (error card
   const cc = official(fs.readdirSync(path.join(app, v1)).find((name) => name.startsWith('cc43287c9-')));
   assert.ok(cc.includes('v("div",{ref:at,"data-skip-approval-enter":Jr,...Yr,className:Xr,children:[Zr,ei]})'));
   const main = read('src/main.jsx');
-  const open = '<div className={mode === "code" ? "code-dock-column flex min-w-0 shrink-0 flex-col" : "contents"}\n                  data-toast-safe-region={mode === "code" ? "near-bottom" : undefined}>';
+  // U-07: the column also carries the landing overflow ref (cc43287c9 Zke's columnRef).
+  const open = '<div ref={landingColumnRef} className={mode === "code" ? "code-dock-column flex min-w-0 shrink-0 flex-col" : "contents"}\n                  data-toast-safe-region={mode === "code" ? "near-bottom" : undefined}>';
   const start = main.indexOf(open);
   assert.ok(start > 0, 'dock column wrapper');
   const end = main.indexOf('</SourceCoworkSessionStates>\n                </div>\n                </SourceSessionErrorBoundary>', start);

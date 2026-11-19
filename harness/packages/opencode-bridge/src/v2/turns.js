@@ -6,8 +6,8 @@
  *   turn/start     POST /api/session/:id/agent and /model only when they differ from the session's (both are session
  *                  state in 2.x, each call a transcript message), then POST …/prompt {id, delivery:'steer'} with an id
  *                  the bridge chose: the turn is that id, announced at once (its events may come before the answer)
- *   /command       POST …/command answers 204 with no id: the turn is claimed by the first user item enqueued in the
- *                  session after it (session.inbox.enqueued is published before the answer). A sub-agent command (or one
+ *   /command       POST …/command answers 204 with no id. Collect user inbox candidates during the request and avoid
+ *                  claiming any if more than one can be the command's prompt. A sub-agent command (or one
  *                  that sends nothing) enqueues nothing here: its turn is the bridge's own and ends at once (the child
  *                  session is a sub-agent thread; its end wakes this session later, an external turn)
  *   review/start   2.2.5's review prompt (v2/review.js) sent as a prompt with its id, under the read-only review mode;
@@ -53,6 +53,10 @@ export const THREAD_V2 = {
     this.ownInboxV2 ??= new Set()
     this.pendingSteersV2 ??= new Map()
     return (this.adapterV2 ??= new LiveAdapterV2(this.projector, { sessionID: this.sessionID }))
+  },
+
+  isRunningShellV2(itemId) {
+    return this.bridge.v2 && itemId.endsWith(':shell') && this.adapterV2?.raw.get(itemId.slice(0, -6))?.status === 'running'
   },
 
   // ---------------------------------------------------------------- params
@@ -128,7 +132,7 @@ export const THREAD_V2 = {
     await this.selectV2()
     const firstText = (Array.isArray(params.input) ? params.input : []).find((item) => item?.type === 'text' && typeof item.text === 'string')?.text ?? ''
     if (!this.store.get(this.id).preview && firstText) this.store.update(this.id, { preview: firstText.slice(0, 200) })
-    if (prompt.command) return this.commandV2(params, prompt, firstText)
+    if (prompt.command) return this.commandV2(params, prompt)
     return this.postTurnV2(newMessageId(), 'turn', params.input, promptBodyV2(prompt))
   },
 
@@ -193,72 +197,77 @@ export const THREAD_V2 = {
   },
 
   /**
-   * A slash command: POST …/command, the turn claimed from the session's next user item enqueued (not the bridge's
-   * own). None within claimMs of the answer: the command ran outside this session (a sub-agent command: its child is
-   * a sub-agent thread) or sent nothing, and its turn, the bridge's own, ends at once.
+   * POST …/command returns 204 without an inbox ID. Hold the events until a candidate can be selected. If another
+   * client submits in the same window, replay the prompts independently instead of assigning either to this command.
    */
-  async commandV2(params, prompt, firstText) {
+  async commandV2(params, prompt) {
     const api = await this.bridge.v2Api()
     this.liveV2()
     const name = prompt.command
-    const args = firstText.replace(new RegExp(`^\\s*/${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b\\s*`), '')
+    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const separated = params.input.some((item) => item?.type === 'skill' && item.commandArgumentsSeparated === true)
+    const args = separated ? prompt.text : prompt.text.replace(new RegExp(`^\\s*/${escapedName}(?:[ \t]+|(?=\\n|$))`, 'i'), '')
     this.held = true
-    let claimedId = null
-    const claimed = new Promise((resolve) => {
-      this.commandClaimV2 = (id) => {
-        this.commandClaimV2 = null
-        claimedId = id
-        // The bridge's from here on: its delivery is this turn's prompt, an interrupt deletes it while undelivered.
-        this.expectV2 ??= new Map()
-        this.expectV2.set(id, { kind: 'command' })
-        this.ownInboxV2.add(id)
-        this.store.rememberInput(this.id, id, params.input)
-        this.projector.meta = this.store.get(this.id)
-        this.openOwnTurnV2(id, 'command', Date.now())
-        resolve(id)
-      }
-    })
+    const events = []
+    let wake
+    const enqueued = new Promise((resolve) => { wake = resolve })
+    this.commandBufferV2 = { events, wake }
+    const replay = () => {
+      this.commandBufferV2 = null
+      for (const event of events) this.onEventV2(event)
+    }
     try {
       await api.post(route(this, '/command'), { name, text: args, ...(prompt.files.length ? { files: prompt.files } : {}), ...(prompt.skills.length ? { skills: prompt.skills } : {}), delivery: 'steer' })
     } catch (error) {
-      this.commandClaimV2 = null
-      if (claimedId) this.dropOwnTurnV2(claimedId)
-      else { this.buffer.splice(0); this.held = false }
+      replay()
+      this.release()
       throw error
     }
     let timer
-    const id = await Promise.race([claimed, new Promise((resolve) => { timer = setTimeout(() => resolve(null), this.bridge.v2.claimMs ?? 3000); timer.unref?.() })])
+    await Promise.race([enqueued, new Promise((resolve) => { timer = setTimeout(resolve, this.bridge.v2.claimMs ?? 3000); timer.unref?.() })])
     clearTimeout(timer)
-    this.commandClaimV2 = null
+    // The POST handler enqueues before replying. Allow the SSE reader to drain the events already sent with it.
+    await new Promise((resolve) => setImmediate(resolve))
+    const candidates = new Set(events.filter((event) => event.type === 'session.inbox.enqueued' && event.data?.item?.type === 'user' && typeof event.data.inboxID === 'string' && !this.ownInboxV2.has(event.data.inboxID)).map((event) => event.data.inboxID))
+    const id = candidates.size === 1 ? candidates.values().next().value : null
     const turnId = id ?? newMessageId()
-    if (!id) {
-      this.store.rememberInput(this.id, turnId, params.input)
-      this.projector.meta = this.store.get(this.id)
-      this.openOwnTurnV2(turnId, 'command', Date.now())
-      this.finishTurn({ continuing: this.busy })
+    if (id) {
+      this.expectV2 ??= new Map()
+      this.expectV2.set(id, { kind: 'command' })
+      this.ownInboxV2.add(id)
     }
+    this.store.rememberInput(this.id, turnId, params.input)
+    this.projector.meta = this.store.get(this.id)
+    const started = Date.now()
+    this.openOwnTurnV2(turnId, 'command', started)
+    if (!id) this.finishTurn({ continuing: this.busy })
+    replay()
     this.lastActivity = Date.now()
     this.store.update(this.id, { lastActivity: this.lastActivity })
     setImmediate(() => this.release())
-    const started = this.activeTurn?.id === turnId ? this.activeTurn.startedMs : Date.now()
     return { turn: { id: turnId, items: [], itemsView: 'notLoaded', status: 'inProgress', error: null, startedAt: seconds(started), completedAt: null, durationMs: null } }
   },
 
   async steerV2(params) {
     const active = this.activeTurn
-    if (!active || (params.expectedTurnId && params.expectedTurnId !== active.id) || active.kind === 'compaction')
-      throw new RpcError(-32600, 'No active turn to steer.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: active?.kind === 'compaction' ? 'compact' : 'regular' } } })
+    const checkActive = () => {
+      if (!active || this.activeTurn !== active || (params.expectedTurnId && params.expectedTurnId !== active.id) || active.kind === 'compaction' || this.interruptingV2)
+        throw new RpcError(-32600, 'No active turn to steer.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: active?.kind === 'compaction' ? 'compact' : 'regular' } } })
+    }
+    checkActive()
     const prompt = promptInputV2(params.input)
+    if (prompt.command) throw invalidParams('An OpenCode command cannot be steered into an active turn. Queue it to run after the current turn.')
     if (!prompt.text && !prompt.files.length && !prompt.skills.length) throw invalidParams('The message is empty.')
     // A steer delivered after the turn ended starts one of its own: the same check as turn/start.
     await this.bridge.bridgePluginGuardV2(this.cwd)
     const api = await this.bridge.v2Api()
+    checkActive()
     this.liveV2()
     const id = newMessageId()
     this.store.rememberInput(this.id, id, params.input)
     this.store.addTo(this.id, 'steers', id)
     this.projector.meta = this.store.get(this.id)
-    this.pendingSteersV2.set(id, { clientId: typeof params.clientUserMessageId === 'string' && params.clientUserMessageId ? params.clientUserMessageId.slice(0, 200) : null })
+    this.pendingSteersV2.set(id, { turnId: active.id, clientId: typeof params.clientUserMessageId === 'string' && params.clientUserMessageId ? params.clientUserMessageId.slice(0, 200) : null })
     this.ownInboxV2.add(id)
     try {
       await api.post(route(this, '/prompt'), { id, ...promptBodyV2(prompt), delivery: 'steer' })
@@ -316,39 +325,55 @@ export const THREAD_V2 = {
    * @param {{ failed?: () => Promise<unknown> }} [options] - failed: run first when it failed (a plain Deny's own reply)
    */
   async interruptV2({ failed: onFailed = null } = {}) {
-    this.interrupted = true
-    const turnId = this.activeTurn?.id
-    let interrupted = false
-    let failed = false
-    try { interrupted = await (await this.bridge.v2Api()).interrupt(this.sessionID) } catch (error) { failed = true; this.bridge.log(`interrupt ${this.id}: ${error?.message}`) }
-    // The session's open asks go with the interrupt (v2 publishes nothing for them): withdrawn, never answered. A failed
-    // interrupt leaves them open in v2: cancelled with a message, so no execution waits on an ask nobody sees. Other
-    // sessions' cards (a background sub-agent's) stay, as at a turn's end; the root's plan card goes.
-    if (failed) {
-      await onFailed?.()
-      this.rootThread.cancelAsksV2?.(this.sessionID, 'Turn interrupted.')
-    } else this.rootThread.withdrawAsksV2?.(this.sessionID, 'Turn interrupted.')
-    this.planCardV2?.abort('Turn interrupted.')
-    await this.dropInboxV2()
-    // Nothing was running (a prompt not yet delivered, a turn whose end was missed): it ends here.
-    if (!interrupted && turnId && this.activeTurn?.id === turnId) this.finishTurn()
-    return !failed
+    const active = this.activeTurn
+    if (this.interruptingV2) return false
+    const inbox = [...(this.ownInboxV2 ?? [])]
+    this.interruptingV2 = { active }
+    try {
+      const api = await this.bridge.v2Api()
+      if (this.activeTurn !== active) return false
+      let interrupted
+      try {
+        interrupted = await api.interrupt(this.sessionID)
+      } catch (error) {
+        this.bridge.log(`interrupt ${this.id}: ${error?.message}`)
+        if (onFailed) { await onFailed(); return false }
+        throw error
+      }
+      // Only the originally stopped turn's state and pending inputs belong to this request.
+      if (this.activeTurn === active) {
+        if (interrupted) this.interrupted = true
+        this.rootThread.withdrawAsksV2?.(this.sessionID, 'Turn interrupted.')
+        this.planCardV2?.abort('Turn interrupted.')
+      }
+      await this.dropInboxV2(inbox, api)
+      // Nothing was running: an undelivered prompt can close once its inbox entry was deleted.
+      if (!interrupted && active && this.activeTurn === active) {
+        this.interrupted = true
+        this.finishTurn()
+      }
+      return true
+    } finally {
+      this.interruptingV2 = null
+      setImmediate(() => this.startNext())
+    }
   },
 
   /** The bridge's own inputs still in the session's inbox (an interrupt keeps them): deleted, as if never sent. */
-  async dropInboxV2() {
-    const own = [...(this.ownInboxV2 ?? [])]
+  async dropInboxV2(own, api) {
     if (!own.length) return
-    const api = await this.bridge.v2Api()
-    let ids = own
-    try {
-      const pending = await api.get(route(this, '/inbox'))
-      if (Array.isArray(pending)) ids = own.filter((id) => pending.some((item) => item?.id === id))
-    } catch (error) { this.bridge.log(`inbox ${this.id}: ${error?.message}`) }
+    const pending = await api.get(route(this, '/inbox')).catch(() => null)
+    const ids = Array.isArray(pending) ? own.filter((id) => pending.some((item) => item?.id === id)) : own
+    const failed = []
     for (const id of ids) {
-      try { await api.delete(route(this, `/inbox/${encodeURIComponent(id)}`)) } catch (error) { if (error?.status !== 404) this.bridge.log(`inbox ${id}: ${error?.message}`) }
+      try {
+        await api.delete(route(this, `/inbox/${encodeURIComponent(id)}`))
+      } catch (error) {
+        if (error?.status !== 404) { failed.push(id); this.bridge.log(`inbox ${id}: ${error?.message}`); continue }
+      }
       this.inboxGoneV2(id)
     }
+    if (failed.length) throw new RpcError(-32000, 'OpenCode accepted the stop request, but some pending messages could not be removed. They may still be delivered.')
   },
 
   /** An input of the bridge's that will never be delivered (deleted, cancelled, refused). */
@@ -367,6 +392,11 @@ export const THREAD_V2 = {
   /** One normalized event of this session (Bridge.onEventV2); held while a resync reloads the thread. */
   onEventV2(event) {
     if (this.closed) return
+    if (this.commandBufferV2) {
+      this.commandBufferV2.events.push(event)
+      if (event.type === 'session.inbox.enqueued' && event.data?.item?.type === 'user') this.commandBufferV2.wake()
+      return
+    }
     if (this.resyncBufferV2) { this.resyncBufferV2.push(event); return }
     try { this.handleEventV2(event) } catch (error) { this.bridge.log(`event ${event?.type} ${this.id}: ${error?.stack || error}`) }
   },
@@ -377,12 +407,11 @@ export const THREAD_V2 = {
     switch (event.type) {
       case 'session.inbox.enqueued':
         live.apply(event)
-        // A command's prompt: the first user item enqueued after it that the bridge did not send.
-        if (data.item?.type === 'user' && this.commandClaimV2 && !this.ownInboxV2.has(data.inboxID)) this.commandClaimV2(data.inboxID)
         return
       case 'session.inbox.delivered': {
-        live.apply(event)
+        const [change] = live.apply(event)
         this.ownInboxV2.delete(data.inboxID)
+        if (!change && !this.expectV2?.has(data.inboxID) && !this.pendingSteersV2.has(data.inboxID)) return
         const entry = this.projector.messages.get(data.inboxID)
         if (entry?.info.type === 'user') this.userDeliveredV2(entry)
         else if (entry?.info.type === 'synthetic') this.contextMessageV2(entry)
@@ -399,6 +428,8 @@ export const THREAD_V2 = {
       case 'session.execution.failed':
       case 'session.execution.interrupted': return this.executionEndedV2(event)
       case 'session.step.started': {
+        // A buffered start can predate a snapshot containing the finished step.
+        if (live.assistant(data.assistantMessageID)?.time?.completed != null) return
         if (!this.activeTurn) this.openExternalTurnV2(this.wakingV2?.id ?? data.assistantMessageID)
         this.turnOf.set(data.assistantMessageID, this.activeTurn.id)
         if (!this.busy) { this.busy = true; this.publishStatus() }
@@ -413,7 +444,9 @@ export const THREAD_V2 = {
       case 'session.shell.started': {
         // The user's own command (from another client) with no turn open: a turn of its own, ended with it.
         if (!this.activeTurn) this.openExternalTurnV2(messageIdOfEvent(event.id), null, 'shell')
-        return this.emitChangesV2(live.apply(event))
+        const changes = live.apply(event)
+        if (changes[0]) this.turnOf.set(changes[0].messageID, this.activeTurn.id)
+        return this.emitChangesV2(changes)
       }
       case 'session.shell.ended': {
         const changes = live.apply(event)
@@ -499,7 +532,7 @@ export const THREAD_V2 = {
     const steered = steer || (this.store.get(this.id).steers ?? []).includes(id)
     if (steered) {
       this.pendingSteersV2.delete(id)
-      if (this.activeTurn) {
+      if (this.activeTurn && (!steer || this.activeTurn.id === steer.turnId)) {
         this.turnOf.set(id, this.activeTurn.id)
         this.emitUserItemV2(entry, this.activeTurn.id, steer?.clientId ?? null)
         return
@@ -507,6 +540,7 @@ export const THREAD_V2 = {
       // Delivered after its turn ended (into the next execution): the start of a turn of its own, as a reload groups it.
       const steers = (this.store.get(this.id).steers ?? []).filter((other) => other !== id)
       this.store.update(this.id, { steers: steers.length ? steers : undefined })
+      if (this.activeTurn) this.finishTurn({ continuing: true })
       this.openExternalTurnV2(id, entry, 'turn')
       return
     }
@@ -540,7 +574,14 @@ export const THREAD_V2 = {
   },
 
   executionEndedV2(event) {
-    this.liveV2().apply(event)
+    const live = this.liveV2()
+    if (event.type === 'session.execution.interrupted' && event.data?.reason === 'shutdown') {
+      live.apply(event)
+      return
+    }
+    const id = typeof event.id === 'string' && event.id.startsWith('evt_') ? messageIdOfEvent(event.id) : null
+    if (id && live.raw.has(id)) return
+    live.apply(event)
     this.wakingV2 = null
     if (event.type === 'session.execution.failed') {
       const error = errorInfoOfV2(event.data?.error)
@@ -553,7 +594,7 @@ export const THREAD_V2 = {
     // Plan mode's plan (v2/asks.js): its item in the turn, its card after turn/completed (the card does not hold the turn).
     const plan = this.planOfTurnV2?.(event) ?? null
     if (plan) this.emitItem(plan.turnId, { type: 'plan', id: plan.itemId, text: plan.text }, { done: true })
-    this.finishTurn()
+    this.finishTurn({ recoverHistory: true })
     if (plan) void this.planReviewV2(plan).catch((error) => this.bridge.log(`plan card ${this.id}: ${error?.message ?? error}`))
   },
 
@@ -566,6 +607,8 @@ export const THREAD_V2 = {
       if (!partID) { if (entry.info.role === 'assistant') this.stepUsageV2(entry, turnId); continue }
       const part = entry.parts.find((candidate) => candidate.id === partID)
       if (!part || !turnId) continue
+      // The streaming input is raw JSON. Publish the shell row once its arguments are available.
+      if (part.type === 'tool' && part.tool === 'shell' && part.state?.status === 'pending') continue
       const items = this.projector.itemsOf(part, entry)
       const done = part.type === 'tool' ? ['completed', 'error'].includes(part.state?.status)
         : part.type === 'compaction' ? part.status !== 'running'
@@ -597,7 +640,7 @@ export const THREAD_V2 = {
    * messages by id, an item already there is not started again (v2/live.js), a delta's text replaced by .ended.
    */
   async resyncV2() {
-    if (this.resyncBufferV2) return
+    if (this.resyncBufferV2) { this.resyncAgainV2 = true; return }
     this.holdV2()
     try { await this.reload() } finally { this.releaseV2() }
   },
@@ -612,6 +655,10 @@ export const THREAD_V2 = {
     const buffered = this.resyncBufferV2 ?? []
     this.resyncBufferV2 = null
     for (const event of buffered) this.onEventV2(event)
+    if (this.resyncAgainV2 && !this.closed) {
+      this.resyncAgainV2 = false
+      void this.resyncV2().catch((error) => this.bridge.log(`resync ${this.id}: ${error?.message || error}`))
+    }
   },
 
   /**
@@ -624,7 +671,7 @@ export const THREAD_V2 = {
     const api = await this.bridge.v2Api()
     const list = (tail) => api.get(route(this, tail)).then((value) => (Array.isArray(value) ? value : []), () => null)
     const [inbox, permissions, forms] = await Promise.all([list('/inbox'), list('/permission'), list('/form')])
-    this.liveV2().reset(messages, inbox ?? [])
+    this.liveV2().reset(messages, inbox)
     if (permissions && forms) this.rootThread.withdrawAsksV2?.(this.sessionID, 'Answered.', new Set([...permissions, ...forms].map((entry) => entry?.id)))
     for (const request of permissions ?? []) if (request?.id) this.onEventV2({ kind: 'ask', type: 'permission.asked', sessionID: this.sessionID, data: request, durable: null })
     for (const form of forms ?? []) if (form?.id) this.onEventV2({ kind: 'ask', type: 'form.created', sessionID: this.sessionID, data: { form }, durable: null })

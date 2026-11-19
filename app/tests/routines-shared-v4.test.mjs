@@ -110,8 +110,16 @@ test('the production graph and its 3.6556.2 consumers are untouched: no 3.6556.2
   // Code only (round3 integrate-gates): a comment that explains which graph adapts the same bindings
   // (source-cowork-context-v4-adapters.jsx, source-projects.jsx) imports nothing; any code mention still counts.
   const code = text => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/.*$/gm, '$1');
+  // library-pages-r1-03 (cutover; the old assertion "no host file is cut over" encoded the staged state): the Scheduled page
+  // host takes the status line / divider (source-routines.jsx) and the card (source-routine-cowork-page-adapters.jsx) from
+  // routines-shared-v4; no other host file imports it.
+  const scheduledHosts = ['source-routine-cowork-page-adapters.jsx', 'source-routines.jsx'];
   for (const file of await fs.readdir(path.join(ROOT, 'src')))
-    if (/\.(m?js|jsx)$/.test(file)) assert.doesNotMatch(code(await fs.readFile(path.join(ROOT, 'src', file), 'utf8')), /routines-shared-v4/, `host ${file} is not cut over`);
+    if (/\.(m?js|jsx)$/.test(file)) {
+      const text = code(await fs.readFile(path.join(ROOT, 'src', file), 'utf8'));
+      if (scheduledHosts.includes(file)) assert.match(text, /from '\.\/generated\/routines-shared-v4\/index\.mjs';/, `host ${file}`);
+      else assert.doesNotMatch(text, /routines-shared-v4/, `host ${file} is not cut over`);
+    }
 });
 
 test('roots: each 4.16336.0 root is the exported (or private) unique declaration the routes import', async () => {

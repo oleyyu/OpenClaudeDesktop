@@ -13,25 +13,25 @@
   },
   "sharedGraph": {
     "area": "cds-core",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   },
   "linkedAreas": {
     "artifact-library-v4": "f57f9ab2d8ef06f6169d0c3b2eee66a3503228ca66916f39428519a90253923c",
     "cowork-progress-v4": "e5501ac28f6c72be0c01e5278e0b22159f48d63e1a3a61349e0c4eca8bd504a7",
-    "cowork-scheduled-v4": "1af355ba22cc6cee9062edb2710c581d7808d95812d240d343ad995cf96ceb78",
-    "files-changes-v4": "35740c17397e4a05b8f5a12f408061040cdd39e4fb28ca86b43c02f786e1b93e",
-    "frame-sidebar-nav": "f050559d8d4736a10e502efd30f166d28900e800b146c6c8749608a326966487",
-    "proposal-group-v4": "373e3ed4e243fdfea94253655f55063a894ac1a21187f4fd5eb8745eea61bc83",
-    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "cowork-scheduled-v4": "6397e9a488ca12cbfed6715092e9e2f349a23dc8b9d904c1edd6f15c4a9b8921",
+    "files-changes-v4": "708013539535ccec0498a3f2272b037af2628234eca68c6d1f94353c24b2848b",
+    "frame-sidebar-nav": "130fb0fd5b7c760333f4e8868dcdce5d1cdfdc4877c3876625469f07c2855cbc",
+    "proposal-group-v4": "b61c81b10a01dec674d5635cde4f94981ffee8db70ba71b0d61ad8092f2fc8c9",
+    "routines-shared-v4": "79aa397be0c7daa4745103bbe2ea06fdcdbade14633a50d27248c2aea2b31649",
     "session-rail-changes-v4": "fd23545a7c4be524493f74e75d69170c3538554b15051026bb8622d8240903bf",
     "session-rail-context-v4": "b2224a8593dc7c7440bbd8903b00f32276d57a50f8bd9734c3cbff12e67018bf",
-    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a",
+    "session-rail-kit-v4": "d503708edd688b20c3a92e35cfcd097c048a90deda862533044d2973cd6043e2",
     "session-rail-sections-v4": "150a2450f0b81d000fab6f2f7f9dc62554d734e6adc4fe055db8e3dff374fc33",
-    "settings-desktop-v4": "540f6881c10584f6db4e81363d4dea195d0c7c70815cf6e7f5bc8c8038ae413d",
+    "settings-desktop-v4": "d9294d76fed2e813768e52d4023a1972b96f4d15c343a3446b21363eb6331d16",
     "settings-nav": "435f5b7252e981860470a2e95daf50f60eb6fe14bf70caf26cace55915d2da8d",
     "transcript-rows-v4": "78a6fba1cc34e50cbd11f242247a0361851ad33988ef2df04afc104e4853d7fe",
-    "turn-plan-v4": "120180f4946ca49f0a8cb0302a85c1ff5f155733e1ef1bb35000ece88b1ceb2e",
-    "working-line-v4": "25610753870c1d676d772810433ca78b2413b2d93418b0e3ea8a904875d1deaa"
+    "turn-plan-v4": "eeaa54a1891ff3941efa4271bcfdb9d96822919883beaadc87efc537e58e49cc",
+    "working-line-v4": "a8643190175e64a76ad6b902c7071978a35e8bbca3aae07bc90f0b7e3f8e94a1"
   },
   "roots": [
     {

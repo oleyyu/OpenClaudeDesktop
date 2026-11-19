@@ -221,8 +221,9 @@ test('same-source fork on OpenCode / MiMo: the bridge forks the session; a refus
   assert.deepEqual([forked.threadId, forked.strategy], ['m-fork', 'fork']);
   assert.deepEqual(fake.forked, ['s-1']);
   const refused = fakeCore('opencode', { threadImport: true, customization: true }, { fork: () => { throw new Error('This session is not available in OpenCode.'); }, import: () => ({ thread: { id: 'oc-n' } }) });
-  const result = await run(refused, session('opencode'));
+  const result = await run(refused, session('opencode'), { cwd: '/fallback' });
   assert.deepEqual([result.threadId, result.strategy], ['oc-n', 'native']);
+  assert.equal(refused.imported[0].cwd, '/fallback');
   assert.deepEqual(result.warnings, ['fork-failed']);
 });
 
@@ -451,6 +452,7 @@ test('a fork import hands the fork the folder it would open in: the session\'s o
   const body = main.slice(start, main.indexOf('\n  }\n', start));
   assert.match(body, /const gone = typeof thread\.cwd === "string" && thread\.cwd && !fs\.existsSync\(thread\.cwd\);/);
   assert.match(body, /const cwd = gone && typeof folder === "string" && path\.isAbsolute\(folder\) && fs\.existsSync\(folder\) \? \{ cwd: folder \} : \{\};/);
+  assert.match(body, /if \(cwd\.cwd && coreCapabilities\(owner\.serverInfo\)\.forkCwd === false\)/);
   assert.match(body, /importStartParams\("thread\/fork", \{ threadId, [^\n]*\.\.\.cwd \}, owner\)/);
   assert.match(main, /fork: \(threadId, owner, options\) => forkCoreSession\(threadId, owner, options\),/);
 });

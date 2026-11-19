@@ -196,8 +196,8 @@ test('SSR: the closed panel is the original aside (inert, popover surface, heade
   assert.ok(html.includes('class="flex shrink-0 items-center gap-1 border-b-0.5 px-3 py-2"'));
   const words = text(html);
   for (const w of ['Side chat', 'Sees 3 messages from main chat', 'read-only',
-    'Ask on the side without touching the main chat. Claude sees the full context, and nothing here is added to it.'])
-    assert.ok(words.includes(w), w);
+    'Ask on the side without touching the main chat. DeepSeek sees the full context, and nothing here is added to it.'])
+    assert.ok(words.includes(w), w);  // fix-r2 U-14 (E83): the running assistant, was Claude
   assert.match(html, /aria-label="Close side chat"/);
   assert.doesNotMatch(html, /Clear side chat/);
   assert.match(html, /<textarea[^>]*placeholder="Ask a quick question…"/);

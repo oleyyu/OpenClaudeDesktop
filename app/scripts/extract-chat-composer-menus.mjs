@@ -84,6 +84,25 @@ const roots = {
   Ms: { source: ADD, features: ['{ popup: t } = e,', 'leadingRows: i, rows: a, maxVisibleItems:'] },
   Tz: { source: SHARED5, exportAlias: 'n', features: ['id: "0/w13aoHrd"', 'icon: "Globe"', 'icon: "Lock"'] },
   yz: { source: SHARED5, exportAlias: 's', features: ['id: "C5I8J3lxs3"', 'icon: "Research"', 'id: "CzjOV5rgPZ"', 'id: "WyiVeak7w5"'] },
+  // r2 chat-home-r2-01 (4.16336.0 keys = locals): the + menu's own CDS Dropdown. shared-8 wP renders `Q.Root {open,
+  // onOpenChange, sheetTitle: "Add"}` around `Q.Trigger render: TP` and `Q.Popup {align, side, sideOffset,
+  // collisionPadding, className, ...bP}`; bP = Dt(vP.handle.id) is shared-0 _b's `{ "data-perf-overlay": id }` with vP's
+  // entry id. c752b32f8 ga / _a / ba / Sa / Aa / Da / ka / ja draw the rows on the CDS Dropdown parts (ha: the submenu
+  // popups' perf attribute) — their classes, tooltip sides / offsets and popup frame are picked literals below.
+  wP: { source: SHARED8, features: ['sheetTitle: ', 'id: "alWu/MbgXB"', 'collisionPadding: 10', '"max-h-[min(var(--available-height),24rem)]"'] },
+  vP: { source: SHARED8, features: ['id: "composer_add_menu"', 'tier: "T1"', 'pick: (e) => e.MenuItems'] },
+  bP: { source: SHARED8, features: ['(vP.handle.id)'] },
+  ha: { source: ADD, features: ['("composer_add_menu")'] },
+  ga: { source: ADD, features: ['e.type === "section-header"', '"flex h-control items-center gap-xs px-2.5"', 'hoverable: !0'] },
+  _a: { source: ADD, features: ['case "connector-tool":', 'focusesNothing: y,', 'case "toggle-submenu":'] },
+  ba: { source: ADD, features: ['"renderPopup" in i', 'hintDir: "auto"', 'openOnHover: l,'] },
+  Sa: { source: ADD, features: ['collisionPadding: 10', 'SearchablePopup', 'footerItems: p'] },
+  Aa: { source: ADD, features: ['{ label: t, subtitle: i } = e', '"flex min-w-0 flex-col"'] },
+  Da: { source: ADD, features: ['"block truncate"', 'scrollWidth > '] },
+  ka: { source: ADD, features: ['"truncate text-footnote text-muted-as-secondary"', '{ text: t } = e'] },
+  ja: { source: ADD, features: ['labelDir: "auto"', 'sourcePluginTitle: p', 'onMouseLeave: C'] },
+  // chat-cowork-1to1 r3 (chat-home-r3-01): ma, the inert switch _a's "toggle" row trails with.
+  ma: { source: ADD, features: ['{ checked: t, disabled: r } = e', '"pointer-events-none inline-flex items-center"', 'inert: !0'] },
 };
 // Sliced verbatim, in this order (dependencies first); each may only read the others in its chunk's group.
 const sliced = { [SHARED8]: ['iN', 'oN', 'sN', 'cN', 'Yj', 'lN'], [ADD]: ['na', 'ia', 'ra'] };
@@ -123,6 +142,37 @@ const picks = [
   ['messages.researchNeedsSearchTool', 'yz', descriptor('CzjOV5rgPZ'), ['message']],
   ['messages.researchNeedsSearchIntegration', 'yz', descriptor('WyiVeak7w5'), ['message']],
   ['items.research', 'yz', new RegExp(`\\{\\s*type: ${STR},\\s*label: ${I},\\s*icon: ${STR},\\s*checked: ${I},\\s*disabled: ${I},\\s*tooltip: ${I},\\s*onAction: ${I},\\s*closeOnClick: !0,\\s*\\.\\.\\.${I},\\s*\\}`), ['type', 'icon']],
+  // r2 chat-home-r2-01: wP's Root / Popup and the c752b32f8 row renderers (numbers are converted after the picks).
+  ['messages.add', 'wP', descriptor('alWu/MbgXB'), ['message']],
+  ['popup.props', 'wP', new RegExp(`${I}\\(${I}\\.Popup, \\{\\s*align: ${STR},\\s*side: ${STR},\\s*sideOffset: (\\d+),\\s*collisionPadding: (\\d+),\\s*className: ${STR},\\s*\\.\\.\\.(${I}),\\s*children:`), ['align', 'side', 'sideOffset', 'collisionPadding', 'className', 'perfBinding']],
+  ['popup.root', 'wP', new RegExp(`${I}\\(${I}\\.Root, \\{ open: ${I}, onOpenChange: ${I}, sheetTitle: (${I}), children: \\[${I}, ${I}\\] \\}\\)`), ['sheetTitleBinding']],
+  ['popup.perfId', 'vP', new RegExp(`entry: \\{\\s*id: ${STR},`), ['value']],
+  ['popup.perfCall', 'bP', new RegExp(`^${I} = (${I})\\(${I}\\.handle\\.id\\)$`), ['helper']],
+  ['rows.submenuPerf', 'ha', new RegExp(`^${I} = (${I})\\(${STR}\\)$`), ['helper', 'id']],
+  ['rows.loadingIcon', 'ga', new RegExp(`${I}\\(\\$, \\d+, ${I}\\(${I}, \\{ width: (\\d+), height: (\\d+) \\}\\)\\)`), ['width', 'height']],
+  ['rows.loadingRow', 'ga', new RegExp(`className: ${STR},\\s*children: \\[\\s*${I},\\s*${I}\\("span", \\{ "aria-hidden": !0, className: ${STR}, children: ${I}\\(${I}, \\{ width: (\\d+), height: (\\d+) \\}\\) \\}\\),`), ['className', 'labelClass', 'labelWidth', 'labelHeight']],
+  ['rows.tooltip', 'ga', new RegExp(`hoverable: !0,\\s*content: ${I},\\s*side: ${I}\\(${STR}, ${I}\\),\\s*sideOffset: (\\d+),\\s*children: ${I}\\("div", \\{ children:`), ['side', 'sideOffset']],
+  ['rows.groupClass', '_a', new RegExp(`${I}\\(\\$, \\d+, ${I}, ${I}\\(${STR}, ${I}\\)\\) : \\$\\[`), ['value'], 2],
+  ['rows.subtitleStackClass', 'Aa', new RegExp(`${I}\\("span", \\{ className: ${STR}, children: \\[${I}\\(${I}, \\{ text: ${I} \\}\\), ${I}\\(${I}, \\{ text: ${I} \\}\\)\\] \\}\\)`), ['value']],
+  ['rows.labelClass', 'Da', new RegExp(`${I}\\(${I}, ${I}, ${I}\\(${STR}, ${I}\\)\\)\\)`), ['value']],
+  ['rows.labelTooltip', 'Da', new RegExp(`multiline: !0,\\s*className: ${STR},\\s*content: ${I},\\s*side: ${I},\\s*align: ${STR},`), ['className', 'align']],
+  ['rows.labelTooltipSide', 'Da', new RegExp(`${I}\\(\\$, \\d+, ${I}, ${I}\\(${STR}, ${I}\\)\\) : \\$\\[`), ['value']],
+  ['rows.subtitleClass', 'ka', new RegExp(`${I}\\(${I}, ${I}, ${STR}\\)\\) : \\$\\[`), ['value']],
+  ['rows.submenuAlign', 'ba', new RegExp(`${I} = ${I} === void 0 \\? ${STR} : ${I},\\s*\\[${I}, ${I}\\] = ${I}\\(${I} === !0\\)`), ['value']],
+  ['rows.submenuHintDir', 'ba', new RegExp(`hintDir: ${STR},`), ['value']],
+  ['rows.submenuPopup', 'Sa', new RegExp(`\\{ \\.\\.\\.${I}, align: ${I}, collisionPadding: (\\d+), className: ${I}, maxVisibleItems: ${I}, footer: ${I} \\}`), ['collisionPadding']],
+  ['rows.submenuMaxVisible', 'Sa', new RegExp(`${I}\\?\\.includes\\(${STR}\\) \\? void 0 : \\(${I} \\?\\? ([\\d.]+)\\)`), ['classHint', 'defaultCount']],
+  // chat-cowork-1to1 r3 (chat-home-r3-01): _a's `case "toggle"` (read from that case alone, `_aToggle`): base-ui
+  // Menu.CheckboxItem (vendor-frame `on`) {data-testid, checked, closeOnClick (default false), onClick (none while
+  // toggleDisabled), aria-disabled (toggleDisabled), className t(k({variant}), "group", cursorDefault && …), disabled} around
+  // [icon span (CdsIcon size auto), label stack (Oa + ka), trailing span (suffix + ma)]; ma is the inert switch.
+  ['rows.toggle.closeOnClick', '_aToggle', new RegExp(`closeOnClick: (${I}),\\s*testId: ${I},\\s*\\} = e,\\s*${I} = \\1 !== void 0 && \\1,\\s*${I} = (${I}) \\? void 0 : ${I},\\s*${I} = \\2 \\|\\| void 0,`), ['binding', 'toggleDisabled']],
+  ['rows.toggle.item', '_aToggle', new RegExp(`${I}\\((${I})\\(\\{ variant: ${STR} \\}\\), ${STR}, ${I} && ${STR}\\)`), ['classHelper', 'variant', 'groupClass', 'cursorDefaultClass']],
+  ['rows.toggle.icon', '_aToggle', new RegExp(`${I}\\("span", \\{\\s*className: ${STR},\\s*children: typeof ${I} == "string" \\? ${I}\\((${I}), \\{ name: ${I}, size: ${STR} \\}\\) : ${I},\\s*\\}\\)`), ['className', 'iconBinding', 'size']],
+  ['rows.toggle.stacks', '_aToggle', new RegExp(`${I}\\("span", \\{ className: ${STR}, children: \\[${I}, ${I}\\] \\}\\)[\\s\\S]*?${I}\\((${I}), \\{ checked: ${I}, disabled: ${I} \\}\\)[\\s\\S]*?${I}\\("span", \\{ className: ${STR}, children: \\[${I}, ${I}\\] \\}\\)`), ['labelStackClass', 'switchComponent', 'trailingClass']],
+  ['rows.toggle.element', '_aToggle', new RegExp(`${I}\\((${I}), \\{\\s*"data-testid": ${I},\\s*checked: ${I},\\s*closeOnClick: ${I},\\s*onClick: ${I},\\s*"aria-disabled": ${I},\\s*className: ${I},\\s*disabled: ${I},\\s*children: \\[${I}, ${I}, ${I}\\],\\s*\\}\\)`), ['itemComponent']],
+  ['rows.toggle.switch', 'ma', new RegExp(`${I}\\("div", \\{\\s*"aria-hidden": ${STR},\\s*className: ${STR},\\s*children: ${I}\\("span", \\{\\s*inert: !0,\\s*className: ${STR},\\s*children: ${I}\\((${I}), \\{ size: ${STR}, checked: ${I}, disabled: ${I} \\}\\),\\s*\\}\\),\\s*\\}\\)`), ['ariaHidden', 'frameClass', 'inertClass', 'switchBinding', 'size']],
+  ['rows.skill', 'ja', new RegExp(`labelDir: ${STR},\\s*ref: ${I},\\s*icon: ${I},\\s*hint: ${I},\\s*hintDir: ${STR},`), ['labelDir', 'hintDir']],
 ];
 
 async function readSource(name, cache) {
@@ -180,6 +230,12 @@ export async function extractChatComposerMenus({ check = false } = {}) {
   const allSliced = Object.values(sliced).flat().map(key => found[key].local);
   if (new Set(allSliced).size !== allSliced.length) throw Error(`sliced locals collide across chunks: ${allSliced.join(', ')}`);
 
+  // chat-home-r3-01: _a's "toggle" case alone (from `case "toggle": {` to the next case), so its picks cannot hit another row kind.
+  {
+    const text = found._a.text, start = text.indexOf('case "toggle": {'), end = text.indexOf('case "toggle-submenu":');
+    if (start < 0 || end < start || text.indexOf('case "toggle": {', start + 1) !== -1) throw Error(`${ADD} _a no longer has one "toggle" case before "toggle-submenu"`);
+    found._aToggle = { ...found._a, text: text.slice(start, end) };
+  }
   const data = {}, pickRecords = [];
   for (const [name, rootKey, pattern, groups, count = 1] of picks) {
     const text = found[rootKey].text;
@@ -263,6 +319,71 @@ export async function extractChatComposerMenus({ check = false } = {}) {
   const projectPopupResolved = { source: SHARED212, export: maxImport.imported, local: maxLocal, value: maxInit.value };
   delete data.projectPopup;
 
+  // r2 chat-home-r2-01: wP's Root takes the "Add" message as its sheetTitle, its Popup spreads bP, and bP / c752b32f8 ha
+  // are shared-0's `_b` (`function (e) { return { [attr]: e }; }`, attr a string constant) over the menu's perf id.
+  const esc = value => value.replace(/[$]/g, '\\$&');
+  if (!new RegExp(`(?<![\\w$])${esc(data.popup.root.sheetTitleBinding)} = [^;]{0,80}formatMessage\\(\\{ defaultMessage: "Add", id: "alWu/MbgXB" \\}\\)`).test(found.wP.text))
+    throw Error(`wP Root sheetTitle ${data.popup.root.sheetTitleBinding} is no longer the "Add" message`);
+  if (data.popup.props.perfBinding !== found.bP.local) throw Error(`wP Popup spreads ${data.popup.props.perfBinding}, not ${found.bP.local}`);
+  if (!new RegExp(`\\(${esc(found.vP.local)}\\.handle\\.id\\)$`).test(found.bP.text)) throw Error(`${found.bP.local} no longer reads ${found.vP.local}.handle.id`);
+  const perfAttribute = async (src, helper) => {
+    const imp = src.imported.get(helper);
+    if (!imp || !/^shared-0-/.test(imp.from)) throw Error(`${src.name} perf helper ${helper} is not a shared-0 import`);
+    const s0 = await readSource(imp.from, cache);
+    const local = s0.exported.get(imp.imported);
+    const fn = local && s0.program.scope.bindings[local]?.path;
+    const body = fn?.isFunctionDeclaration() ? textOf(s0, fn).match(new RegExp(`^function ${esc(local)}\\((${I})\\) \\{\\s*return \\{ \\[(${I})\\]: \\1 \\};\\s*\\}$`)) : null;
+    if (!body) throw Error(`shared-0 ${imp.imported} (${local}) is no longer \`{ [attr]: e }\``);
+    const attr = s0.program.scope.bindings[body[2]]?.path;
+    if (attr?.node.init?.type !== 'StringLiteral') throw Error(`shared-0 ${body[2]} is no longer a string constant`);
+    return { name: attr.node.init.value, resolved: { source: imp.from, export: imp.imported, local, attr: body[2], sha256: sha(textOf(s0, fn)) } };
+  };
+  const popupPerf = await perfAttribute(s8, data.popup.perfCall.helper);
+  const submenuPerf = await perfAttribute(add, data.rows.submenuPerf.helper);
+  const num = value => { const n = Number(value); if (!Number.isFinite(n)) throw Error(`not a number: ${value}`); return n; };
+  let perfResolvedToggle = null;
+  const p = data.popup.props, r = data.rows;
+  data.popup = { align: unescape(p.align), side: unescape(p.side), sideOffset: num(p.sideOffset), collisionPadding: num(p.collisionPadding),
+    className: unescape(p.className), perfAttribute: { name: popupPerf.name, value: unescape(data.popup.perfId) } };
+  data.rows = {
+    loading: { className: unescape(r.loadingRow.className), labelClass: unescape(r.loadingRow.labelClass),
+      icon: { width: num(r.loadingIcon.width), height: num(r.loadingIcon.height) }, label: { width: num(r.loadingRow.labelWidth), height: num(r.loadingRow.labelHeight) } },
+    tooltip: { hoverable: true, side: unescape(r.tooltip.side), sideOffset: num(r.tooltip.sideOffset) },
+    groupClass: r.groupClass, subtitleStackClass: r.subtitleStackClass, labelClass: r.labelClass, subtitleClass: r.subtitleClass,
+    labelTooltip: { multiline: true, className: unescape(r.labelTooltip.className), align: unescape(r.labelTooltip.align), side: r.labelTooltipSide },
+    submenu: { align: r.submenuAlign, hintDir: r.submenuHintDir, collisionPadding: num(r.submenuPopup.collisionPadding),
+      maxVisibleClassHint: unescape(r.submenuMaxVisible.classHint), maxVisibleItems: num(r.submenuMaxVisible.defaultCount),
+      perfAttribute: { name: submenuPerf.name, value: unescape(r.submenuPerf.id) } },
+    skill: { labelDir: unescape(r.skill.labelDir), hintDir: unescape(r.skill.hintDir) },
+  };
+  // chat-home-r3-01 (E5): the toggle row's parts are the cds-core published bindings the host imports — k = shared-frame tc
+  // (cdsMenuItemClass), l = vendor-frame on (BaseMenuCheckboxItem), the icon = shared-frame lf (CdsIcon), ma's switch = shared-frame
+  // oa (CdsSwitch) — each resolved through its import, then through the official export to the cds-core publicName's local.
+  {
+    const t = r.toggle, add = found._a.src;
+    if (t.stacks.switchComponent !== found.ma.local) throw Error(`_a toggle trails ${t.stacks.switchComponent}, not the located ma (${found.ma.local})`);
+    if (t.closeOnClick.binding === t.closeOnClick.toggleDisabled) throw Error('_a toggle closeOnClick / toggleDisabled bindings collide');
+    const cds = JSON.parse(await fs.readFile(path.join(root, 'src/generated/cds-core/manifest.json'), 'utf8')).publicNames;
+    const toggleParts = { classHelper: [t.item.classHelper, 'cdsMenuItemClass'], itemComponent: [t.element.itemComponent, 'BaseMenuCheckboxItem'],
+      icon: [t.icon.iconBinding, 'CdsIcon'], switch: [t.switch.switchBinding, 'CdsSwitch'] };
+    const resolvedToggle = {};
+    for (const [part, [binding, publicName]] of Object.entries(toggleParts)) {
+      const imp = add.imported.get(binding), entry = cds[publicName];
+      if (!imp || !entry || imp.from !== entry.file) throw Error(`_a toggle ${part} ${binding} is not an import of ${entry?.file ?? publicName}`);
+      const official = await fs.readFile(path.join(source, imp.from), 'utf8');
+      const alias = new RegExp(`[,{]${entry.local.replace(/\$/g, '\\$')} as ${imp.imported.replace(/\$/g, '\\$')}[,}]`);
+      if (!alias.test(official)) throw Error(`_a toggle ${part}: ${imp.from} ${imp.imported} is not ${publicName} (${entry.local})`);
+      resolvedToggle[part] = { source: imp.from, export: imp.imported, local: entry.local, publicName };
+    }
+    data.rows.toggle = { itemComponent: 'BaseMenuCheckboxItem', variant: unescape(t.item.variant), groupClass: unescape(t.item.groupClass),
+      cursorDefaultClass: unescape(t.item.cursorDefaultClass), closeOnClickDefault: false,
+      iconClass: unescape(t.icon.className), iconSize: unescape(t.icon.size), labelStackClass: unescape(t.stacks.labelStackClass),
+      trailingClass: unescape(t.stacks.trailingClass),
+      switch: { ariaHidden: unescape(t.switch.ariaHidden), frameClass: unescape(t.switch.frameClass), inertClass: unescape(t.switch.inertClass), size: unescape(t.switch.size) } };
+    perfResolvedToggle = resolvedToggle;
+  }
+  const perfResolved = { popup: popupPerf.resolved, submenu: submenuPerf.resolved };
+
   const literal = value => typeof value === 'string' && value.startsWith('{ defaultMessage') ? value : JSON.stringify(value);
   const objectText = obj => `{ ${Object.entries(obj).map(([k, v]) => `${JSON.stringify(k)}: ${v && typeof v === 'object' ? objectText(v) : literal(v)}`).join(', ')} }`;
   const header = (sources) => `// Original Claude Desktop ${referenceVersion} code and literals from ${sources}; generated by extract-chat-composer-menus.mjs.\n// Edit the extractor, never this file.\n`;
@@ -273,15 +394,15 @@ export async function extractChatComposerMenus({ check = false } = {}) {
     `${[...sliced[SHARED8], ...sliced[ADD]].map(declText).join('\n')}\n` +
     `export { ${found.iN.local} as addMenuSlotGroups, ${found.lN.local} as splitAddMenuSlots, ${found.na.local} as addMenuTestIds, ${found.ra.local} as withAddMenuTestIds };\n`, { parser: 'babel' });
   const menu = { trigger: { ...data.trigger.button, icon: data.trigger.icon, className: data.trigger.className, tooltipSide: data.trigger.tooltip.side, shortcut: data.trigger.shortcut },
-    separators: data.separators, items: data.items };
-  const menuText = await format(`${header(`${SHARED8} ${L(['kF'])}, ${SHARED1} ${testIdLocal}, ${ADD} ${L(['Js', 'Ws', 'Fs', 'ks', 'Es', 'Ms']).join(' / ')}, ${SHARED212} ${maxLocal} and ${SHARED5} ${L(['Tz', 'yz']).join(' / ')} (picked literals)`)}` +
+    separators: data.separators, items: data.items, popup: data.popup, rows: data.rows };
+  const menuText = await format(`${header(`${SHARED8} ${L(['kF', 'wP', 'vP', 'bP']).join(' / ')}, ${SHARED1} ${testIdLocal}, ${ADD} ${L(['Js', 'Ws', 'Fs', 'ks', 'Es', 'Ms', 'ha', 'ga', '_a', 'ba', 'Sa', 'Aa', 'Da', 'ka', 'ja']).join(' / ')}, ${SHARED212} ${maxLocal} and ${SHARED5} ${L(['Tz', 'yz']).join(' / ')} (picked literals)`)}` +
     `const chatAddMenuMessages = Object.freeze(${objectText(data.messages)});\n` +
     `const chatAddMenu = Object.freeze(${objectText(menu)});\n` +
     `export { chatAddMenuMessages, chatAddMenu };\n`, { parser: 'babel' });
   const files = { 'add-menu-slots.mjs': slotsText, 'add-menu.mjs': menuText };
   const manifest = { referenceVersion, referenceSnapshot, generator: 'scripts/extract-chat-composer-menus.mjs', hostModule: 'src/source-chat-tools-menu.jsx',
-    roots: Object.fromEntries(Object.entries(found).map(([key, f]) => [key, { source: f.source, local: f.local, sourceSha256: sha(f.src.bytes), sha256: sha(f.text), features: roots[key].features }])),
-    resolved: { artifactFileRows: artifactRowsResolved, triggerTestId: { source: SHARED1, export: testIdImport.imported, local: testIdLocal, value: data.trigger.button.testId }, projectMaxVisibleItems: projectPopupResolved },
+    roots: Object.fromEntries(Object.entries(found).filter(([key]) => Object.hasOwn(roots, key)).map(([key, f]) => [key, { source: f.source, local: f.local, sourceSha256: sha(f.src.bytes), sha256: sha(f.text), features: roots[key].features }])),
+    resolved: { perfAttributes: perfResolved, artifactFileRows: artifactRowsResolved, triggerTestId: { source: SHARED1, export: testIdImport.imported, local: testIdLocal, value: data.trigger.button.testId }, projectMaxVisibleItems: projectPopupResolved, toggleRow: perfResolvedToggle },
     modules: [
       { target: 'add-menu-slots.mjs', sources: [SHARED8, ADD], sha256: sha(slotsText), sliced: Object.values(sliced).flat(),
         exports: ['addMenuSlotGroups', 'splitAddMenuSlots', 'addMenuTestIds', 'withAddMenuTestIds'] },

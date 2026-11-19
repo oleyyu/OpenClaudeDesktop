@@ -11,17 +11,18 @@ import { SessionsPageShell as Page } from './source-sessions-primitives.jsx';
 // get the page's host from source-routine-cowork-page-adapters.jsx (the detail's back link is its backHref, answered with
 // onBack; a run row opens its session through onSessionOpen). The starter template grid (RC-05): ccd3f68fe-C8Xiv_qI wraps
 // the template cards in `w-full ${Wr(columns)}` with columns 2 (cdbc75b4b Wr, the hit-grid gaps the hit-row cards pair with).
-import { ScheduledTaskStatusLine as RoutineStatus, ScheduledTaskDivider as RoutineDivider } from './generated/routines-shared/index.mjs';
+// library-pages-r1-03: 4.16336.0 now (routines-shared-v4 cdbc75b4b Sr / Xr; cowork-scheduled-v4 ccd3f68fe os / Wl / zl / Rl,
+// c97b955f1 Xa, shared-18 SY with the DotsHorizontal trigger, Field family from cds-core shared-frame).
+import { ScheduledTaskStatusLine as RoutineStatus, ScheduledTaskDivider as RoutineDivider } from './generated/routines-shared-v4/index.mjs';
 import { ScheduledTaskMenu as CurrentScheduledTaskMenu, ScheduledTaskTemplateCard as RoutineTemplate, SCHEDULED_TASK_TEMPLATES as routineTemplates,
   scheduledTaskTemplateMessages as templateCopy, routineGridClass, routineTemplateTwoColumnGridClass, SCHEDULED_TASK_COPY as scheduledCopy,
   Pictogram as RoutinePictogram, STOPWATCH_PICTOGRAM as stopwatch, CdsField as Field, CdsFieldLabel as Label, CdsFieldDescription as Description,
-  CdsFieldError as ErrorText, CdsTextArea as TextArea, KeepAwakeSwitch } from './generated/cowork-scheduled/index.mjs';
+  CdsFieldError as ErrorText, CdsTextArea as TextArea, KeepAwakeSwitch } from './generated/cowork-scheduled-v4/index.mjs';
 import { useKeepAwakeAvailable } from './source-routine-cowork-adapters.jsx';
-// 4.16336.0 host wiring (frame): TextInput stays view-tabs because registerNativeFieldComponents hands it to the 3.6556.2
-// cowork-scheduled form; the page's Banner, header Dropdowns, delete ConfirmationDialog and its Checkbox are cds-core (the
+// 4.16336.0 host wiring (frame): TextInput is cds-core's, the same family as the 4.16336.0 cowork-scheduled-v4 Field parts
+// registerNativeFieldComponents gets; the page's Banner, header Dropdowns, delete ConfirmationDialog and its Checkbox are cds-core (the
 // page itself is the cds-core CdsPage through source-sessions-primitives).
-import { CdsTextInput as TextInput } from './generated/view-tabs/index.js';
-import { CdsBanner, CdsCheckbox, CdsConfirmationDialog, CdsDropdown } from './cds-core.mjs';
+import { CdsBanner, CdsCheckbox, CdsConfirmationDialog, CdsDropdown, CdsTextInput as TextInput } from './cds-core.mjs';
 // V3-w13-coworkui-scheduled-page: the official list route's own helpers, published by chat-projects under their projects
 // names (same bindings): shared-18 Ou (aC, the loading grid `ar`), c444bcdd7 t (`Pi`, search ↔ results keys) and
 // c365fd3fe n (`Fi`, the search results announcement). 4.16336.0 through chat-projects-v4: shared-18 nE, c444bcdd7 t, c365fd3fe n
@@ -40,6 +41,11 @@ registerNativeFieldComponents({ Field, Label, Description, ErrorText, TextInput,
 
 const active = task => task.runs?.some(run => ['starting', 'running'].includes(run.status));
 const date = value => value ? new Date(value).toLocaleString(getLocale()) : t('—');
+// U-21: the run errors electron/routine-runner.mjs and local-routines.mjs store are English sentences; each is a zh-CN key.
+const runErrorText = message => {
+  const core = /^Switch to (.+) to run this scheduled task\.$/.exec(message)?.[1];
+  return core ? t('Switch to {core} to run this scheduled task.', { core }) : t(message);
+};
 const copy = key => t(scheduledCopy[key].defaultMessage);
 
 // ccd3f68fe-C8Xiv_qI zu.create: the "Create with Claude" prompt (Vu `an({ prompt: "" })` → shared-18 hK; a translated
@@ -190,7 +196,7 @@ export function SourceRoutines({ call, onSession, onCreateWithClaude, onStartTem
   const { tasks, error: loadError, reload } = useLocalRoutines(call, 'cowork');
   const [error, setError] = useState('');
   const [query, setQuery] = useState(''), [sort, setSort] = useState('nextRun');
-  const [editing, setEditing] = useState(null), [deleting, setDeleting] = useState(null), [removeFiles, setRemoveFiles] = useState(false);
+  const [editing, setEditing] = useState(null), [deleting, setDeleting] = useState(null), [removeFiles, setRemoveFiles] = useState(true);
   const [busy, setBusy] = useState(null), [starting, setStarting] = useState(false), [startingTemplate, setStartingTemplate] = useState(null);
   const live = useRef(true);
   useEffect(() => () => { live.current = false; }, []);
@@ -246,6 +252,7 @@ export function SourceRoutines({ call, onSession, onCreateWithClaude, onStartTem
     ...(typeof ruleContent === 'string' && { ruleContent }) }).catch(() => setError(t('Tool approval couldn’t be removed. You can try again.')));
   const selected = tasks?.find(task => task.id === selectedId);
   const taskSource = selected && { ...sourceRoutine(selected), approvedPermissions: listedApprovals(selected.approvedPermissions) };
+  const runErrors = selected?.runs.filter(run => !run.threadId && run.error) ?? [];
   const home = useMemo(() => coworkHomeState(sessions, sessionMetadata, state), [sessions, sessionMetadata, state]);
   const runSessions = selected?.runs.filter(run => run.threadId).map(run => {
     const live = home.rows.find(row => row.sessionId === run.threadId);
@@ -266,10 +273,16 @@ export function SourceRoutines({ call, onSession, onCreateWithClaude, onStartTem
   const existingNames = useMemo(() => new Set((tasks ?? []).map(task => task.name)), [tasks]);
   const deleteCopy = deleting ? deleteDialogCopy(deleting) : null;
   return <RoutineContext.Provider value={{ Menu: CurrentScheduledTaskMenu, copy: scheduledCopy, mutate, error: setError, formError: error, busy, task: selected, editingTask: editing, readState: home.readState, call, models, bypassEnabled, executionProfile }}>
-    <div className="surface-routines cds-root" data-density="comfortable">
+    <div className="surface-routines cds-root" data-density="comfortable" data-run-errors={runErrors.length > 0 ? '' : undefined}>
       {selectedId && tasks === null ? <p role="status" className="text-muted text-body p-md">{loadError || t('Loading…')}</p> : selected ? <>
         {error && <p role="alert" className="text-body text-danger px-md">{error}</p>}
-        <RoutineDetail key={selected.id} scheduledTask={taskSource} sessions={runSessions}
+        {/* U-21: a run that failed or was interrupted before it started a session has no History row (ccd3f68fe lists
+            sessions and missed runs only). Its cause shows in one danger banner aligned with the page column (the detail's
+            own `mx-auto w-full px-md md:px-8 max-w-5xl`), above the detail, in the interface language. */}
+        {runErrors.length > 0 && <div className="mx-auto mt-4 w-full shrink-0 px-md md:px-8 lg:mt-6 max-w-5xl" data-routine-run-errors="">
+          <CdsBanner variant="danger" role="alert">{runErrors.map(run => <p key={run.id} className="m-0">{date(run.startedAt)} · {runErrorText(run.error)}</p>)}</CdsBanner>
+        </div>}
+        <RoutineDetail key={selected.id} scheduledTask={taskSource} sessions={runSessions} className={runErrors.length > 0 ? 'min-h-0 flex-1' : undefined}
           isRunning={active(selected) || busy === selected.id} isDeleting={busy === selected.id}
           onRunNow={() => act({ action: 'run', id: selected.id })}
           onEnable={() => act({ action: 'toggle', id: selected.id, enabled: true })}
@@ -278,10 +291,9 @@ export function SourceRoutines({ call, onSession, onCreateWithClaude, onStartTem
           canRemoveFiles onDelete={async files => {
             try { await removeTask(selected, files); setSelectedId(null); } catch (error) { setError(error.message); }
           }} onBack={onBack} onSessionOpen={onSession} sessionHrefPrefix="/cowork" />
-        {selected.runs.filter(run => !run.threadId && run.error).map(run => <p key={run.id} role="alert" className="text-body text-danger px-md">{date(run.startedAt)} · {run.error}</p>)}
       </> : <ScheduledTaskList tasks={tasks} loadError={loadError} error={error} query={query} onQueryChange={setQuery} sort={sort} onSortChange={setSort}
         busy={busy} starting={starting} startingTemplate={startingTemplate} onSelect={setSelectedId} onRunNow={task => act({ action: 'run', id: task.id })}
-        onEdit={task => setEditing(task)} onDelete={task => { setRemoveFiles(false); setDeleting(task); }} onSetUpManually={() => setEditing({})}
+        onEdit={task => setEditing(task)} onDelete={task => { setRemoveFiles(true); setDeleting(task); }} onSetUpManually={() => setEditing({})}
         offered={offered} onCreateWithClaude={offered ? createWithClaude : undefined} onTemplate={startTemplate} />}
       {editing && <OriginalRoutineForm isOpen onClose={() => { setEditing(null); setError(''); }} existingNames={existingNames}
         editingTask={editingSource} initialValues={initialValues} initialSurface="chat" />}

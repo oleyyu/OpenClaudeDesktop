@@ -295,7 +295,11 @@ test('main.jsx: one boundary, at a fixed place inside the section "new" pane con
   // only the archived banner (no vie notices), so the archived zone no longer calls renderSessionNotices; only Chat /
   // Cowork's call above the column is left inside the boundary.
   assert.equal(findAll(boundary, n => n.type === 'CallExpression' && n.callee.name === 'renderSessionNotices').length, 1, 'Chat / Cowork above the column (Code\'s archived zone draws only the banner, r8c-05)');
-  assert.equal(findAll(boundary, n => n.type === 'CallExpression' && n.callee.name === 'renderMainComposer').length, 1, 'the composer is inside');
+  // r2 chat-home-r2-05: Chat's new page draws the same composer inside SourceNewPageCardSlot (shared-19 ED's card column), the
+  // other branch of the one ternary, so exactly one renders (was: length 1).
+  const composerCalls = findAll(boundary, n => n.type === 'CallExpression' && n.callee.name === 'renderMainComposer');
+  assert.equal(composerCalls.length, 2, 'the composer is inside');
+  assert.equal(new Set(composerCalls.map(c => text(c))).size, 1, 'both branches render the same composer');
   assert.equal(text(attr(findAll(boundary, n => jsxName(n) === 'SourceTranscript')[0], 'key').value.expression), 'current ?? "draft"');
   // The row boundary stays nested inside (per-row crashes are still caught by rows first).
   assert.ok(findAll(boundary, n => jsxName(n) === 'SourceTranscriptRowBoundary').length >= 1);

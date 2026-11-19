@@ -98,25 +98,27 @@ export function paletteProjects({ folders = [], sessions = [], query = "", filte
     .sort((a, b) => b.updatedAt - a.updatedAt || a.name.localeCompare(b.name));
 }
 
-// c2771e1f6 :9634-10079 'Settings → {section}' / 'Customize → {section}' rows for the local Settings sections
-// (source-settings.jsx tabs: General first, This computer › System; B23 shared-19 ZC; the Advanced group last,
-// settings-advanced-model.mjs).
-// w13-coworkui-settings: Memory (w13-chatfn-memory, after Usage) and Cowork (shared-46 `e.push({id:"cowork",…,icon:Fp})`,
-// Fp = Tasks, after Claude Code) as the Settings nav lists them; Cowork only while Cowork is on (shared-46 `if(d&&!k)`).
-// w13-close-chat-projects-memory: Privacy (w13-chatfn-history; shared-46 `e.push({id:"data-privacy-controls",…"Privacy"…,
-// icon:Dp})`, Dp = LockShield) right after General, as the nav lists it.
+// c2771e1f6 :9634-10079 'Settings → {section}' / 'Customize → {section}' rows. Official 4.16336.0 c2771e1f6 builds one
+// row per section the Settings nav shows, named as the nav names it (`a ?? r.name`), and folds the sections merged into it
+// into that row's searchHints (`b.get(r.id)`). fix-r2 U-28: the host nav is the hand-written one (source-settings.jsx
+// SETTINGS_NAV, U-SET-HANDWRITE), so the rows are its pages in its order, each opening the host page the nav entry draws
+// first; the host pages folded into a nav page (Privacy into Account, Memory into Your Claude, Cores into Models, System /
+// Developer / Core options / Harness / Profiles into Desktop app…) are that row's hints, so typing an old name still finds
+// it. Customize is its own row family below. Each entry: [host page id, nav label, icon, folded page names].
 export const PALETTE_SETTINGS_SECTIONS = Object.freeze([
-  ["preferences", "General", "Settings"], ["privacy", "Privacy", "LockShield"], ["usage", "Usage", "UsageGaugeMiddle"], ["memory", "Memory", "Memory"], ["theme", "Theme", "Palette"], ["code", "Code", "Code"],
-  ["cowork", "Cowork", "Tasks"],
-  ["instructions", "Instructions", "BookText"], ["commands", "Commands", "SlashShortcutCommand"],
-  ["models", "Models", "Lightning"], ["general", "System", "Computer"], ["developer", "Developer", "Wrench"], ["cores", "Cores", "Box"],
-  ["advanced", "Core options", "Wrench"], ["harness", "Harness", "CommandLine"], ["customize-hooks", "Hooks", "CommandLine"], ["profiles", "Profiles", "Tool"],
+  ["account", "Account", "User", ["Privacy", "Data sharing", "Export data"]], ["usage", "Usage", "UsageGaugeMiddle", []],
+  ["preferences", "Appearance", "Palette", ["General", "Theme"]], ["instructions", "Your Claude", "Chat", ["Instructions", "Memory"]],
+  ["models", "Models", "Lightning", ["Cores"]], ["notifications", "Notifications", "Notification", []],
+  ["code", "Code", "Code", ["Cowork"]],
+  ["general", "Desktop app", "Computer", ["System", "Developer", "Core options", "Harness", "Profiles"]],
 ]);
 // The Settings nav's own copy for a page name ('System' is the page there, not the theme choice: settings-model
 // settingsHeading's 'settings heading: …' entries).
 const settingsSectionLabel = (label) => { const key = `settings heading: ${label}`, shown = t(key); return shown === key ? t(label) : shown; };
 export const PALETTE_CUSTOMIZE_SECTIONS = Object.freeze([
   ["customize-skills", "Skills", "Scroll"], ["customize-connectors", "Connectors", "Connectors"], ["customize-plugins", "Plugins", "Plugin"],
+  // fix-r2 U-28: Commands and Hooks are tabs of the Customize page in the hand-written nav (source-settings.jsx SETTINGS_NAV).
+  ["commands", "Commands", "SlashShortcutCommand"], ["customize-hooks", "Hooks", "CommandLine"],
 ]);
 
 // gn's jump_to_* palette commands (focus-region-model.mjs JUMP_COMMANDS; shared-1-BPVqFfwb.js :10700-10760 aj/oj/cj/
@@ -238,7 +240,12 @@ export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSetti
   if (onShortcuts) push({ id: "shortcuts_modal", group: "general", label: t("Keyboard shortcuts"), icon: "Keyboard", shortcut: capsOf("cmd+/"), run: onShortcuts });
   if (onOpenSettings) {
     push({ id: "settings", group: "settings", label: t("Settings"), icon: "Settings", shortcut: "⌘,", run: () => onOpenSettings(true) });
-    for (const [id, label, icon] of PALETTE_SETTINGS_SECTIONS) if (id !== "cowork" || coworkEnabled) push({ id: `settings:${id}`, group: "settings", label: t("Settings → {section}", { section: settingsSectionLabel(label) }), icon, run: () => onOpenSettings(id) });
+    // fix-r2 U-28: the folded page names search in both languages; Cowork only while Cowork is on (shared-46 `if(d&&!k)`).
+    for (const [id, label, icon, folded] of PALETTE_SETTINGS_SECTIONS) {
+      const names = folded.filter((name) => name !== "Cowork" || coworkEnabled);
+      push({ id: `settings:${id}`, group: "settings", label: t("Settings → {section}", { section: settingsSectionLabel(label) }), icon,
+        hints: [...new Set(names.flatMap((name) => [name, settingsSectionLabel(name)]))], run: () => onOpenSettings(id) });
+    }
     for (const [id, label, icon] of PALETTE_CUSTOMIZE_SECTIONS) push({ id: `settings:${id}`, group: "settings", label: t("Customize → {section}", { section: t(label) }), icon, run: () => onOpenSettings(id) });
   }
   if (onJump) for (const command of jumps) if (JUMP_LABELS[command.id])

@@ -38,13 +38,174 @@ export function stripJsonComments(text) {
   return out.replace(/,(\s*[}\]])/g, '$1')
 }
 
-/** Writes JSON atomically, keeping a .bak of the previous file once. */
-export function writeJsonFile(file, value) {
-  fs.mkdirSync(path.dirname(file), { recursive: true })
-  try { if (fs.existsSync(file) && !fs.existsSync(`${file}.code-desktop.bak`)) fs.copyFileSync(file, `${file}.code-desktop.bak`) } catch {}
-  const temp = `${file}.${process.pid}.tmp`
-  fs.writeFileSync(temp, JSON.stringify(value, null, 2) + '\n')
-  fs.renameSync(temp, file)
+/**
+ * Writes JSON atomically over the agent's own config file, which the user may also edit by hand:
+ * - a file that doesn't parse is never replaced (its settings would all be lost): the write is refused instead;
+ * - comments and trailing commas stay (patchJsonc rewrites only the values that changed), or the write is refused;
+ * - the file keeps its permissions (a 0600 settings.json with keys in it stays 0600) and a symlink keeps pointing at it;
+ * - `<file>.code-desktop.bak` holds the version before this write.
+ * `replace`: a file OpenClaude Desktop owns and rebuilds whole (a launch overlay, its own state): written as given.
+ */
+export function writeJsonFile(file, value, { replace = false } = {}) {
+  let target = file
+  try { target = fs.realpathSync(file) } catch {}
+  fs.mkdirSync(path.dirname(target), { recursive: true })
+  let text = null
+  let mode = null
+  if (!replace) {
+    try { text = fs.readFileSync(target, 'utf8'); mode = fs.statSync(target).mode & 0o777 } catch (error) { if (error?.code !== 'ENOENT') throw error }
+  }
+  let next = JSON.stringify(value, null, 2) + '\n'
+  if (text !== null && text.trim()) {
+    let plain = true
+    try { JSON.parse(text) } catch { plain = false }
+    if (!plain) {
+      let current
+      try { current = JSON.parse(stripJsonComments(text)) } catch {
+        throw new Error(`${file} isn’t valid JSON, so OpenClaude Desktop left it unchanged. Fix or remove it, then try again.`)
+      }
+      next = patchJsonc(text, current, value)
+      if (next === null) throw new Error(`OpenClaude Desktop can’t make this change to ${file} without losing its comments, so it left the file unchanged. Edit the file itself instead.`)
+    }
+  }
+  if (text !== null) { try { fs.copyFileSync(target, `${target}.code-desktop.bak`) } catch {} }
+  const temp = `${target}.${process.pid}.tmp`
+  try {
+    fs.writeFileSync(temp, next, mode === null ? undefined : { mode })
+    if (mode !== null) fs.chmodSync(temp, mode)
+    fs.renameSync(temp, target)
+  } catch (error) {
+    try { fs.rmSync(temp, { force: true }) } catch {}
+    throw error
+  }
+}
+
+/**
+ * A project's own connector (config/batchWrite removal with the session's folder): removed from `file`, the project
+ * file it came from. Not there (an extension's or plugin's, or no folder named): refused with `refusal`, since
+ * reporting success would only let it come straight back.
+ */
+export function removeProjectMcpServer(file, name, refusal) {
+  const config = file ? readJsonFile(file, null) : null
+  const servers = config?.mcpServers
+  if (!servers || typeof servers !== 'object' || !Object.hasOwn(servers, name)) throw new Error(refusal)
+  const rest = { ...servers }
+  delete rest[name]
+  writeJsonFile(file, { ...config, mcpServers: rest })
+}
+
+const isPlainObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+function sameJson(a, b) {
+  if (a === b) return true
+  if (Array.isArray(a)) return Array.isArray(b) && a.length === b.length && a.every((entry, index) => sameJson(entry, b[index]))
+  if (!isPlainObject(a) || !isPlainObject(b)) return false
+  const keys = Object.keys(a)
+  return keys.length === Object.keys(b).length && keys.every((key) => Object.hasOwn(b, key) && sameJson(a[key], b[key]))
+}
+
+/** The JSONC text's values with where they are: objects with their members, everything else as a span. Throws when it doesn't parse. */
+function jsoncTree(text) {
+  let i = 0
+  const fail = () => { throw new Error(`JSONC at ${i}`) }
+  const skip = () => {
+    for (;;) {
+      while (i < text.length && /\s/.test(text[i])) i++
+      if (text[i] === '/' && text[i + 1] === '/') { while (i < text.length && text[i] !== '\n') i++; continue }
+      if (text[i] === '/' && text[i + 1] === '*') { const end = text.indexOf('*/', i + 2); if (end < 0) fail(); i = end + 2; continue }
+      return
+    }
+  }
+  const string = () => {
+    const start = i
+    if (text[i] !== '"') fail()
+    for (i++; i < text.length && text[i] !== '"'; i++) if (text[i] === '\\') i++
+    if (i >= text.length) fail()
+    i++
+    return JSON.parse(text.slice(start, i))
+  }
+  const value = () => {
+    skip()
+    const start = i
+    if (text[i] === '{' || text[i] === '[') {
+      const object = text[i] === '{'
+      const close = object ? '}' : ']'
+      const members = []
+      i++
+      skip()
+      while (text[i] !== close) {
+        const keyStart = i
+        let key = null
+        if (object) { key = string(); skip(); if (text[i] !== ':') fail(); i++ }
+        const node = value()
+        skip()
+        let comma = null
+        if (text[i] === ',') { comma = i; i++; skip() }
+        else if (text[i] !== close) fail()
+        members.push({ key, keyStart, node, comma })
+      }
+      i++
+      return { type: object ? 'object' : 'array', start, end: i, members }
+    }
+    if (text[i] === '"') { string(); return { type: 'value', start, end: i } }
+    while (i < text.length && /[^\s,\]}\/]/.test(text[i])) i++
+    if (i === start) fail()
+    return { type: 'value', start, end: i }
+  }
+  const root = value()
+  skip()
+  if (i !== text.length) fail()
+  return root
+}
+
+/**
+ * `after` written over the JSONC `text` (whose value is `before`) so that its comments, trailing commas and layout stay:
+ * object members are removed, added and changed in place, other changed values rewritten whole. Null when that can't
+ * be done faithfully (a duplicate key, or the result wouldn't read back as `after`).
+ */
+export function patchJsonc(text, before, after) {
+  let root
+  try { root = jsoncTree(text) } catch { return null }
+  const edits = []
+  const lineIndent = (pos) => {
+    const lineStart = text.lastIndexOf('\n', pos - 1) + 1
+    const lead = text.slice(lineStart, pos)
+    return /^[ \t]*$/.test(lead) ? lead : null
+  }
+  const json = (value, indent) => JSON.stringify(value, null, 2).replace(/\n/g, `\n${indent}`)
+  const walk = (node, was, now, indent) => {
+    if (sameJson(was, now)) return true
+    if (node.type !== 'object' || !isPlainObject(was) || !isPlainObject(now)) { edits.push([node.start, node.end, json(now, indent)]); return true }
+    const { members } = node
+    if (new Set(members.map((member) => member.key)).size !== members.length) return false
+    const inner = (members.length ? lineIndent(members[0].keyStart) : null) ?? `${indent}  `
+    const kept = members.filter((member) => Object.hasOwn(now, member.key))
+    const added = Object.keys(now).filter((key) => !Object.hasOwn(was, key))
+    const trailing = members.length > 0 && members.at(-1).comma !== null
+    for (const member of members) {
+      if (!Object.hasOwn(now, member.key)) {
+        // The member, its comma and the line it stood on.
+        let start = member.keyStart
+        while (start > 0 && (text[start - 1] === ' ' || text[start - 1] === '\t')) start--
+        if (text[start - 1] === '\n') start--
+        edits.push([start, member.comma !== null ? member.comma + 1 : member.node.end, ''])
+      } else if (!walk(member.node, was[member.key], now[member.key], lineIndent(member.keyStart) ?? inner)) return false
+    }
+    const last = kept.at(-1)
+    const rows = added.map((key) => `\n${inner}${JSON.stringify(key)}: ${json(now[key], inner)}`).join(',')
+    if (last) {
+      if (added.length) {
+        const at = last.comma !== null ? last.comma + 1 : last.node.end
+        edits.push([at, at, (last.comma !== null ? '' : ',') + rows + (trailing ? ',' : '')])
+      } else if (last !== members.at(-1) && last.comma !== null && !trailing) edits.push([last.comma, last.comma + 1, ''])
+    } else if (added.length) edits.push([node.start + 1, node.start + 1, rows + (members.length ? '' : `\n${indent}`)])
+    return true
+  }
+  if (!walk(root, before, after, lineIndent(root.start) ?? '')) return null
+  // Last edit first; at one position a removal goes before an insertion there, which it would otherwise take with it.
+  edits.sort((a, b) => b[0] - a[0] || b[1] - a[1])
+  let out = text
+  for (const [start, end, insert] of edits) out = out.slice(0, start) + insert + out.slice(end)
+  try { return sameJson(JSON.parse(stripJsonComments(out)), after) ? out : null } catch { return null }
 }
 
 /** Minimal YAML frontmatter (key: value, key: [a, b], block lists) of a Markdown file. */

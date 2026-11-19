@@ -19,7 +19,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { SourceSelect } from './source-select.jsx';
 import { SourceSegments } from './source-segments.jsx';
 import { SourceDisclosure } from './source-disclosure.jsx';
-import { SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
+import { SourceConfirmationDialog, SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceSwitch } from './source-switch.jsx';
 // CDS Checkbox with its own label (3.6556.2 shared-frame xP `label`, as c71860c77's cleanup choices); facade import (R6).
@@ -50,6 +50,10 @@ const FIELD_LABELS = { cacheHit: t('Cache hit'), cacheMiss: t('Cache miss'), out
 const DEFAULT_PRICING_URL = 'https://api-docs.deepseek.com/zh-cn/quick_start/pricing';
 // Above Settings (layer 500), like the other Settings page dialogs.
 const SETTINGS_LAYER = Object.freeze({ base: 520, z: 520 });
+// The saved keys file is there but can't be decrypted (model-settings.cjs keysUnreadable): saves are refused until the
+// keychain lets the app read it again, so the page says why every key shows as missing.
+const keysLockedNote = view => view?.keysUnreadable ? <p className="ss-row-error msx-provider-error" role="alert">
+  {t('The saved API keys can’t be read: macOS didn’t let OpenClaude Desktop use “OpenClaude Desktop Safe Storage” in the keychain. They aren’t deleted, and saving is off until access is allowed. Restart the app and choose Always Allow when macOS asks.')}</p> : null;
 const PROTOCOL_LABELS = { 'openai-completions': 'OpenAI Chat Completions', 'openai-responses': 'OpenAI Responses', 'anthropic-messages': 'Anthropic Messages' };
 
 // Which listed models accept images: one toggle chip per id. The cores attach images only for a model marked here.
@@ -196,9 +200,10 @@ const CONNECTION_OPTIONS = [{ value: 'official', label: t('DeepSeek official') }
 function ConnectionGroup({ deepseek, desktopCall, onReconnect }) {
   const [view, setView] = useState(null);
   const [draft, setDraft] = useState({ mode: 'official', relayBaseURL: '', relayModels: '', relayImageModels: [], relayContextWindows: {}, officialKey: '', relayKey: '' });
-  const [busy, setBusy] = useState(''), [error, setError] = useState(''), [pending, setPending] = useState(false);
+  const [busy, setBusy] = useState(''), [error, setError] = useState(''), [pending, setPending] = useState(false), [confirmRemove, setConfirmRemove] = useState(false);
+  // pending: main's truth (model-settings.cjs connectionView), so a saved change still offers Restart core after Settings reopens.
   const adopt = result => {
-    setView(result);
+    setView(result); setPending(result.pending === true);
     setDraft({ mode: result.mode, relayBaseURL: result.relayBaseURL || '', relayModels: (result.relayModels || []).join('\n'), relayImageModels: result.relayImageModels || [],
       relayContextWindows: windowsText(result.relayContextWindows), officialKey: '', relayKey: '' });
   };
@@ -227,7 +232,7 @@ function ConnectionGroup({ deepseek, desktopCall, onReconnect }) {
   const set = key => event => { const value = event.target.value; setError(''); setDraft(current => ({ ...current, [key]: value })); };
   const save = async (payload, key) => {
     setBusy(key); setError('');
-    try { adopt(await desktopCall('model-settings', { op: 'connection-save', ...payload })); setPending(true); }
+    try { adopt(await desktopCall('model-settings', { op: 'connection-save', ...payload })); }
     catch (failure) { setError(failure?.message || String(failure)); }
     finally { setBusy(''); }
   };
@@ -292,15 +297,22 @@ function ConnectionGroup({ deepseek, desktopCall, onReconnect }) {
         <span className="msx-connection-status" role="status">
           {error ? <span className="ss-row-error">{error}</span>
             : pending ? t('Saved. Restart the core to apply.')
-              : view && !view.available ? t('Needs Settings › Harness, which isn’t available.') : ''}
+              : view && !view.available ? t('Needs Settings › Harness, which isn’t available.')
+                : view?.mode === 'relay' && !view.relayKey && !view.keysUnreadable ? t('The relay has no saved API key, so its requests fail. Enter its key and save.') : ''}
         </span>
         {!relay && view?.officialKey && <SourceSettingsButton size="sm" variant="ghost" disabled={disabled} busy={busy === 'remove'}
-          onClick={() => void save({ officialKey: null }, 'remove')}>{t('Remove key')}</SourceSettingsButton>}
+          onClick={() => setConfirmRemove(true)}>{t('Remove key')}</SourceSettingsButton>}
         {pending && onReconnect && !dirty ? <SourceSettingsButton size="sm" variant="primary"
           onClick={() => { setPending(false); void Promise.resolve(onReconnect()).catch(() => {}); }}>{t('Restart core')}</SourceSettingsButton>
           : <SourceSettingsButton type="submit" size="sm" variant="primary" disabled={!canSave} busy={busy === 'save'}>{t('Save')}</SourceSettingsButton>}
       </div>
+      {keysLockedNote(view)}
     </SettingsGroup>
+    {confirmRemove && <SourceConfirmationDialog title={t('Remove the saved DeepSeek API key?')} confirmLabel={t('Remove')} confirmVariant="danger" layer={SETTINGS_LAYER}
+      body={view?.inheritedKey ? t('It’s deleted from this Mac. After the core restarts, the DEEPSEEK_API_KEY the app was launched with is used.')
+        : t('It’s deleted from this Mac. After the core restarts, the key saved in DeepSeek Harness (~/.dsh) is used, if there is one.')}
+      pending={busy === 'remove'} onCancel={() => setConfirmRemove(false)}
+      onConfirm={() => void save({ officialKey: null }, 'remove').finally(() => setConfirmRemove(false))}/>}
   </form>;
 }
 
@@ -393,7 +405,9 @@ export function CodexConnectionGroup({ core, desktopCall, onReconnect, initialVi
   const [wantsCustom] = useState(() => { const wanted = customEndpointIntent; customEndpointIntent = false; return wanted; });
   const baseURLInput = useRef(null), customApplied = useRef(false);
   const [busy, setBusy] = useState(''), [error, setError] = useState(''), [pending, setPending] = useState(false), [tested, setTested] = useState(null);
-  const adopt = result => { setView(result); setDraft(codexDraft(result)); };
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  // pending: main's truth (model-settings.cjs codexProviderView: the running Codex child started with another endpoint).
+  const adopt = result => { setView(result); setDraft(codexDraft(result)); setPending(result.pending === true); };
   useEffect(() => {
     if (initialView || typeof desktopCall !== 'function') return undefined;
     let live = true;
@@ -442,7 +456,7 @@ export function CodexConnectionGroup({ core, desktopCall, onReconnect, initialVi
     catch (failure) { if (key === 'test') setTested({ ok: false, message: failure?.message || String(failure) }); else setError(failure?.message || String(failure)); }
     finally { setBusy(''); }
   };
-  const save = (key, provider, apiKey) => call(key, { op: 'codex-provider-save', provider, apiKey }, result => { adopt(result); setPending(true); });
+  const save = (key, provider, apiKey) => call(key, { op: 'codex-provider-save', provider, apiKey }, adopt);
   const submit = event => {
     event.preventDefault(); event.stopPropagation();
     if (canSave) void save('save', custom ? { mode: 'custom', baseURL, models: modelIds, webSearch: draft.webSearch } : { mode: 'openai' }, typedKey || undefined);
@@ -459,7 +473,7 @@ export function CodexConnectionGroup({ core, desktopCall, onReconnect, initialVi
     settingRow('codex-provider', t('Provider'), custom ? t('Requests go to an OpenAI Responses-compatible endpoint you choose, such as a GPT relay.')
       : fromConfig ? (fromConfig.host ? t('Requests go to {name} ({host}), set in your Codex config.toml. Choose Custom endpoint to use one set here instead.', { name: fromConfig.name, host: fromConfig.host })
         : t('Requests go to {name}, set in your Codex config.toml. Choose Custom endpoint to use one set here instead.', { name: fromConfig.name }))
-      : t('Requests go to OpenAI with the ChatGPT account or OpenAI API key you sign in with on Settings › General › Account.'),
+      : t('Requests go to OpenAI with the ChatGPT account or OpenAI API key you sign in with on Settings › Account.'),
       <SourceSegments label={t('{core} provider', { core })} value={draft.mode} disabled={disabled}
         options={[{ value: 'openai', label: fromConfig ? t('config.toml') : 'OpenAI' }, { value: 'custom', label: t('Custom endpoint') }]} onChange={mode => edit({ mode })}/>),
     ...(custom ? [
@@ -510,12 +524,17 @@ export function CodexConnectionGroup({ core, desktopCall, onReconnect, initialVi
               : view && !view.available ? t('The endpoint can’t be changed in this window.') : ''}
         </span>
         {!!view?.baseURL && <SourceSettingsButton size="sm" variant="ghost" disabled={disabled} busy={busy === 'remove'}
-          onClick={() => void save('remove', { mode: 'openai', baseURL: '', models: [], webSearch: false }, null)}>{t('Remove endpoint')}</SourceSettingsButton>}
+          onClick={() => setConfirmRemove(true)}>{t('Remove endpoint')}</SourceSettingsButton>}
         {pending && onReconnect && !dirty ? <SourceSettingsButton size="sm" variant="primary"
           onClick={() => { setPending(false); void Promise.resolve(onReconnect()).catch(() => {}); }}>{t('Restart core')}</SourceSettingsButton>
           : <SourceSettingsButton type="submit" size="sm" variant="primary" disabled={!canSave} busy={busy === 'save'}>{t('Save')}</SourceSettingsButton>}
       </div>}
+      {keysLockedNote(view)}
     </SettingsGroup>
+    {confirmRemove && <SourceConfirmationDialog title={t('Remove the custom endpoint?')} confirmLabel={t('Remove')} confirmVariant="danger" layer={SETTINGS_LAYER}
+      body={t('{core} goes back to OpenAI after the core restarts. The endpoint’s address, model list and saved API key are deleted from this Mac.', { core })}
+      pending={busy === 'remove'} onCancel={() => setConfirmRemove(false)}
+      onConfirm={() => void save('remove', { mode: 'openai', baseURL: '', models: [], webSearch: false }, null).finally(() => setConfirmRemove(false))}/>}
   </form>;
 }
 
@@ -533,7 +552,7 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
   const [official, setOfficial] = useState({ loading: deepseek, prices: null, pricingUrl: null, peakWindows: null, unsupported: !deepseek });
   const [adding, setAdding] = useState(null);
   const [providers, setProviders] = useState({ available: false, protocols: [...PROVIDER_PROTOCOLS], providers: [], changed: false, error: '' });
-  const [providerDialog, setProviderDialog] = useState(null), [providerBusy, setProviderBusy] = useState('');
+  const [providerDialog, setProviderDialog] = useState(null), [providerBusy, setProviderBusy] = useState(''), [removingProvider, setRemovingProvider] = useState(null);
   const writes = useRef(0);
   const saved = normalize(config.modelSettings);
   const current = optimistic === undefined ? saved : normalize(optimistic);
@@ -573,7 +592,7 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     setProviderBusy(key);
     try {
       const result = await desktopCall('model-settings', payload);
-      setProviders(value => ({ ...value, ...result, changed: true, error: '' }));
+      setProviders(value => ({ ...value, ...result, changed: typeof result?.changed === 'boolean' ? result.changed : true, error: '' }));
       return result;
     } finally { setProviderBusy(''); }
   };
@@ -771,15 +790,17 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
 
   // ---- Custom providers (the Harness llm-pi-ai adapter, DeepSeek core only)
   const providerRows = providers.providers.map(provider => settingRow(`provider-${provider.route}`, provider.displayName ? `${provider.displayName} (${provider.route})` : provider.route,
-    `${PROTOCOL_LABELS[provider.api] || provider.api} · ${provider.baseURL} · ${providerModelSummary(provider)} · ${provider.hasKey ? t('key saved') : t('no key')}`,
+    `${PROTOCOL_LABELS[provider.api] || provider.api} · ${provider.baseURL} · ${providerModelSummary(provider)} · ${provider.hasKey ? t('key saved') : providers.keysUnreadable ? t('key can’t be read') : t('no key')}`,
     <div className="msx-actions">
       <SourceSettingsButton size="sm" variant="ghost" disabled={!!providerBusy} aria-label={t('Edit {name}', { name: provider.displayName || provider.route })} onClick={() => setProviderDialog({ initial: provider })}>{t('Edit')}</SourceSettingsButton>
       <SourceSettingsButton size="sm" disabled={!!providerBusy} busy={providerBusy === provider.route} aria-label={t('Remove {name}', { name: provider.displayName || provider.route })}
-        onClick={() => void providerCall(provider.route, { op: 'provider-remove', route: provider.route }).catch(error => setProviders(value => ({ ...value, error: error?.message || String(error) })))}>{t('Remove')}</SourceSettingsButton>
+        onClick={() => setRemovingProvider(provider)}>{t('Remove')}</SourceSettingsButton>
     </div>));
   const providerGroup = customProviders && providers.available && <SettingsGroup title={t('Custom providers')} rows={providerRows}>
     {!providerRows.length && <p className="msx-empty">{deepseek ? t('Add an OpenAI-compatible endpoint to use its models next to DeepSeek’s.') : t('Add an OpenAI-compatible endpoint, such as a relay or a self-hosted server, to use its models in {core}.', { core: coreLabel })}</p>}
     {providers.error && <p className="ss-row-error msx-provider-error" role="alert">{providers.error}</p>}
+    {/* The DeepSeek page says it once, in the API connection group. */}
+    {!deepseek && keysLockedNote(providers)}
     <div className="msx-add-row msx-provider-actions">
       <SourceSettingsButton size="sm" icon="Add" disabled={!!providerBusy} onClick={() => setProviderDialog({ initial: null })}>{t('Add provider')}</SourceSettingsButton>
       {providers.changed && <><span className="msx-pending" role="status">{t('Restart the core to apply.')}</span>
@@ -787,6 +808,12 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     </div>
   </SettingsGroup>;
 
+  const removeProvider = provider => void providerCall(provider.route, { op: 'provider-remove', route: provider.route })
+    .catch(error => setProviders(value => ({ ...value, error: error?.message || String(error) }))).finally(() => setRemovingProvider(null));
+  const removeProviderNode = removingProvider && <SourceConfirmationDialog title={t('Remove {name}?', { name: removingProvider.displayName || removingProvider.route })}
+    body={t('Its endpoint, model list and saved API key are deleted from this Mac. Its models leave the model menu after the core restarts.')}
+    confirmLabel={t('Remove')} confirmVariant="danger" layer={SETTINGS_LAYER} pending={providerBusy === removingProvider.route}
+    onCancel={() => setRemovingProvider(null)} onConfirm={() => removeProvider(removingProvider)}/>;
   const providerDialogNode = providerDialog && <ProviderDialog initial={providerDialog.initial} protocols={providers.protocols?.length ? providers.protocols : [...PROVIDER_PROTOCOLS]} harness={deepseek} coreLabel={coreLabel}
     onCancel={() => setProviderDialog(null)}
     onSubmit={async ({ provider, previousRoute, apiKey }) => {
@@ -805,6 +832,7 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     {codexProvider && <CodexSubagentsGroup core={coreLabel} desktopCall={desktopCall} connected={connected} models={allModels}/>}
     {!codexProvider && providerGroup}
     {!codexProvider && providerDialogNode}
+    {!codexProvider && removeProviderNode}
   </div>;
 
   // Advanced (pricing and custom providers) starts open when something in it was already changed.
@@ -824,5 +852,6 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     </div>
     </SourceDisclosure>
     {providerDialogNode}
+    {removeProviderNode}
   </div>;
 }

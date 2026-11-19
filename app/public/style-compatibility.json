@@ -789,7 +789,7 @@
               "binding": "Vb",
               "generator": "scripts/extract-cowork-progress-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -1290,28 +1290,28 @@
               "binding": "It",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/frame-shell-header-B1Xokuj0.mjs",
               "binding": "Ae",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/shared-9-CM21XrJw.mjs",
               "binding": "vh",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/shared-frame-6jtSkIit.mjs",
               "binding": "KE",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -2100,7 +2100,7 @@
               "binding": "cn",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -2153,7 +2153,7 @@
               "binding": "As",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -2182,7 +2182,7 @@
               "binding": "As",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -2530,28 +2530,28 @@
               "binding": "It",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/frame-shell-header-B1Xokuj0.mjs",
               "binding": "Ae",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/shared-9-CM21XrJw.mjs",
               "binding": "vh",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/shared-frame-6jtSkIit.mjs",
               "binding": "KE",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -2580,28 +2580,28 @@
               "binding": "It",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/frame-shell-header-B1Xokuj0.mjs",
               "binding": "Ae",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/shared-9-CM21XrJw.mjs",
               "binding": "vh",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/shared-frame-6jtSkIit.mjs",
               "binding": "KE",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         },
@@ -2613,28 +2613,28 @@
               "binding": "It",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/frame-shell-header-B1Xokuj0.mjs",
               "binding": "Ae",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/shared-9-CM21XrJw.mjs",
               "binding": "vh",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             },
             {
               "file": "src/generated/artifact-library/shared-frame-6jtSkIit.mjs",
               "binding": "KE",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -3141,7 +3141,7 @@
               "binding": "wt",
               "generator": "scripts/extract-cowork-approval-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -3165,7 +3165,7 @@
               "binding": "wt",
               "generator": "scripts/extract-cowork-approval-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -3189,7 +3189,7 @@
               "binding": "wt",
               "generator": "scripts/extract-cowork-approval-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -3309,7 +3309,7 @@
               "binding": "wt",
               "generator": "scripts/extract-cowork-approval-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -3381,7 +3381,7 @@
               "binding": "wt",
               "generator": "scripts/extract-cowork-approval-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -3736,7 +3736,7 @@
               "binding": "yt",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }
@@ -3760,7 +3760,7 @@
               "binding": "yt",
               "generator": "scripts/extract-artifact-library-v4.mjs",
               "sourceVersion": "3.6556.2",
-              "reachable": true
+              "reachable": false
             }
           ]
         }

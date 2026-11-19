@@ -29,6 +29,8 @@ export { useHomePinsEnabled } from "./source-cowork-home-v3-adapters.jsx";
 export { markNavigation } from "./source-sessions-page-hf-adapters.jsx";
 export { markConversationNavigationIntent } from "./source-sessions-page-v4-adapters.jsx";
 export { useGrowthBookFeatureOn } from "./settings-nav-adapter.mjs";
+// shared-0 PO: the cowork spaces bridge the sliced Edit details form (shared-19 NI / FI) saves through (r2-02).
+export { CoworkSpaces } from "./source-project-spaces-bridge.mjs";
 
 // shared-123 PD (3.6556.2 shared-78 WF): a connector's favicon through a remote favicon service; no such request here
 // (E59), so the official fallback renders: the caller's fallbackSvg (Ie passes the letter avatar), else PD's own Globe

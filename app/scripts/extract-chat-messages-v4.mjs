@@ -19,6 +19,19 @@
 //   shared-4-C_EiQb9h   ev  ChatRetryAction       (3.6556.2 Jv; chunk-internal): the Retry action Q_ (export Ui) draws
 //                           without a quota hold
 //   shared-153-DMw2VzSq Kq  messageTextFeatures   (3.6556.2 shared-130 Gq): a text's { hasCodeBlock, hasWebLink }
+//   c7dd2633f-CvrjtTGG  re  AssistantMessageRoot  (export N; cc1aae219 kw): chat-conversation r2-02, the classic
+//                           assistant message wrapper JY draws outside cdsAssistantMessageRoot (host gate off, D29/D31):
+//                           `div.group.relative` + the caller's `relative pb-[var(--msg-assistant-pb,0.75rem)]`
+//                       y   AssistantMessageText  (export P; cc1aae219 jw): the reply's text column (font-claude-response,
+//                           leading-[1.65rem], the text / table insets v and g; stackBlocks adds shared-38 eo)
+//   ca2ef848d-DA54buzo  Zce ChatFooterSpark       (chat-conversation r3-02; chunk-internal): ele's chat-footer-spark, the
+//                           div[data-state] around W$ (the interactive spark, U$'s tooltip lines) or s$ (the footer dots,
+//                           SU from working-line-v4's activity-sprites.mjs; shared-33 KH / shared-100 _r warm-ups are host
+//                           hints)
+//   cf854d0e8-YPmDYG3q  c   ChatJumpToLatest      (export t; chat-conversation r3-01): the Chat page's scroll-to-bottom
+//                           button uL draws (ca2ef848d JO)
+//   shared-2-CsjIBQD8   _J  CHAT_COLUMN_MESSAGE_INSETS (export Ea): the msg-* insets of the transcript column vJ
+//                           (`[--msg-text-inset:0.25rem] [--msg-block-inset:0px]`, max-md `--msg-inset-end` 0)
 //
 // Machinery: the shared runSlicer engine (scripts/extract-working-line.mjs, not changed here):
 //   - sourceContract scripts/official-4.16336.0.mjs (vendor-frame React aliases checked against their declarators);
@@ -54,7 +67,7 @@ const ADAPTER_FILE = 'src/source-chat-messages-v4-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
 // The cds-core graph this area was reviewed against (cds-core wave 6, cds-integrate/wave6/apply-real.json).
-export const CDS_CORE_MANIFEST_SHA256 = '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c';
+export const CDS_CORE_MANIFEST_SHA256 = 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd';
 
 export const FEEDBACK = 'c49573414-CW4mWVDA.js';
 export const ROW = 'cc1aae219-BbSf__8R.js';
@@ -63,8 +76,12 @@ export const MENU = 'c79f7d2ef-snkGFUaN.js';
 export const FORM = 'shared-6-2QYRw_Wv.js';
 export const RETRY = 'shared-4-C_EiQb9h.js';
 export const LINKS = 'shared-153-DMw2VzSq.js';
-const TARGETS = { [FEEDBACK]: 'feedback.mjs', [ROW]: 'message-row.mjs', [PAGE]: 'disclaimer.mjs', [MENU]: 'context-menu.mjs',
-  [FORM]: 'feedback-form.mjs', [RETRY]: 'retry-action.mjs', [LINKS]: 'message-links.mjs' };
+export const MESSAGE = 'c7dd2633f-CvrjtTGG.js';
+export const COLUMN = 'shared-2-CsjIBQD8.js';
+export const JUMP = 'cf854d0e8-YPmDYG3q.js';
+const TARGETS = { [JUMP]: 'jump-to-latest.mjs', [FEEDBACK]: 'feedback.mjs', [ROW]: 'message-row.mjs', [PAGE]: 'disclaimer.mjs', [MENU]: 'context-menu.mjs',
+  [FORM]: 'feedback-form.mjs', [RETRY]: 'retry-action.mjs', [LINKS]: 'message-links.mjs', [MESSAGE]: 'assistant-message.mjs',
+  [COLUMN]: 'message-column.mjs' };
 const target = file => TARGETS[file] ?? `${/^(shared-\d+|shared-frame|vendor-[a-z]+|c[0-9a-f]+)-/.exec(file)[1]}.mjs`;
 
 // ── Roots: file -> local -> { name, export (the chunk's own alias, null: chunk-internal), probe (raw), features } ──────
@@ -88,6 +105,11 @@ export const ROOTS = {
         'm(f_, { components: uj, children: f })', '"data-testid": "message-warning",'] },
   },
   [PAGE]: {
+    // chat-conversation r3-02: ele's footer spark, `st("chat-footer-spark", …)` → Zce (div[data-testid][data-state] p-1
+    // -translate-x-px) around W$ (the interactive spark: shared-frame Wa in a lazy cd tooltip, U$'s lines, tickle on press).
+    Zce: { name: 'ChatFooterSpark', export: null, probe: 'Zce=b(function(e){let $=J9(33)',
+      features: ['testId: t,', 'hidden: n,', 'collapsed: r,', 'atWorkingRow: i,', 'avatarState: a,', 'footerDots: o,', 'dotsActivity: s,',
+        'T = S ? "collapsed" : n ? "hidden" : "shown",', 'E = C ? "working-row" : void 0,', '"data-testid": t,', '"data-state": T,', '"data-placement": E,'] },
     H9: { name: 'ChatDisclaimer', export: null, probe: 'id:"GjG77Kioid"',
       features: ['conversationUuid: t,', 'isTemporary: n,', 'incognitoString: r,', 'hasWebSearchResponse: i,', 'isMcpAppFullscreen: a,', 'inline: o,', 'concealed: s,',
         '"pointer-events-auto relative z-0 -mt-10 bg-page pb-2 pt-12 text-center text-xs text-muted-as-secondary",',
@@ -116,6 +138,27 @@ export const ROOTS = {
     Kq: { name: 'messageTextFeatures', export: null, probe: 'function Kq(e){let{hasCodeBlock:t,hasWebLink:n}=Gq(e,null)',
       features: ['let { hasCodeBlock: t, hasWebLink: n } = Gq(e, null);', 'return { hasCodeBlock: t, hasWebLink: n };'] },
   },
+  // chat-conversation r2-02 (cc1aae219 JY classic branch): `_(kw, {"data-testid": "assistant-message", …, children: [h3, m(jw,
+  // {id, ref, stackBlocks, children}), Mn, Pn]})`.
+  [MESSAGE]: {
+    re: { name: 'AssistantMessageRoot', export: 'N', probe: 'K1($,4,r,t("group relative",r))',
+      features: ['({ className: r, ref: a, ...i } = e)', 't("group relative", r)', 'n("div", { ref: a, ...i, className: o })'] },
+    y: { name: 'AssistantMessageText', export: 'P', probe: 'stackBlocks:o,cdsTextInset:s',
+      features: ['stackBlocks: o,', 'cdsTextInset: s,', 'l = !(s !== void 0 && s) && v,', 'u = c && ee,',
+        '"font-claude-response relative leading-[1.65rem] [&_pre>div]:bg-bg-000/50 [&_pre>div]:border-0.5 [&_pre>div]:border-border-400 [&_.ignore-pre-bg>div]:bg-transparent",',
+        'n(f.Provider, { value: c, children: r })', 'n("div", { ...a, className: d, children: p })'] },
+  },
+  // chat-conversation r3-01: the Chat page's jump-to-latest control (ca2ef848d Yle → lL → uL renders `u(JO, {visible, onClick,
+  // isStreaming, workingMark, placementClassName: "bottom-5 -translate-y-[var(--composer-banners-h,0px)]"})`, JO = t).
+  [JUMP]: {
+    c: { name: 'ChatJumpToLatest', export: 't', probe: '"data-testid":"jump-to-latest"',
+      features: ['placementClassName: p,', 'defaultMessage: "Scroll to bottom",', '"z-[1] size-9 inline-flex items-center justify-center",', '"absolute left-1/2 -translate-x-1/2",',
+        '"border-0.5 overflow-hidden !rounded-full p-1",', '"shadow-md hover:shadow-lg",', '"bg-bg-000/80",', '"data-testid": "jump-to-latest",'] },
+  },
+  [COLUMN]: {
+    _J: { name: 'CHAT_COLUMN_MESSAGE_INSETS', export: 'Ea', probe: '_J=`max-md:[--msg-inset-end:0px] ${aJ}`',
+      features: ['_J = `max-md:[--msg-inset-end:0px] ${aJ}`'] },
+  },
 };
 // Reviewed pins: raw declaration sha256 (official bytes) of every root (`--locate` prints them; never refreshed by a script).
 export const ROOT_PINS = {
@@ -128,9 +171,20 @@ export const ROOT_PINS = {
   'shared-6-2QYRw_Wv.js#k_': '73361cacecebc494d1f28c4ca63ee1805fd3ff60ae0c4c1b78018078e0b67669',
   'shared-4-C_EiQb9h.js#ev': 'd068ca53e8378bc2d4f946e9363fbe7c6e8d39495c157dcd10f7b50e00484f40',
   'shared-153-DMw2VzSq.js#Kq': '8054c728dab64d80ac1cde796a2842e4d543062b11d2312ea9b1580456c7bccb',
+  'c7dd2633f-CvrjtTGG.js#re': '793ba2b4b2fcd0bfe2107aff452053311a667baa360becfcf1fdb46376504dfa',
+  'c7dd2633f-CvrjtTGG.js#y': 'a7bc5bc7556bf7342da1e0f2358a67dfa8a4f9f627a98c9b385b565fbaa5df02',
+  'shared-2-CsjIBQD8.js#_J': '80b98a1a67fce44bec78f7d43c0e1d50b8d5c1e3377b6fad631a231d68b1cc98',
+  'ca2ef848d-DA54buzo.js#Zce': '2b737ed03c5831ecb5aa9be5c26eb4bfacc9262a2023512c33f34f0562f909e0',
+  'cf854d0e8-YPmDYG3q.js#c': 'f2e1b1313d2834b3332e71ee489fb2806ca31dd99262b68079a23a7be959e6b1',
 };
 // Feature checks on parts the roots reach (a reused minified name cannot pass): file#local -> features.
 export const INNER = {
+  // chat-conversation r3-02: W$, the footer spark Zce draws while the dots are off (CdsAnimatedSpark in a lazy CdsTooltip,
+  // inline-end of the reading direction; a press tickles it and counts U$'s line), and U$ (literal English lines).
+  'ca2ef848d-DA54buzo.js#W$': ['{ state: t, isInteractive: n } = e,', 'r = t === void 0 ? "idle" : t,', '[o, c] = s(G$, 0),', 'w(K$, f);',
+    'g = !i || r === "thinking" || r === "writing",', 'x = l ? "tickle" : r,', 'u(de, { state: x, onEnd: _ })', 'className: "inline-flex",', 'onMouseDown: b,',
+    'u(be, { content: v, side: y, lazy: !0, children: C })'],
+  'ca2ef848d-DA54buzo.js#U$': ['return e > 24 && e < 32', 'e > 18 && e <= 24', '"Alright, alright, you have my attention!"', '"Are you still doing that?"', '"Yes, yes. What can I do for you?"'],
   // nt (3.6556.2 UF): the thumbs, pressed from the message's chat_feedback (or the type just submitted).
   'c49573414-CW4mWVDA.js#nt': ['conversationUuid: t,', 'message: o,', 'agentMode: s,', 'cdsPresets: l,', 'testIdPrefix: h,', 'T = h === void 0 ? "action-bar" : h,',
     'rating: e === "upvote" ? "up" : "down",', 'ratingSurface: x ?? "row",', 'renderer: "legacy",', 'G = le ?? o.chat_feedback?.type,',
@@ -197,6 +251,15 @@ export const HOST_ADAPTERS = {
   // Vj's markdown renderer, react-markdown's Markdown (vendor-markdown c = ho); the host's react-markdown package is the
   // same library.
   'vendor-markdown-CoTLcoVs.js#ho': { name: 'ChatWarningMarkdown', from: OWN, features: ['return vo(t.runSync(t.parse(n), n), e);'] },
+  // chat-conversation r3-02: Zce's s$ (footer dots) warms the clay activity sprites on mount (shared-33 KH = `PH(() => void
+  // WH())`, an idle-time dynamic import of the sprite sheets). working-line-v4 holds the sprite players (SU) the dots draw;
+  // the warm-up is a load-time hint only, answered by the host.
+  'shared-33-DtdykY0y.js#KH': { name: 'preloadChatActivitySprites', from: null, features: ['return PH(() => void WH());'] },
+  // W$'s mount effect K$ → shared-100 _r (export Pt): at idle time, warm the CDS spark sprites (gr: `Bg() ? resolve :
+  // sM()`, shared-frame's reduced-motion probe and sprite loader, neither published by cds-core). CdsAnimatedSpark (dM)
+  // loads the same sprites itself (lM's effect calls sM()), so the warm-up is a load-time hint only, answered by the host.
+  'shared-100-BBQR7Gmd.js#_r': { name: 'preloadChatSparkSprites', from: null,
+    features: ['let e = () => void gr();', 'typeof requestIdleCallback == "function"', 'requestIdleCallback(e, { timeout: 2e3 })', ': setTimeout(e, 2e3);'] },
 };
 // Reviewed pins: raw declaration sha256 of every adapted original.
 export const ADAPTER_PINS = {
@@ -233,6 +296,8 @@ export const ADAPTER_PINS = {
   'shared-153-DMw2VzSq.js#yW': '5a4be3480166b4a04bd385754e2c76537cbc61e42300165f95ca54cf47f8e324',
   'shared-123-1Hc1RTKl.js#Fm': '64c0e106d278fab291feb7545e0cb285c1b22decadbd592c1cdde37198d7bc41',
   'vendor-markdown-CoTLcoVs.js#ho': '7c54d5b8ce16b5b6d65f10ed1e1ee7edb8580ce50a02e049cde0decb87e7aa85',
+  'shared-33-DtdykY0y.js#KH': '2e70735b27f270a7dced3c0bab330d2128b6384f6734af007d616d755d6721f1',
+  'shared-100-BBQR7Gmd.js#_r': '8e8dc6dc87fe0a00488909b7329d6a83f73840a3972d1557b687541ef76a6fd5',
 };
 
 // D1 (round2/plan.json chat-messages presentLinks / chunkOverlap): the modules of other 4.16336.0 graphs that hold a binding
@@ -240,14 +305,14 @@ export const ADAPTER_PINS = {
 export const LINKED_AREAS = [
   { area: 'frame-sidebar-nav', modules: ['shared-26.mjs', 'shared-153.mjs', 'shared-33.mjs', 'shared-62.mjs', 'shared-92.mjs'] },
   { area: 'routines-shared-v4', modules: ['shared-25-D-aF0gt9.mjs'] },
-  { area: 'working-line-v4', modules: ['shared-2.mjs'] },
+  { area: 'working-line-v4', modules: ['shared-2.mjs', 'activity-sprites.mjs'] },
   { area: 'session-rail-kit-v4', modules: ['shared-38-DyF0_Fim.mjs'] },
 ];
 // Pure bindings a linked module holds without exporting, cut again here (no module state).
 const linkedCopies = {};
 
 const SUPPORT = ['shared-frame-CJdE5Ria.js', 'shared-0-CnnWnVrT.js', 'shared-26-B-POtn5S.js', 'shared-183-B2N6Zy4J.js', 'shared-8-BqfCbkJd.js',
-  'shared-33-DtdykY0y.js', 'shared-3-IQTrO7Gx.js'];
+  'shared-33-DtdykY0y.js', 'shared-3-IQTrO7Gx.js', 'shared-38-DyF0_Fim.js'];
 const modules = [
   ...Object.entries(ROOTS).map(([file, roots]) => ({
     source: file, target: target(file), internal: Object.values(roots).some(r => r.export === null),
@@ -276,6 +341,17 @@ const rawCallSites = [
     features: ['n(ce,{...o,initialFeedbackInput:e,onKeepFeedbackInput:y,onSubmit:d},t)', 'Da as ce'] },
   { source: PAGE, role: 'The Chat page renders the disclaimer under the transcript',
     features: ['u(H9,{conversationUuid:t,isTemporary:De,incognitoString:Mt,hasWebSearchResponse:!!ho,isMcpAppFullscreen:At,concealed:qa})'] },
+  { source: ROW, role: 'chat-conversation r2-02: JY (classic layout) draws the assistant message as kw (c7dd2633f N = re) around its sr-only h3 and jw (P = y)',
+    features: ['_(kw,{"data-testid":"assistant-message","data-is-streaming":Tn,className:p("relative",!ie&&!(ae&&!i&&!In)&&"pb-[var(--msg-assistant-pb,0.75rem)]",q&&"message-fade-up")',
+      'm("h3",{"data-find-omitted":"",className:"sr-only select-none","aria-hidden":!At||void 0,children:At}),m(jw,{id:Sn,ref:Lt,stackBlocks:wn,children:m(MP.Provider,{value:sn,children:Qt})}),Mn,Pn]',
+      'N as kw', 'P as jw'] },
+  { source: PAGE, role: 'chat-conversation r3-01: uL draws the jump-to-latest control (cf854d0e8 t = JO) in its `relative h-0` holder above the composer; Yle passes no working mark while turnStatusOwnsSpark is off',
+    features: ['u(JO,{visible:L,onClick:D,isStreaming:d,workingMark:r,placementClassName:"bottom-5 -translate-y-[var(--composer-banners-h,0px)]"})',
+      'import{t as JO}from"./cf854d0e8-YPmDYG3q.js"', 'r=Jd("turnStatusOwnsSpark"),i=n&&r?zP:void 0'] },
+  { source: PAGE, role: 'chat-conversation r3-02: ele draws Zce as chat-footer-spark in the chat-footer-row (mt-6 when no status row) unless the turn status owns the spark',
+    features: ['ye?null:st("chat-footer-spark",Ye?"idle":ue,Qe,Ve)', '"data-testid":"chat-footer-row",className:gt', 'mt=et?"mt-1":"mt-6"',
+      'l(pt,"ms-[calc(var(--msg-text-inset,0.5rem)_-_0.25rem)] items-center transition-transform duration-300 ease-out",mt,ht)',
+      'ge=Jd("turnStatusOwnsSpark"),_e=he&&ge&&!le'] },
 ];
 
 const declarations = src => [...new Set([...src.top.values()].filter(entry => entry.kind !== 'import'))];

@@ -16,6 +16,13 @@ function cm(e) {
 function lm(e) {
   return 4 * e + 18;
 }
+var um = ["--epitaxy-code-font-size", "--epitaxy-code-leading"];
+function dm(e) {
+  return {
+    "--epitaxy-code-font-size": `${e / 16}rem`,
+    "--epitaxy-code-leading": `${cm(e) / 16}rem`,
+  };
+}
 var pm = "claude-light";
 var mm = "claude-dark";
 var hm = [
@@ -241,8 +248,10 @@ export {
   Rm,
   Wm,
   cm,
+  dm,
   hm,
   lm,
   om,
   sm,
+  um,
 };

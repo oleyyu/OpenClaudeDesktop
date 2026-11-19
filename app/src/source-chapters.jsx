@@ -211,12 +211,14 @@ const ChapterEntry = memo(function ChapterEntry({ chapter, sessionId, isActive, 
   // button names with aria-describedby (no native title), the row sits in the CDS Tooltip (shared-frame Xm = Kl: lazy,
   // non-hoverable, inline-end; `content: a && t.summary ? t.title : void 0, detail: t.summary`, a the open list), and a
   // Claude or user chapter's right-click menu is the CDS ContextMenu (kA = qi): Rename, a separator, danger Delete.
+  // fix-r2 U-50: FC's title is `o(vl, {text: t.title})`, vl = c96d752d0 fj (ChapterHeadingText: plain text first, a reveal
+  // only on a later rename), so the overflow tooltip's ellipsis applies to the text (not an inline-flex .sch-reveal box).
   const session = chapter.source === "session";
   const row = <button type="button" onClick={() => onJump(chapter)} onDoubleClick={session ? undefined : () => onStartRename(chapter.id)}
     aria-current={isActive ? "true" : undefined} aria-describedby={chapter.summary ? summaryId : undefined}
     className={`group/ch hit-row-main w-full flex items-center gap-sm px-1.25 h-control app-list-row rounded-[5px] text-start text-body hover:bg-fill-ghost-hover ${isActive ? "text-primary" : "text-secondary hover:text-primary"}`}>
     <span aria-hidden="true" className={`block h-[2px] rounded-full shrink-0 transition-[background-color] duration-150 ${isActive ? "w-[14px] bg-alpha-8" : "w-[9px] bg-alpha-3 group-hover/ch:bg-alpha-5"}`} />
-    <CdsOverflowTooltip lazy hoverable={false} side="inline-end" className="flex-1"><SourceTitleReveal text={chapter.title} /></CdsOverflowTooltip>
+    <CdsOverflowTooltip lazy hoverable={false} side="inline-end" className="flex-1"><ChapterHeadingText text={chapter.title} /></CdsOverflowTooltip>
     {chapter.summary && <span id={summaryId} hidden>{chapter.summary}</span>}
   </button>;
   const tooltip = (trigger) => <CdsTooltip lazy hoverable={false} side="inline-end"

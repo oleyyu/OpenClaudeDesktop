@@ -137,12 +137,15 @@ test('#8 account Learn more: external link first (trailing ArrowOutSquare), then
   pin(official3('cd75f6c8c-zFZzXb5w.js'), ['var X=n(g,{name:"ArrowOutSquare",size:"sm"})', 'pn=J0($,131)?K0($,131,n(c.Separator,{})):$[131]',
     'children:[Qt,en,tn,nn,rn,on,cn,ln,un,fn,pn,gn]']);
   const account = main.slice(main.indexOf('case "account":'), main.indexOf('case "connection":'));
-  const popup = account.slice(account.indexOf('className="account-learn-more"'));
-  const order = ['data-testid="user-menu-core-homepage" trailing={<CdsIcon name="ArrowOutSquare" size="sm" />}', '<SourceMenu.Separator />', 't("Keyboard shortcuts")}</SourceMenu.Item>']
+  // r2 sidebar-titlebar-r2-03: the account menu is the CDS Dropdown (shared-19 Y); Learn more is its Submenu Popup
+  // min-w-[208px] (was: SourceMenu, className="account-learn-more", SourceMenu.Separator / SourceMenu.Item).
+  const popup = account.slice(account.indexOf('<CdsDropdown.Popup className="min-w-[208px]">'));
+  const order = ['data-testid="user-menu-core-homepage" trailing={<CdsIcon name="ArrowOutSquare" size="sm" />}', '<CdsDropdown.Separator />', 't("Keyboard shortcuts")}</CdsDropdown.Item>']
     .map((needle) => popup.indexOf(needle));
   assert.ok(order.every((index, at) => index > 0 && (at === 0 || index > order[at - 1])), `order: ${order}`);
   // host-wiring root: the host-rendered trailing icon is the 4.16336.0 Icon through the cds-core facade.
-  assert.match(main, /import \{ CdsIcon \} from "\.\/cds-core\.mjs";/);
+  // r2 sidebar-titlebar-r2-03 imports CdsDropdown on the same line (was: /import \{ CdsIcon \} from …/).
+  assert.match(main, /import \{ CdsDropdown, CdsIcon \} from "\.\/cds-core\.mjs";/);
   assert.doesNotMatch(main, /import \{ CdsIcon \} from "\.\/generated\/view-tabs\/index\.js";/);
 });
 

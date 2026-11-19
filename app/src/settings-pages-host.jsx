@@ -22,6 +22,7 @@ import { CodeAppearanceSection, CodeTranscriptAppearanceSection } from './genera
 import codeThemeColors from './generated/code-theme-colors.json';
 import { SourceCodeThemePreview } from './source-code-theme-preview.jsx';
 import { useEditorPrefsStore } from './generated/settings-pages-v4/editor-prefs.mjs';
+import { useCodeFontSizeRoot } from './generated/settings-pages-v4/code-font-size-root.mjs';
 import { ClaudeCodeSettingsGroups } from './generated/settings-pages-v4/claude-code.mjs';
 import { DeveloperSettingsPage } from './generated/settings-pages-v4/developer-page.mjs';
 // Host errors (addError → danger toast) for the official useErrors reads (shared-62 rP), one host answer.
@@ -91,6 +92,22 @@ function useCodeLooksMirror(code, save) {
     for (const [host, official] of CODE_KEYS)
       if (state[official] !== previous[official] && typeof state[official] === 'string' && state[official] !== code[host]) save({ [host]: state[official] });
   }), [codeFont, codeThemeLight, codeThemeDark, save]);
+}
+
+// fix-r2 U-33: mounted once by the window (main.jsx App), as the desktop mounts c66fe388e `ct` (shared-20 bb): the
+// editorPrefs store's code font size on html (data-code-font-size, --epitaxy-code-font-size / --epitaxy-code-leading), the
+// variables the transcript code blocks, diffs and terminal read.
+// fix-r2 U-34: the host's saved transcript text size / width seed the store from launch on (not only while Settings is
+// open): the Code transcript reads its prose size from this same store (extract-code-transcript.mjs shared-7 jg →
+// useTranscriptEditorPrefsStore), so a preferences.json size shows without a localStorage copy.
+export function useOfficialEditorPrefsRoot({ transcriptSize, transcriptWidth } = {}) {
+  useCodeFontSizeRoot();
+  useEffect(() => {
+    const state = useEditorPrefsStore.getState(), patch = {};
+    if (SIZES.has(transcriptSize) && state.chatTextSize !== transcriptSize) patch.chatTextSize = transcriptSize;
+    if (SIZES.has(transcriptWidth) && state.transcriptWidthChoice !== transcriptWidth) patch.transcriptWidthChoice = transcriptWidth;
+    if (Object.keys(patch).length) useEditorPrefsStore.setState(patch);
+  }, [transcriptSize, transcriptWidth]);
 }
 
 function useHostValue({ theme, motion, interfaceFont, save, transcriptView }) {

@@ -1110,8 +1110,10 @@
         "Z5"
       ],
       "heldByViewTabs": [
+        "Bn",
         "Dr",
         "Er",
+        "Hn",
         "Om",
         "Sa",
         "Sr",
@@ -1122,7 +1124,8 @@
         "pr",
         "wr",
         "xa",
-        "xr"
+        "xr",
+        "zn"
       ]
     },
     {
@@ -1682,6 +1685,8 @@
         "wW"
       ],
       "heldByViewTabs": [
+        "J$",
+        "Y$",
         "oI",
         "sI"
       ]
@@ -2201,7 +2206,7 @@
       "target": "editor-prefs.mjs",
       "source": "shared-36-fqRFYwOb.js",
       "sourceSha256": "46b37c8c361e9b83b9e10257008f0ace79f91e1ec68a8d20b136de35644b7719",
-      "sha256": "7ba6bb098eb704c1a9d2f8af4c06d72fc7cf2a978657239bcb9aec76406cc48c",
+      "sha256": "3e3294331bfc3e7c1eb40b6a19f14e851701b545db7be18efe312dec2b4eecb3",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -2219,6 +2224,14 @@
         {
           "name": "lm",
           "sha256": "e9e0d5f9b61460c8345cb4333adc5545dc126122b6a8d7ca4c0f67f0cb910362"
+        },
+        {
+          "name": "um",
+          "sha256": "20d4ad8e537eeccbdd612982f79f0c1b9ac7dbf759810a30b7584f62ff68e903"
+        },
+        {
+          "name": "dm",
+          "sha256": "3c1ce94c669104f98f53bd85f3d704c9d11bf87367e8c2909f81eacfa9e8ad90"
         },
         {
           "name": "pm",
@@ -2405,10 +2418,12 @@
         "Rm",
         "Wm",
         "cm",
+        "dm",
         "hm",
         "lm",
         "om",
-        "sm"
+        "sm",
+        "um"
       ],
       "heldByViewTabs": [
         "hm",
@@ -5861,6 +5876,111 @@
       "heldByViewTabs": []
     },
     {
+      "target": "code-font-size-root.mjs",
+      "source": "shared-20-DUEo90UF.js",
+      "sourceSha256": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc",
+      "sha256": "857897f2dc85764497ba2f309be6abc2e156e0655dac99fc9a1d91b4dd33b951",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "hb",
+          "sha256": "e4887c504a531509a53256d74c3d69b4e33b49becd40f11d89c0b7f8af934481"
+        },
+        {
+          "name": "yb",
+          "sha256": "faafc2102baba11aa3422f9d19f36897fb9cc4e6410be7bdb6228f8794325db2"
+        },
+        {
+          "name": "bb",
+          "sha256": "ba0483db3dc59b8eb11224f4e3e4ba8d42c9f1f3baebb5cd82ee6e28ee93010c"
+        },
+        {
+          "name": "xb",
+          "sha256": "d7d2e7c8f88e5b1bc23d258766791ac55aa048f37aa8648955b9fda772b57306"
+        },
+        {
+          "name": "Sb",
+          "sha256": "66bfc680bd5972e475592a266575c6f1cce3f72630ce4623ca46e4371b859d91"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Fd",
+          "from": "./editor-prefs.mjs",
+          "name": "dm",
+          "via": "shared-36-fqRFYwOb.js:Fo",
+          "kind": "generated"
+        },
+        {
+          "local": "Id",
+          "from": "./editor-prefs.mjs",
+          "name": "um",
+          "via": "shared-36-fqRFYwOb.js:No",
+          "kind": "generated"
+        },
+        {
+          "local": "J0",
+          "from": "../settings-nav/shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../settings-nav/shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J9",
+          "from": "../settings-nav/shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../settings-nav/shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K2",
+          "from": "../settings-nav/shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "Rd",
+          "from": "./editor-prefs.mjs",
+          "name": "Mm",
+          "via": "shared-36-fqRFYwOb.js:So",
+          "kind": "generated"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-BckkO60Y.js:xo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "bb": "useCodeFontSizeRoot"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
       "target": "desktop-prefs.mjs",
       "source": "c6673aecb-B-t_VQzj.js",
       "sourceSha256": "c224b357e77afcf6aaf444cae824c04b7c2ea85c5529669fefece38b2414d405",
@@ -8313,7 +8433,7 @@
       "target": "claude-code.mjs",
       "source": "c8b630735-Bbdb359j.js",
       "sourceSha256": "4da5657b201430a2a1626d2f844b39ec4448f9257f4615f1b1a744bc9490fd23",
-      "sha256": "7e5567a7ae81e55bfbddab279bab1d38601c0737a7adbf1ec3552dccdcb2ddc8",
+      "sha256": "09580ba2f7588b27cf73d5f1386bda7073c9ced1457073c9aac9029384c44067",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -9909,5 +10029,15 @@
     }
   ],
   "callSites": [],
+  "rewrites": [
+    {
+      "binding": "c8b630735-Bbdb359j.js#ot",
+      "why": "Host fact (U-41): the app creates \"Inside project\" worktrees in <project>/.code/worktrees (electron/worktree-prepare.mjs), not the CLI's .claude/worktrees",
+      "fromSha256": "02ce5cbdd0c10f09cb0ea8f6e261739b1c7875e0ea71ea304c1f639269aaa5ff",
+      "toSha256": "bc64be3f4d1ba275261f701bbc96293afb9b473084077188e62ccc9228a4e560",
+      "from": "description:\".claude/worktrees\"",
+      "to": "description:\".code/worktrees\""
+    }
+  ],
   "publicAssets": []
 }

@@ -47,7 +47,7 @@ const PAGE = 200
 
 /** Every message of a session, oldest first. */
 export function readMessages(api, sessionID, { signal } = {}) {
-  return api.all(`/api/session/${encodeURIComponent(sessionID)}/message`, { query: { order: 'asc' }, limit: PAGE, signal })
+  return api.all(`/api/session/${encodeURIComponent(sessionID)}/message`, { query: { order: 'asc' }, limit: PAGE, maxPages: Infinity, signal })
 }
 
 /** A v2 Session.Info with 1.x's `directory` (location.directory) for the code that reads it. */
@@ -86,12 +86,16 @@ function userParts(message) {
   if (typeof message.text === 'string' && message.text) parts.push({ id: textPartId(message.id, 0), type: 'text', text: message.text })
   for (const file of Array.isArray(message.files) ? message.files : []) {
     if (!isRecord(file)) continue
-    const url = file.source?.type === 'uri' && typeof file.source.uri === 'string' ? file.source.uri
-      : typeof file.uri === 'string' ? file.uri : typeof file.data === 'string' ? `data:${file.mime};base64,${file.data}` : null
+    const url = typeof file.data === 'string' && file.data ? `data:${file.mime};base64,${file.data}`
+      : file.source?.type === 'uri' && typeof file.source.uri === 'string' ? file.source.uri
+        : typeof file.uri === 'string' ? file.uri : null
     if (url) parts.push({ type: 'file', mime: file.mime, url, ...(file.name ? { filename: file.name } : {}) })
   }
   // A mention is already part of the text (its start/end point into it).
   for (const agent of Array.isArray(message.agents) ? message.agents : []) if (isRecord(agent) && agent.name && !agent.mention) parts.push({ type: 'agent', name: agent.name })
+  for (const skill of Array.isArray(message.skills) ? message.skills : []) {
+    if (typeof skill?.id === 'string' && skill.id) parts.push({ type: 'skill', name: skill.id })
+  }
   return parts
 }
 
@@ -136,7 +140,7 @@ export function toV1Message(message, { sessionID = null } = {}) {
         ...(failed ? { error: message.status === 'timeout' ? 'The command timed out.' : 'The command was stopped.' } : {}),
         time: { start: message.time?.created, ...(Number.isFinite(message.time?.completed) ? { end: message.time.completed } : {}) },
       }
-      return { info: { ...base, role: 'shell', ...(typeof message.shellID === 'string' ? { shellID: message.shellID } : {}) }, parts: [{ id: shellPartId(id), type: 'tool', tool: 'shell', callID: message.shellID ?? id, sessionID, messageID: id, state }] }
+      return { info: { ...base, role: 'shell', ...(typeof message.shellID === 'string' ? { shellID: message.shellID } : {}) }, parts: [{ id: shellPartId(id), type: 'tool', tool: 'shell', source: 'userShell', callID: message.shellID ?? id, sessionID, messageID: id, state }] }
     }
     case 'idle': return { info: { ...base, role: 'idle', outcome: message.outcome, ...(isRecord(message.error) ? { error: message.error } : {}) }, parts: [] }
     default: return { info: { ...base, role: message.type ?? 'unknown' }, parts: [] }

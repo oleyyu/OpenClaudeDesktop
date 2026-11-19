@@ -57,3 +57,25 @@ test('the reply chin leading holds the Add control alone (no Microphone + CaretD
   assert.ok(!labels.includes('Dictate'));
   assert.equal(chin.split('data-cds="ChatComposerChin"').length - 1, 1);
 });
+
+// marlin-chin fix2 (U-MARLIN): the marlin Chat conversation's chin-mic slot is shared-9 n_: rendered only with a control
+// (t_, source-composer.jsx passes one only for stableDictationAvailable), its frame "ms-1 flex items-center" plus
+// "opacity-40" and inert while the composer is disabled or a send is in flight (n_ p = disabled || $g).
+const fakeMic = React.createElement('button', { type: 'button', 'aria-label': 'Dictate' });
+const micFrame = html => /<div class="([^"]*)" data-testid="chin-mic"([^>]*)>/.exec(html);
+test('marlin chin: no control → no chin-mic slot (n_ returns null without t_)', () => {
+  assert.equal(micFrame(render({ current: true })), null);
+});
+test('marlin chin: an available control sits in n_ / k_ frames, undimmed at rest', () => {
+  const frame = micFrame(render({ current: true, dictationControl: fakeMic }));
+  assert.ok(frame, 'chin-mic rendered');
+  assert.equal(frame[1], 'ms-1 flex items-center');
+  assert.doesNotMatch(frame[2], /inert/);
+});
+for (const [name, props] of [['sending', { sending: true }], ['disabled', { disabled: true }]])
+  test(`marlin chin: ${name} dims the chin-mic frame (opacity-40, inert)`, () => {
+    const frame = micFrame(render({ current: true, dictationControl: fakeMic, ...props }));
+    assert.ok(frame, 'chin-mic rendered');
+    assert.equal(frame[1], 'ms-1 flex items-center opacity-40');
+    assert.match(frame[2], /inert=""/);
+  });

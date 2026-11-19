@@ -1358,7 +1358,7 @@ var ot = a((e) => {
       ? K1($, 14, Ce, {
           value: "default",
           label: Ce,
-          description: ".claude/worktrees",
+          description: ".code/worktrees",
         })
       : $[15],
     De = J1($, 16, J)

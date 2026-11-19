@@ -42,7 +42,7 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 // The finalized cds-core graph this area was reviewed against (cds-integrate/wave4/wave4-merged.json manifestSha256.production).
 // The engine checks every cds-core module's bytes against that manifest; this pin makes a regenerated cds-core an explicit stop
 // (re-run, review the closure, update the pin) instead of a silent relink. No cds-core generator config is read.
-export const CDS_CORE_MANIFEST_SHA256 = '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c';
+export const CDS_CORE_MANIFEST_SHA256 = 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd';
 
 export const START = 'cc43287c9-dzfX-J5i.js';
 const FACE = 'shared-20-DUEo90UF.js';

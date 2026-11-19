@@ -44,6 +44,7 @@ process.once('message',async options=>{
    // W14-code r5 gen-final-5 (R5DC-03 residue): no pause / member control reaches a run any more, so no 'pausable' event.
    const hosted=await runHarnessWorkflow(client,options,send,value=>{runtime=value;});
    if(hosted.supported){await publishResult(options.directory,hosted.value,hosted.outputFile);await close(0);return;}
+   if(options.requiresHostedResume)throw new Error('The selected core cannot resume this core-hosted workflow.');
   }
   // The access comes from the session's Mode at launch (permission-policy.mjs workflowAccess);
   // script options cannot raise it. Agents never ask (approvalPolicy never): the Mode chose already.

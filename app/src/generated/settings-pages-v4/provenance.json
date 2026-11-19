@@ -5,7 +5,7 @@
   "scope": "settings page primitives (shared-1 II/jI/GI), General › Appearance (c0db37792 Hn; cbc28252c E wording overlay not sliced, see generator header), the Claude Code page code looks (cda9efc49 R Code appearance + M Appearance part all, the desktop c71860c77-puomdTO2 Ea `x && !C` groups; c51ac4bf6 row layer; FileDiff ca7ba268c Va answered by the host preview; round 4: the simple-nav GeneralCodeLooks c296a7a55 root is gone) and the Claude Code page setting groups (c8b630735 ot: the host renders parts local and notifications; desktop bridges AppPreferences / FilePickers / DesktopInfo answered by the host) and the Developer page (c71860c77-Cuocl2LF i: c8828a060 F > B > oe; the claude.settings MCP bridge answered by the host from the core's local MCP configuration); the General page shell zn (Profile: vendor-motion D1; Notifications: local-sessions store D1; Tasks / Memory: vendor-query skipToken identity — round4/settings/general/report.json), the Claude Code page shell c71860c77 Ea and the System page are not sliced here",
   "sharedGraph": {
     "area": "cds-core",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   },
   "linkedAreas": [
     {
@@ -14,7 +14,7 @@
     },
     {
       "area": "files-changes-v4",
-      "manifestSha256": "35740c17397e4a05b8f5a12f408061040cdd39e4fb28ca86b43c02f786e1b93e"
+      "manifestSha256": "708013539535ccec0498a3f2272b037af2628234eca68c6d1f94353c24b2848b"
     }
   ],
   "roots": [
@@ -89,6 +89,14 @@
       "export": "Eo",
       "oldCounterpart": null,
       "declarationSha256": "ab174ff5679cf89de1a916b0e6b05771955444c60340f84726cb71ec70c7e8a2"
+    },
+    {
+      "semantic": "useCodeFontSizeRoot",
+      "file": "shared-20-DUEo90UF.js",
+      "local": "bb",
+      "export": "ys",
+      "oldCounterpart": null,
+      "declarationSha256": "ba0483db3dc59b8eb11224f4e3e4ba8d42c9f1f3baebb5cd82ee6e28ee93010c"
     }
   ],
   "cuts": [
@@ -472,8 +480,10 @@
     "shared-25-D-aF0gt9.js#uH",
     "shared-25-D-aF0gt9.js#vd",
     "shared-25-D-aF0gt9.js#wH",
+    "shared-frame-CJdE5Ria.js#Bn",
     "shared-frame-CJdE5Ria.js#Dr",
     "shared-frame-CJdE5Ria.js#Er",
+    "shared-frame-CJdE5Ria.js#Hn",
     "shared-frame-CJdE5Ria.js#Om",
     "shared-frame-CJdE5Ria.js#Sa",
     "shared-frame-CJdE5Ria.js#Sr",
@@ -485,6 +495,9 @@
     "shared-frame-CJdE5Ria.js#wr",
     "shared-frame-CJdE5Ria.js#xa",
     "shared-frame-CJdE5Ria.js#xr",
+    "shared-frame-CJdE5Ria.js#zn",
+    "shared-1-D1bGaTaN.js#J$",
+    "shared-1-D1bGaTaN.js#Y$",
     "shared-1-D1bGaTaN.js#oI",
     "shared-1-D1bGaTaN.js#sI",
     "vendor-all-0-uUCo-eCX.js#de",

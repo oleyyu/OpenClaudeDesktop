@@ -77,7 +77,7 @@ test('the v4 graph pins the official 4.16336.0 roots, adapters, links and call s
   assert.equal(manifest.referenceVersion, '4.16336.0');
   assert.equal(manifest.referenceSnapshot, 'snapshots/claude-4.16336.0-20261104');
   assert.equal(manifest.sharedGraph, 'cds-core');
-  assert.equal(provenance.sharedGraph.manifestSha256, '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c');
+  assert.equal(provenance.sharedGraph.manifestSha256, 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd');
   assert.deepEqual(provenance.roots.map(r => `${r.file}#${r.local}=${r.name}/${r.export}`), [
     'c96142a4d-DqOQjECe.js#gt=ToolApprovalCard/i', 'c14f706e5-Bqtc_XFV.js#Zt=ToolApprovalActions/t']);
   assert.ok(provenance.roots.every(r => r.pinned) && provenance.adapters.every(a => a.pinned));
@@ -138,7 +138,7 @@ test('SSR: a Cowork command request on the 4.16336.0 card: Claude wants to use B
   if (!ssr(t)) return;
   const html = render(command());
   const words = text(html);
-  assert.match(words, /Claude wants to use Bash/);
+  assert.match(words, /DeepSeek wants to use Bash/); // fix-r2 U-14 (E83): the running assistant, was Claude
   assert.ok(words.indexOf('Allow for this task') >= 0, words);
   assert.match(words, /Allow once/);
   assert.match(words, /Deny/);
@@ -159,6 +159,6 @@ test('SSR: no session offer leaves Allow once and Deny; a persistent offer goes 
 
 test('SSR: file changes name Edit / Write', (t) => {
   if (!ssr(t)) return;
-  assert.match(text(render(request('item/fileChange/requestApproval', { changes: [{ path: '/Users/x/Docs/a.md', kind: { type: 'update' } }] }))), /Claude wants to use Edit/);
-  assert.match(text(render(request('item/fileChange/requestApproval', { changes: [{ path: '/Users/x/Docs/b.md', kind: { type: 'add' } }] }))), /Claude wants to use Write/);
+  assert.match(text(render(request('item/fileChange/requestApproval', { changes: [{ path: '/Users/x/Docs/a.md', kind: { type: 'update' } }] }))), /DeepSeek wants to use Edit/);
+  assert.match(text(render(request('item/fileChange/requestApproval', { changes: [{ path: '/Users/x/Docs/b.md', kind: { type: 'add' } }] }))), /DeepSeek wants to use Write/);
 });

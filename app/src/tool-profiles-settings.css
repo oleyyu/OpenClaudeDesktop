@@ -8,3 +8,6 @@
 .tprof-check > span:last-child { display:flex; min-width:0; }
 .tprof-check .tprof-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:var(--cds-font-mono); font-size:var(--cds-font-size-footnote, 12px); }
 .tprof-check[data-tool-locked] .tprof-name { color:var(--cds-text-muted); }
+/* A server's tool count after its name: the label is a flex row, so the count's leading space collapses; keep a gap
+   and never let the count shrink (U-53). */
+.tprof-check .ccmd-muted { flex:none; margin-inline-start:0.5ch; }

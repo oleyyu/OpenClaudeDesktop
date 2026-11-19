@@ -12,20 +12,20 @@
   },
   "sharedGraph": {
     "area": "cds-core",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   },
   "linkedAreas": {
     "chat-knowledge-v4": "c9b7145c372539e22e2cdac8caf9ed380d4953cb4c4be8cb40ba5f5d09c9ea91",
-    "code-current-v4": "38e807769b8b78b4564954b6441278a7fad18cd79f9c8d1fbcc1840d6188df76",
-    "files-changes-v4": "35740c17397e4a05b8f5a12f408061040cdd39e4fb28ca86b43c02f786e1b93e",
-    "frame-sidebar-nav": "f050559d8d4736a10e502efd30f166d28900e800b146c6c8749608a326966487",
+    "code-current-v4": "c08455eabfc2d1fe4c1eebdc3d427cd5f553b5dee189678f5e85f8af47888bcd",
+    "files-changes-v4": "708013539535ccec0498a3f2272b037af2628234eca68c6d1f94353c24b2848b",
+    "frame-sidebar-nav": "130fb0fd5b7c760333f4e8868dcdce5d1cdfdc4877c3876625469f07c2855cbc",
     "review-findings-v4": "539686c82407f012dc7920b9c68d2e92c16de3aa1700e25bf407f36f1ae495f4",
-    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "routines-shared-v4": "79aa397be0c7daa4745103bbe2ea06fdcdbade14633a50d27248c2aea2b31649",
     "session-rail-changes-v4": "fd23545a7c4be524493f74e75d69170c3538554b15051026bb8622d8240903bf",
-    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a",
-    "settings-pages-v4": "10c5fe1c4bf21bf43298bab9e58dddc91af58217aceea8ce915423157f448aa7",
-    "turn-plan-v4": "120180f4946ca49f0a8cb0302a85c1ff5f155733e1ef1bb35000ece88b1ceb2e",
-    "working-line-v4": "25610753870c1d676d772810433ca78b2413b2d93418b0e3ea8a904875d1deaa"
+    "session-rail-kit-v4": "d503708edd688b20c3a92e35cfcd097c048a90deda862533044d2973cd6043e2",
+    "settings-pages-v4": "f6a0579888ca74f8a97bff68f33c0b800665bf168a43e6071df964a58485f8f2",
+    "turn-plan-v4": "eeaa54a1891ff3941efa4271bcfdb9d96822919883beaadc87efc537e58e49cc",
+    "working-line-v4": "a8643190175e64a76ad6b902c7071978a35e8bbca3aae07bc90f0b7e3f8e94a1"
   },
   "roots": [
     {

@@ -95,8 +95,12 @@ export function getClient(options) {
 
 async function connectClient(options) {
   if (clientPromise) {
-    const existing = await clientPromise.catch(() => null);
+    const opening = clientPromise;
+    const existing = await opening.catch(() => null);
+    if (clientPromise !== opening) throw new Error("client shut down");
     if (existing && existing.readyState === "ready") return existing;
+    if (existing) await existing.shutdown();
+    if (clientPromise !== opening) throw new Error("client shut down");
     clientPromise = undefined; // dead/failed — recreate below
   }
   const client = new AppServerClient(options ?? {});
@@ -105,12 +109,12 @@ async function connectClient(options) {
     if (n.method === "thread/tokenUsage/updated") recordTokenUsage(n.params);
   });
   const p = client.connect().then(async () => {
-    try {
-      availableModels = (await client.listModels()).map(modelId).filter(Boolean);
-    } catch {
-      availableModels = [];
-    }
-    modelContext = await readModelContext(client, options);
+    let models = [];
+    try { models = (await client.listModels()).map(modelId).filter(Boolean); } catch {}
+    const context = await readModelContext(client, options);
+    if (currentClient !== client) throw new Error("client shut down");
+    availableModels = models;
+    modelContext = context;
     return client;
   });
   clientPromise = p;
@@ -194,12 +198,20 @@ export function buildTurnParams({ threadId, prompt, model, effort, schema }) {
 // Accumulate a turn's agent-message text for one thread (streaming deltas + the
 // authoritative item/completed text), surfacing partials via onProgress. Returns
 // { text(), detach() }; the caller MUST detach() once the turn settles.
-export function attachAgentMessageCollector(client, threadId, onProgress) {
+export function attachAgentMessageCollector(client, threadId, onProgress, onActivity) {
   let finalText = "";
   const deltas = new Map();
-  const onNote = (n) => {
+  // A single stdout chunk can carry the RPC reply and notifications. Hold all
+  // same-thread frames until startTurn returns the ID so even those first frames
+  // can be matched, including when this thread also has late frames from a prior turn.
+  let pending = onActivity ? [] : null;
+  let turnId;
+  let completed = false;
+  const receive = (n) => {
     const p = n.params ?? {};
-    if (p.threadId !== threadId) return;
+    const eventTurn = p.turnId ?? p.turn?.id;
+    if (completed || (turnId && eventTurn && eventTurn !== turnId)) return;
+    if (n.method === "turn/completed") completed = true;
     if (n.method === "item/agentMessage/delta" && typeof p.delta === "string") {
       deltas.set(p.itemId, (deltas.get(p.itemId) ?? "") + p.delta);
       // best-effort partial output for live viewers — must never break the turn.
@@ -208,9 +220,21 @@ export function attachAgentMessageCollector(client, threadId, onProgress) {
       // Local: a commentary message (a bridge's turn-end note such as "hit the step limit") is not the agent's reply.
       finalText = p.item.text ?? finalText;
     }
+    onActivity?.(n);
+  };
+  const onNote = (n) => {
+    if (n.params?.threadId !== threadId) return;
+    if (pending) pending.push(n);
+    else receive(n);
   };
   client.on("notification", onNote);
   return {
+    bindTurn(id) {
+      turnId = id;
+      const buffered = pending ?? [];
+      pending = null;
+      for (const note of buffered) receive(note);
+    },
     text: () => finalText || (deltas.size ? [...deltas.values()].join("") : ""),
     detach: () => client.off("notification", onNote),
   };
@@ -416,7 +440,6 @@ async function runOneTurn(prompt, opts) {
 // interrupted completion awaited briefly), so a retry never runs beside an orphan.
 async function runTurn(client, threadId, turnParams, opts, state) {
   state.activeTools.clear();
-  const collector = attachAgentMessageCollector(client, threadId, opts.onProgress);
   const idleMs = opts.timeoutMs ?? 600_000;
   const stop = new AbortController();
   let turnId, timer, graceTimer, settled = false;
@@ -434,7 +457,7 @@ async function runTurn(client, threadId, turnParams, opts, state) {
     const tokens=n.method==='thread/tokenUsage/updated'?tokensForThread(threadId)?.total:undefined;
     opts.onActivity?.({activeTools:state.activeTools.size,toolCalls:state.toolCalls,...tool?{lastToolName:p.item.tool??p.item.name??p.item.type}:{},...Number.isFinite(tokens)?{tokens}:{}});
   };
-  client.on('notification',activity);
+  const collector = attachAgentMessageCollector(client, threadId, opts.onProgress, activity);
   // A user/run abort interrupts the turn; its interrupted completion settles the wait.
   // If the server never confirms, give up after a grace period.
   const abort=()=>{if(turnId)void client.interruptTurn(threadId,turnId).catch(()=>{});clearTimeout(graceTimer);graceTimer=setTimeout(()=>stop.abort(new Error("Agent turn interrupted")),INTERRUPT_GRACE_MS);};
@@ -443,6 +466,7 @@ async function runTurn(client, threadId, turnParams, opts, state) {
     opts.signal?.throwIfAborted();
     const startTurnRes = await client.startTurn(turnParams);
     turnId = startTurnRes?.turn?.id;
+    collector.bindTurn(turnId);
     if(opts.signal?.aborted)abort();
     arm();
     const completed = await client.waitForNotification(
@@ -461,7 +485,6 @@ async function runTurn(client, threadId, turnParams, opts, state) {
   } finally {
     clearTimeout(timer); clearTimeout(graceTimer);
     opts.signal?.removeEventListener('abort',abort);
-    client.off('notification',activity);
     collector.detach();
   }
 }

@@ -227,9 +227,14 @@ export function applyConfigEdits(file, edits) {
   config.mcp.servers = config.mcp.servers && typeof config.mcp.servers === 'object' ? config.mcp.servers : {}
   const changed = []
   for (const edit of edits ?? []) {
-    const match = /^mcp_servers\.([^.]+)(?:\.(enabled))?$/.exec(String(edit?.keyPath ?? ''))
-    if (!match) throw Object.assign(new Error(`ZCode can't store ${edit?.keyPath} here; only mcp_servers.<name> is supported.`), { code: -32602 })
-    const [, name, field] = match
+    // `mcp_servers."a.b".enabled` (the app quotes the name for the toggle) or `mcp_servers.<bare>.enabled`; an add or a
+    // removal sends the raw name, dots and all (`mcp_servers.my.server`), or a quoted one.
+    const keyPath = String(edit?.keyPath ?? ''), unquote = (text) => text.replace(/\\(.)/g, '$1')
+    const toggle = /^mcp_servers\.(?:"((?:[^"\\]|\\.)+)"|([^.]+))\.enabled$/.exec(keyPath)
+    const whole = toggle ? null : /^mcp_servers\.(?:"((?:[^"\\]|\\.)+)"|(.+))$/.exec(keyPath)
+    if (!toggle && !whole) throw Object.assign(new Error(`ZCode can't store ${edit?.keyPath} here; only mcp_servers.<name> is supported.`), { code: -32602 })
+    const name = toggle ? (toggle[1] !== undefined ? unquote(toggle[1]) : toggle[2]) : (whole[1] !== undefined ? unquote(whole[1]) : whole[2])
+    const field = toggle ? 'enabled' : undefined
     if (field === 'enabled') {
       if (!config.mcp.servers[name]) throw Object.assign(new Error(`Unknown MCP server: ${name}`), { code: -32602 })
       config.mcp.servers[name].enabled = edit.value !== false
@@ -247,7 +252,7 @@ const RUNTIME_STATUS = { connected: 'connected', connecting: 'starting', disable
 // ZCode reports the enumerated reason; the connector row says what to do about it.
 const OFFICIAL_AUTH_HINTS = [
   [/official_auth_plan_required/, 'This Z.ai service needs an active GLM Coding Plan on the signed-in account.'],
-  [/official_auth_(unavailable|rejected|forbidden)/, 'This Z.ai service needs the GLM Coding Plan browser sign-in (Settings › General › Account › Sign in).'],
+  [/official_auth_(unavailable|rejected|forbidden)/, 'This Z.ai service needs the GLM Coding Plan browser sign-in (Settings › Account › Sign in).'],
 ]
 export function officialAuthHint(status) {
   const text = `${status?.failureKind ?? ''} ${status?.error ?? ''}`

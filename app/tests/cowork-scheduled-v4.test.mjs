@@ -40,7 +40,15 @@ test('two source contracts; the 3.6556.2 production graph is unchanged and the C
   // file imports directly, or one a reached graph declares in its linkedAreas (no undeclared path into this graph).
   assert.ok((await fs.stat(path.join(OUT, 'manifest.json'))).isFile());
   const hostFiles = (await fs.readdir(path.join(ROOT, 'src'))).filter(file => /\.(m?js|jsx)$/.test(file));
-  for (const file of hostFiles) assert.doesNotMatch(await fs.readFile(path.join(ROOT, 'src', file), 'utf8'), /cowork-scheduled-v4\//, `host ${file}`);
+  // library-pages-r1-03 (cutover; the old assertion "no host file imports it" encoded the staged state): the Scheduled page
+  // host (source-routines.jsx) and its card / detail / form wrappers (source-routine-cowork-page-adapters.jsx) import it;
+  // no other host file does.
+  const scheduledHosts = ['source-routine-cowork-page-adapters.jsx', 'source-routines.jsx'];
+  for (const file of hostFiles) {
+    const text = await fs.readFile(path.join(ROOT, 'src', file), 'utf8');
+    if (scheduledHosts.includes(file)) assert.match(text, /from '\.\/generated\/cowork-scheduled-v4\/index\.mjs';/, `host ${file}`);
+    else assert.doesNotMatch(text, /cowork-scheduled-v4\//, `host ${file}`);
+  }
   const linking = new Set();
   for (const area of await fs.readdir(GENERATED)) {
     if (area === 'cowork-scheduled-v4' || !(await fs.stat(path.join(GENERATED, area))).isDirectory()) continue;

@@ -45,7 +45,7 @@ import { createAppSwitchPress, homeNameFor } from "./app-switch-model.mjs";
 import { OFFICIAL_ROUTES, hostTabForSection } from "./settings-tab-compat.mjs";
 // cds-core wave 8 (W8-M4): the official frame store shared-92 Y (qg) is held by cds-core; the sliced nav body
 // (generated/frame-sidebar-nav) links it and reads its frame fields (collapsed 18 reads, …).
-import { store_shared92_Y as officialFrameStore, store_shared25_tu as officialPathnameStore } from "./cds-core.mjs";
+import { CdsDropdown, store_shared92_Y as officialFrameStore, store_shared25_tu as officialPathnameStore } from "./cds-core.mjs";
 
 export const FrameSidebarHostContext = createContext(null);
 function useHost() {
@@ -207,6 +207,11 @@ function useSelectedMode() {
   const host = useHost();
   return state.pressed ?? state.pending ?? host.mode;
 }
+// shared-123 PV over useEnabledModes' list: the mode when enabled, else the first enabled mode (exported for the node test).
+export function frameModeFor(mode, homeMode) {
+  const enabled = [homeMode, "code"];
+  return enabled.includes(mode) ? mode : enabled[0] ?? mode;
+}
 function useEnabledModes() {
   const { homeMode } = useHost();
   return useMemo(() => [homeMode, "code"], [homeMode]);
@@ -251,9 +256,12 @@ function useAccountAvatar() {
   const account = useAccount();
   return useMemo(() => ({ name: account.avatarName, src: undefined }), [account.avatarName]);
 }
-// shared-19 BF (the account menu): the trigger QF builds opens main.jsx's account menu (menu kind "account"); its open
-// state goes back through onOpenChange (QF: setOverflowMenuOpen and the profile-menu telemetry).
-function AccountMenu({ trigger, onOpenChange }) {
+// shared-19 BF (the account menu): official BF / qF draw the CDS Dropdown (shared-19 Y = shared-frame UD = cds-core
+// CdsDropdown): `Y.Trigger {render: trigger, "aria-expanded": open}` and `Y.Root {open, onOpenChange} > Y.Popup {side: "top",
+// align, className}` (QF passes align "start", className "w-[17rem]"). The host keeps its own item set (main.jsx
+// menuContent's account case, CdsDropdown parts: account.menuItems) and its open state (menu kind "account"); the open
+// state goes back through onOpenChange (QF: setOverflowMenuOpen and the profile-menu telemetry). r2-03.
+function AccountMenu({ trigger, align = "end", className, onOpenChange }) {
   const account = useAccount();
   const open = !!account.menuOpen;
   const seen = useRef(open);
@@ -262,10 +270,15 @@ function AccountMenu({ trigger, onOpenChange }) {
     seen.current = open;
     onOpenChange?.(open);
   }, [open, onOpenChange]);
-  return cloneElement(trigger, {
-    ...menuTriggerProps({ open, onOpen: (entry, event) => account.openMenu(event, entry) }),
-    onClick: (event) => account.openMenu(event, keyboardEntry(event)),
-  });
+  // The items stay while the popup plays its exit transition (main.jsx drops them with the menu state).
+  const items = useRef(null);
+  if (account.menuItems) items.current = account.menuItems;
+  return (
+    <CdsDropdown.Root open={open} onOpenChange={(next) => account.setMenuOpen?.(next)}>
+      <CdsDropdown.Trigger render={trigger} aria-expanded={open} />
+      <CdsDropdown.Popup side="top" align={align} className={className}>{items.current}</CdsDropdown.Popup>
+    </CdsDropdown.Root>
+  );
 }
 // shared-183 jg (open the settings dialog at a section): the host page for the official section (settings-tab-compat).
 function openHostSettings(section) {
@@ -366,7 +379,10 @@ export const HOST_ANSWERS = {
   SidebarAnnouncer: ["host", fromHost("announcer")],
   useSidebarToggleCommand: ["host", (source) => stable(toggleBySource, source, () => () => live?.toggleSidebar(source))],
   useSidebarRouteSync: ["gap", noEffect], // $S: official route sync
-  useFrameMode: ["host", () => useHost().mode],
+  // shared-123 EV → OV: PV(mode, enabled modes) clamps the live mode to the enabled list (`t.includes(e) ? e : t[0]`); with Chat
+  // merged into Cowork (XB `["cowork", …code]`) an open chat is the "cowork" frame. Here the enabled modes are useEnabledModes'
+  // [homeMode, "code"]. U-03: the raw "chat" reached the nav, which drew the chat-only rail (no Projects / Artifacts / list).
+  useFrameMode: ["host", () => { const { mode, homeMode } = useHost(); return frameModeFor(mode, homeMode); }],
   SidebarNarrowSheet: ["gap", renderNothing], // zA: phone-sheet controller
   useBouncingLogo: ["gap", () => inactiveLogo], // HE: logo easter egg (the logo row is not drawn on the desktop)
   usePeekHover: ["host", () => peekHover],

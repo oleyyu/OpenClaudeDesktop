@@ -3,10 +3,12 @@
 import {
   useChatRoute as $_,
   useAgentRoute as Bc,
+  preloadChatActivitySprites as DS,
   useOpenChatFeedback as Ig,
   useChatConversationStale as KB,
   useIncognitoChat as Ky,
   FormattedMessage as Q,
+  preloadChatSparkSprites as Tb,
   useChatSettingsPanel as Zy,
   useCanGiveChatFeedback as hg,
   useIsLocalAgentModeContext as oc,
@@ -22,14 +24,168 @@ import { vI as Sr } from "../cds-core/shared-1.mjs";
 import {
   asElementNode as Ae,
   CdsTextLink as H,
+  CdsTooltip as be,
+  CdsAnimatedSpark as de,
   useCdsOwnerWindow as le,
+  useCdsPrefersReducedMotion as se,
 } from "../cds-core/shared-frame.mjs";
-import { clsx as l } from "../cds-core/vendor-frame.mjs";
+import { useDirection as P, clsx as l } from "../cds-core/vendor-frame.mjs";
+import { Cb as AS } from "../frame-sidebar-nav/shared-33.mjs";
+import { SU as jS } from "../working-line-v4/activity-sprites.mjs";
 import { EW as Fu } from "./shared-183.mjs";
 import { zQ as Ap, BQ as Ep } from "./shared-8.mjs";
-import { J0, J1, J2, J4, J5, J9, K0, K1, K2, K4, K5 } from "./shared-frame.mjs";
-import { useSyncExternalStore as c } from "react";
+import {
+  J0,
+  J1,
+  J2,
+  J3,
+  J4,
+  J5,
+  J9,
+  K0,
+  K1,
+  K2,
+  K3,
+  K4,
+  K5,
+} from "./shared-frame.mjs";
+import {
+  memo as b,
+  useSyncExternalStore as c,
+  useState as m,
+  useReducer as s,
+  useEffect as w,
+} from "react";
 import { jsxs as f, Fragment as h, jsx as u } from "react/jsx-runtime";
+function a$() {
+  return DS();
+}
+var o$ = 300;
+function s$(e) {
+  let $ = J9(11),
+    { activity: t, handsOver: n } = e,
+    r = n !== void 0 && n,
+    i = se(),
+    a = J0($, 0) ? K0($, 0, []) : $[0];
+  w(c$, a);
+  let [o, s] = m(t);
+  t !== void 0 && o !== t
+    ? s(t)
+    : t === void 0 && o !== void 0 && i && s(void 0);
+  let c = t === void 0 && o !== void 0,
+    d,
+    f;
+  (J1($, 1, c)
+    ? ((d = () => {
+        if (!c) return;
+        let e = window.setTimeout(() => s(void 0), o$);
+        return () => window.clearTimeout(e);
+      }),
+      (f = [c]),
+      K2($, 1, c, d, f))
+    : ((d = $[2]), (f = $[3])),
+    w(d, f));
+  let p = J3($, 4, r, o, c)
+    ? K3(
+        $,
+        4,
+        r,
+        o,
+        c,
+        o !== void 0 &&
+          u("span", {
+            className: l(
+              "absolute inset-0 flex items-center justify-center transition-[scale,opacity] duration-300 ease-out",
+              c && "scale-0 opacity-0",
+            ),
+            children: u(jS, { standalone: !r, activity: o }),
+          }),
+      )
+    : $[7];
+  return J2($, 8, t, p)
+    ? K2(
+        $,
+        8,
+        t,
+        p,
+        u("span", {
+          "aria-hidden": !0,
+          "data-activity": t,
+          className: "relative inline-flex size-8",
+          children: p,
+        }),
+      )
+    : $[10];
+}
+function c$() {
+  return a$();
+}
+function U$(e) {
+  return e > 24 && e < 32
+    ? "Ugh, well you can\u2019t do that forever"
+    : e > 18 && e <= 24
+      ? "Alright, alright, you have my attention!"
+      : e > 12 && e <= 18
+        ? "Are you still doing that?"
+        : e > 5 && e <= 12
+          ? "Yes, yes. What can I do for you?"
+          : "Hi, I\u2019m Claude. How can I help you today?";
+}
+var W$ = b(function (e) {
+  let $ = J9(19),
+    { state: t, isInteractive: n } = e,
+    r = t === void 0 ? "idle" : t,
+    i = n === void 0 || n,
+    a = P(),
+    [o, c] = s(G$, 0),
+    [l, d] = m(!1),
+    f = J0($, 0) ? K0($, 0, []) : $[0];
+  w(K$, f);
+  let [p, h] = m(r);
+  p !== r && (h(r), d(!1));
+  let g = !i || r === "thinking" || r === "writing",
+    _ = J0($, 1) ? K0($, 1, () => d(!1)) : $[1],
+    v = J2($, 2, o, g) ? K2($, 2, o, g, g ? void 0 : U$(o)) : $[4],
+    y = J1($, 5, a) ? K1($, 5, a, AS("inline-end", a)) : $[6],
+    b = J2($, 7, g, l)
+      ? K2(
+          $,
+          7,
+          g,
+          l,
+          g || l
+            ? void 0
+            : () => {
+                (c(), d(!0));
+              },
+        )
+      : $[9],
+    x = l ? "tickle" : r,
+    S = J1($, 10, x) ? K1($, 10, x, u(de, { state: x, onEnd: _ })) : $[11],
+    C = J2($, 12, b, S)
+      ? K2(
+          $,
+          12,
+          b,
+          S,
+          u("span", {
+            "aria-hidden": !0,
+            className: "inline-flex",
+            onMouseDown: b,
+            children: S,
+          }),
+        )
+      : $[14];
+  return J3($, 15, C, v, y)
+    ? K3($, 15, C, v, y, u(be, { content: v, side: y, lazy: !0, children: C }))
+    : $[18];
+});
+function G$(e) {
+  return e + 1;
+}
+function K$() {
+  Tb();
+}
 function r0(e) {
   return !!Ae(e)?.closest(Fu);
 }
@@ -74,6 +230,77 @@ function o0() {
 function s0() {
   return !1;
 }
+var Zce = b(function (e) {
+  let $ = J9(33),
+    {
+      testId: t,
+      hidden: n,
+      collapsed: r,
+      atWorkingRow: i,
+      avatarState: a,
+      footerDots: o,
+      dotsActivity: s,
+      isCompacting: c,
+      debugInfo: d,
+      sessionId: f,
+      isStreaming: p,
+      isLoadingBeforeStream: m,
+      isRunningTool: h,
+      isResearchPending: g,
+      isWorkspaceUpgradePending: _,
+      isSession: v,
+      isStatusDisplayVisible: y,
+      hasSessionError: b,
+      streamingBlockType: x,
+    } = e,
+    S = r !== void 0 && r,
+    C = i !== void 0 && i,
+    w = J5($, 0, C, a, S, s, o, n, c)
+      ? K5(
+          $,
+          0,
+          C,
+          a,
+          S,
+          s,
+          o,
+          n,
+          c,
+          o
+            ? u(s$, { activity: s, handsOver: C && !n })
+            : u(W$, { state: n || S ? "idle" : a, isInteractive: !c }),
+        )
+      : $[7],
+    T = S ? "collapsed" : n ? "hidden" : "shown",
+    E = C ? "working-row" : void 0,
+    D = C
+      ? "-translate-x-[6px] translate-y-[calc(var(--cds-h-control)/2-var(--cds-icon)-16px)] [&:where(:root[dir=rtl]_:dir(rtl))]:translate-x-[6px]"
+      : "-translate-x-px [&:where(:root[dir=rtl]_:dir(rtl))]:translate-x-px",
+    O = (n || S) && "invisible",
+    k = S && "-me-1 w-0 min-w-0 overflow-hidden px-0",
+    A = J3($, 8, D, O, k) ? K3($, 8, D, O, k, l("p-1", D, O, k)) : $[11],
+    j = J5($, 12, a, d, w, b, c, m, g, h, v, y, p, _, f, x)
+      ? K5($, 12, a, d, w, b, c, m, g, h, v, y, p, _, f, x, w)
+      : $[26];
+  return J5($, 27, j, T, E, A, t)
+    ? K5(
+        $,
+        27,
+        j,
+        T,
+        E,
+        A,
+        t,
+        u("div", {
+          "data-testid": t,
+          "data-state": T,
+          "data-placement": E,
+          className: A,
+          children: j,
+        }),
+      )
+    : $[32];
+});
 function H9(e) {
   let $ = J9(25),
     {
@@ -271,4 +498,4 @@ function H9(e) {
       )
     : $[24];
 }
-export { H9 as ChatDisclaimer };
+export { Zce as ChatFooterSpark, H9 as ChatDisclaimer };

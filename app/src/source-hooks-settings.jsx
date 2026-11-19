@@ -69,10 +69,12 @@ export function SourceHooksSettings({ boot, engine, customize, cwd, initialState
   </SourceTooltip>;
   const columns = [
     { key: 'event', header: t('Event'), width: 40 },
-    { key: 'matcher', header: t('Matcher'), width: 20 },
+    // U-43: 88px, so "Every call" (63px in en-US) fits beside the 12px cell padding; 80px cut it to "Every …". The
+    // trailing cell gives the 8px back (120px: Trust 54 + gap 8 + switch 32 = 94 ≤ 96), so Command keeps its width.
+    { key: 'matcher', header: t('Matcher'), width: 22 },
     { key: 'command', header: t('Command') },
     { key: 'source', header: t('Source'), width: 32 },
-    ...(switchable ? [{ key: 'controls', header: <span className="sr-only">{t('Actions')}</span>, width: 32 }] : []),
+    ...(switchable ? [{ key: 'controls', header: <span className="sr-only">{t('Actions')}</span>, width: 30 }] : []),
   ];
   return <div className="cz-page hk-page" data-cz-page="hooks" data-hooks-page="">
     <PageHeader title={t('Hooks')} searchLabel={t('Search hooks')} searchValue={query} onSearch={setQuery} actions={refresh} />
@@ -95,13 +97,13 @@ export function SourceHooksSettings({ boot, engine, customize, cwd, initialState
     {rows.length > 0 && <ListTable columns={columns} label={t('Hooks')}>
       {rows.map((hook) => <tr key={hook.key} data-hook={hook.key} data-hook-active={hook.active ? 'true' : 'false'}>
         <td className="cz-cell-primary"><span className="cz-truncate cz-block" title={hook.eventDescription || undefined}>{hook.eventName}</span></td>
-        <td className="cz-cell-secondary">{hook.matcher ? <code className="hk-matcher cz-truncate cz-block" title={hook.matcher}>{hook.matcher}</code> : <span className="cz-truncate cz-block">{t('Every call')}</span>}</td>
+        <td className="cz-cell-secondary">{hook.matcher ? <code className="hk-matcher cz-truncate cz-block" title={hook.matcher}>{hook.matcher}</code> : <span className="cz-truncate cz-block" title={t('Every call')}>{t('Every call')}</span>}</td>
         <td className="cz-cell-primary"><div className="cz-name">
           <code className="hk-command cz-truncate" title={hook.async ? `${hook.what} · ${t('runs in the background')}` : hook.what}>{hook.what}</code>
           {hook.needsReview && <Badge title={hookTrustLabel(hook) || undefined}>{t('Needs review')}</Badge>}
           {hook.managed && <Badge>{t('Managed')}</Badge>}
         </div></td>
-        <td className="cz-cell-secondary"><span className="cz-truncate cz-block" title={hook.sourcePath || undefined}>{[hook.source, hook.pluginId].filter(Boolean).join(' · ')}</span></td>
+        <td className="cz-cell-secondary"><span className="cz-truncate cz-block" title={[[hook.source, hook.pluginId].filter(Boolean).join(' · '), hook.sourcePath].filter(Boolean).join('\n') || undefined}>{[hook.source, hook.pluginId].filter(Boolean).join(' · ')}</span></td>
         {switchable && <td className="cz-cell-secondary"><span className="hk-controls">
           {!hook.managed && native && hook.needsReview && <SourceSettingsButton size="sm" busy={busy === hook.key} disabled={!!busy || !boot?.connected} onClick={() => void change(hook.key, { trust: [hook.key] })}>{t('Trust')}</SourceSettingsButton>}
           {!hook.managed && <SourceSwitch label={t('Run this hook')} size="sm" checked={hook.enabled && !hook.needsReview} disabled={!!busy || hook.needsReview || !boot?.connected}

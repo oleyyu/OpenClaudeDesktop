@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { parseClaudeWorkflowScript } from "../third-party/codex-workflows-runner/src/claude-metadata.js";
-import { compileWorkflowBody } from "../third-party/codex-workflows-runner/src/workflow-compiler.js";
+import { compileWorkflowBody, parseWorkflowJavaScript, walkWorkflowJavaScript } from "../third-party/codex-workflows-runner/src/workflow-compiler.js";
 
 export const WORKFLOW_TOOL = "Workflow";
 export const MAX_SCRIPT_BYTES = 524288;
@@ -141,39 +141,22 @@ export function parseWorkflowScript(source) {
   return { meta: parsed.meta, body: parsed.script };
 }
 
-// Code with string, comment and template text blanked out (template ${…} expressions stay code), so the
-// determinism check reads only what runs. Regex literals are rare in scripts and left as code.
-export function codeOnly(source) {
-  let out = "", i = 0;
-  const stack = []; // template nesting: brace depth per open ${
-  const n = source.length;
-  while (i < n) {
-    const ch = source[i], next = source[i + 1];
-    if (ch === "/" && next === "/") { while (i < n && source[i] !== "\n") { out += " "; i++; } continue; }
-    if (ch === "/" && next === "*") { out += "  "; i += 2; while (i < n && !(source[i] === "*" && source[i + 1] === "/")) { out += source[i] === "\n" ? "\n" : " "; i++; } out += "  "; i += 2; continue; }
-    if (ch === "'" || ch === '"') { out += " "; i++; while (i < n && source[i] !== ch && source[i] !== "\n") { if (source[i] === "\\") { out += " "; i++; } out += " "; i++; } out += " "; i++; continue; }
-    if (ch === "`" || (ch === "}" && stack.length && stack.at(-1) === 0)) {
-      if (ch === "}") stack.pop();
-      out += " "; i++;
-      while (i < n && source[i] !== "`") {
-        if (source[i] === "\\") { out += "  "; i += 2; continue; }
-        if (source[i] === "$" && source[i + 1] === "{") { out += "  "; i += 2; stack.push(0); break; }
-        out += source[i] === "\n" ? "\n" : " "; i++;
-      }
-      if (source[i] === "`") { out += " "; i++; }
-      continue;
-    }
-    if (stack.length && ch === "{") stack[stack.length - 1]++;
-    if (stack.length && ch === "}" && stack.at(-1) > 0) stack[stack.length - 1]--;
-    out += ch; i++;
-  }
-  return out;
-}
-/** Claude's static determinism check for inline scripts: Date.now / Math.random member reads, argless new Date. */
+/** Claude's static determinism check for inline scripts. */
 export function readsClock(body) {
-  const code = codeOnly(String(body));
-  return /(?<![\w$.])Date\s*(?:\?\.|\.)\s*now(?![\w$])/.test(code) || /(?<![\w$.])Math\s*(?:\?\.|\.)\s*random(?![\w$])/.test(code)
-    || /(?<![\w$.])new\s+Date(?![\w$])(?!\s*\(\s*[^\s)])/.test(code);
+  const tree = parseWorkflowJavaScript(`(async () => {
+${body}
+})`, { ecmaVersion: "latest" });
+  let reads = false;
+  walkWorkflowJavaScript(tree, node => {
+    if (node.type === "MemberExpression" && !node.computed && node.object.type === "Identifier") {
+      reads ||= (node.object.name === "Date" && node.property.name === "now")
+        || (node.object.name === "Math" && node.property.name === "random");
+    }
+    if (node.type === "NewExpression" && node.callee.type === "Identifier" && node.callee.name === "Date") {
+      reads ||= node.arguments.length === 0;
+    }
+  });
+  return reads;
 }
 export const NONDETERMINISTIC = "Workflow scripts must be deterministic: Date.now()/Math.random()/new Date() are unavailable (breaks resume). Stamp results after the workflow returns, or pass timestamps via args.";
 

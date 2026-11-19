@@ -4,6 +4,7 @@ import { holdModalInert } from "./modal-inert.mjs";
 import { useModalPresence } from "./use-modal-presence";
 // W14-code r6 sh6-03: shared-frame Xy / ab buttons are Uu (E41 direct import, not the index facade).
 import { CdsButton } from "./cds-core.mjs"; // 4.16336.0 host wiring (frame): cds-core Button (shared-frame-CJdE5Ria Xu)
+import { CdsLayerProvider } from "./cds-core.mjs"; // U-23: shared-frame yd, the CDS layer context
 import { t } from "../electron/i18n/index.mjs";
 import "./source-dialog.css";
 
@@ -230,11 +231,15 @@ function DialogPopup({
         className={joinClasses("sdlg-popup draggable-none", NESTED_OVERLAY_CLASS, POPUP_CLASS, POPUP_TRANSITION_CLASS, NESTED_BLUR_CLASS, POPUP_SIZES[size] ?? POPUP_SIZES.md, className)}
         onKeyDown={keyDown}>
         <div className={BODY_CLASS}>
+          {/* U-23: shared-frame Dialog (Cd("modal")) gives its content vd.Provider value y.base, so a CDS tooltip, menu or
+              popover inside it stacks over the dialog (base + 100 + its offset) instead of under it (0 + 100 + offset). */}
+          <CdsLayerProvider base={layer.base}>
           <DialogNesting.Provider value={nesting}>
             {header}
             {children}
             {footer && <SourceDialogFooter>{footer}</SourceDialogFooter>}
           </DialogNesting.Provider>
+          </CdsLayerProvider>
         </div>
       </section>
     </div>,

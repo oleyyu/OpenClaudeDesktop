@@ -49,7 +49,7 @@ export const COWORK_PROGRESS_V4_OUTPUT = 'src/generated/cowork-progress-v4';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
 // The cds-core graph this area was reviewed against (cds-core wave 6, same pin as composer-env-v4 / code-start-v4).
-export const CDS_CORE_MANIFEST_SHA256 = '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c';
+export const CDS_CORE_MANIFEST_SHA256 = 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd';
 
 export const PANEL = 'c21f11e6d-Cyj5xu_D.js';
 export const COLUMN = 'cc5a62f6f-CsfnfFRu.js';

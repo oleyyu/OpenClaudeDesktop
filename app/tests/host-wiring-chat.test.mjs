@@ -23,13 +23,22 @@ const importLine = (source, from) => [...source.matchAll(/^import \{([^}]*)\} fr
 
 // file → { core: names from ./cds-core.mjs, old: names (as imported) still from a view-tabs file, from: that file }
 const CONTRACT = {
-  'source-async-questions.jsx': { core: ['CdsButton', 'CdsTextArea', 'cdsClassNames'], old: ['cdsCheckboxTopAlignClass'], from: VT_INDEX },
+  // chat-cowork-1to1 r2 (cowork-r2-02): the rows and QuestionRadioMark are 4.16336.0 question-card-v4, so the mark's top-align
+  // class is the cds-core one (c2f6611a3 Wr gives Dr shared-frame HC).
+  'source-async-questions.jsx': { core: ['CdsButton', 'CdsTextArea', 'cdsClassNames', 'cdsCheckboxTopAlignClass'], old: [], from: VT_INDEX },
   'source-approval-card.jsx': { core: ['CdsButton', 'CdsCard', 'CdsCollapsible', 'CdsTextLink', 'cdsClassNames'], old: [], from: VT_INDEX },
-  'source-chat-model-menu.jsx': { core: ['CdsBadge'], old: [], from: VT_FRAME },
+  // chat-home r1-05: KH's popup / rows / submenus and hE's switch are cds-core's CDS Dropdown and Switch (was the host SourceMenu).
+  'source-chat-model-menu.jsx': { core: ['CdsBadge', 'CdsDropdown', 'CdsSwitch', 'CdsTooltip'], old: [], from: VT_FRAME },
   // surfaces-prod-3 composer (host cutover): the Chat / Cowork card is the 4.16336.0 ChatComposer (code-composer-v4), so its
   // own markup and its layout context (shared-26 Mp) are cds-core's.
-  'source-chat-composer.jsx': { core: ['CdsBanner', 'CdsButton', 'CdsIcon', 'CdsSpinner', 'cdsClassNames', 'ChatComposerLayoutContext as Layout'], old: [], from: VT_FRAME },
-  'source-chat-tools-menu.jsx': { core: ['CdsButton', 'CdsTooltip'], old: [], from: VT_FRAME },
+  // chat-home r1-02/03: + CdsTooltip / useIsMacPlatform / ariaKeyShortcuts (shared-8 tz's Tooltip, Button aria-keyshortcuts);
+  // r1-05: + CdsDropdown ($H's Q.Root / Q.Trigger around the model button).
+  'source-chat-composer.jsx': { core: ['CdsBanner', 'CdsButton', 'CdsDropdown', 'CdsIcon', 'CdsSpinner', 'CdsTooltip', 'cdsClassNames', 'useIsMacPlatform', 'ariaKeyShortcuts', 'ChatComposerLayoutContext as Layout'], old: [], from: VT_FRAME },
+  // chat-home r2-01: wP's Q.Root / Q.Popup and the c752b32f8 ga / _a rows (CdsDropdown parts, ka's CdsSkeleton loading row,
+  // the toggle row's CdsSwitch, cdsClassNames) replace the host SourceMenu.
+  // chat-home-r3-01: _a's toggle row is base-ui Menu.CheckboxItem (BaseMenuCheckboxItem) with k (cdsMenuItemClass), t (clsx),
+  // CdsIcon and ma's CdsSwitch (was a CdsDropdown.Item + CdsSwitch stand-in).
+  'source-chat-tools-menu.jsx': { core: ['BaseMenuCheckboxItem', 'CdsButton', 'CdsDropdown', 'CdsIcon', 'CdsSkeleton', 'CdsSwitch', 'CdsTooltip', 'cdsClassNames', 'cdsMenuItemClass', 'clsx'], old: [], from: VT_FRAME },
   'source-composer-tiles.jsx': { core: ['CdsConfirmationDialog', 'CdsContextMenu', 'CdsIcon'], old: [], from: VT_FRAME },
   'source-composer-add-menu.jsx': { core: ['CdsButton', 'CdsIcon', 'CdsTooltip', 'cdsClassNames'], old: [], from: VT_FRAME },
   'source-composer-row-chin.jsx': { core: ['CdsButton', 'CdsLoadingSkeleton', 'CdsSkeleton', 'CdsSpinner', 'CdsTooltip', 'cdsClassNames'], old: [], from: VT_FRAME },
@@ -48,8 +57,10 @@ const CONTRACT = {
   'source-incognito-shell.jsx': { core: [], old: [], from: VT_INDEX },
   'source-model-menu.jsx': { core: ['CdsBadge', 'CdsHiddenReasonText', 'CdsTextInput'], old: [], from: VT_INDEX },
   'source-nested-sessions-confirm.jsx': { core: ['CdsButton'], old: [], from: VT_INDEX },
-  'source-question-card.jsx': { core: ['CdsButton', 'CdsTextArea', 'CdsShortcut', 'CdsCheckboxIndicator', 'cdsCheckboxTopAlignClass', 'cdsClassNames'],
-    old: ['CdsButton as ViewTabsCdsButton', 'CdsIcon as ViewTabsCdsIcon', 'cdsCheckboxTopAlignClass as viewTabsCheckboxTopAlignClass'], from: VT_INDEX },
+  // chat-cowork-1to1 r2 (cowork-r2-02): QuestionCardHeader and the rows are 4.16336.0 question-card-v4, so the header's `trailing`
+  // Button / Icon (c9ed5627b dt: shared-frame Id / lf) and the radio mark's top-align class are cds-core too.
+  'source-question-card.jsx': { core: ['CdsButton', 'CdsIcon', 'CdsTextArea', 'CdsShortcut', 'CdsCheckboxIndicator', 'cdsCheckboxTopAlignClass', 'cdsClassNames'],
+    old: [], from: VT_INDEX },
   'source-user-message-edit.jsx': { core: ['CdsButton', 'CdsIcon', 'CdsTooltip', 'cdsClassNames'], old: [], from: VT_INDEX },
   'source-turn-error.jsx': { core: ['CdsButton'], old: ['CdsButton as ViewTabsCdsButton'], from: VT_FRAME },
 };
@@ -88,7 +99,9 @@ test('the facade names the switched files use are the generated 4.16336.0 object
   assert.equal(manifest.referenceVersion, '4.16336.0');
   const names = new Set(Object.values(CONTRACT).flatMap(({ core }) => core.map((n) => n.split(' as ')[0])));
   // ChatComposerLayoutContext is the one non-frame name (4.16336.0 moved it to shared-26 Mp; surfaces-prod-3 composer).
-  const fileOf = (name) => (name === 'ChatComposerLayoutContext' ? 'shared-26-B-POtn5S.js' : 'shared-frame-CJdE5Ria.js');
+  // chat-home-r3-01: BaseMenuCheckboxItem (base-ui Menu.CheckboxItem) and clsx are vendor-frame bindings.
+  const fileOf = (name) => (name === 'ChatComposerLayoutContext' ? 'shared-26-B-POtn5S.js'
+    : name === 'BaseMenuCheckboxItem' || name === 'clsx' ? 'vendor-frame-BckkO60Y.js' : 'shared-frame-CJdE5Ria.js');
   for (const name of names) {
     assert.ok(manifest.publicNames[name], `${name} is a cds-core publicName`);
     assert.equal(manifest.publicNames[name].file, fileOf(name), name);
@@ -110,8 +123,9 @@ test('kept-on-3.6556.2 placements: region slots and render props are wired to th
   assert.ok(composer.includes('<CdsDisabledReason reason={disabledReason} wrapperClassName="min-w-0 shrink-0">\n        <CdsButton ref={button} size="xs"'),
     'Compact session: DisabledReason and Button on one graph');
   const question = local('src/source-question-card.jsx');
-  assert.ok(question.includes('<ViewTabsCdsButton size="base" variant="ghost" iconOnly\n              icon={<ViewTabsCdsIcon name="CaretRight"'), 'header trailing slot');
-  assert.ok(question.includes('<QuestionRadioMark checked={checked} className={viewTabsCheckboxTopAlignClass} />'));
+  // chat-cowork-1to1 r2 (cowork-r2-02): the 4.16336.0 header / rows take cds-core values (no 3.6556.2 region left in the card).
+  assert.ok(question.includes('<CdsButton size="base" variant="ghost" iconOnly\n              icon={<CdsIcon name="CaretRight"'), 'header trailing slot');
+  assert.ok(question.includes('<QuestionRadioMark checked={checked} className={cdsCheckboxTopAlignClass} />'));
   assert.ok(question.includes('<CdsCheckboxIndicator checked={checked} className={cdsCheckboxTopAlignClass} />'));
   const turn = local('src/source-turn-error.jsx');
   assert.ok(turn.includes('function OfficialButton({ size: _size, iconSize: _iconSize, ...props }) {\n  return <ViewTabsCdsButton {...props} />;'));

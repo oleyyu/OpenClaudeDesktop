@@ -2,11 +2,26 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   IMAGE_MAX_BYTES, IMAGE_TYPE_ERROR, IMAGE_SIZE_ERROR, IMAGE_PROCESS_ERROR, IMAGE_MODEL_ERROR, trimMessage, maxImagesMessage,
-  stageFiles, markReady, markFailed, removeAttachment, attachmentInputs, imageMime, modelAcceptsImages, skillChipInput,
+  stageFiles, markReady, markFailed, removeAttachment, attachmentInputs, attachmentsFromInput, imageMime, modelAcceptsImages, skillChipInput,
 } from "../src/composer-attachments-model.mjs";
+import { documentInput } from "../src/chat-attachment-model.mjs";
 
 const makeId = (index) => `id-${index}`;
 const png = (name, size = 10, path = `/tmp/${name}`) => ({ name, size, type: "image/png", path });
+
+test("resending stored input preserves inline images, ordinary files, and converted PDF text", () => {
+  const input = [
+    { type: "image", url: "data:image/png;base64,AAAA" },
+    { type: "mention", name: "note.txt", path: "/w/note.txt" },
+    documentInput({ path: "/w/doc.pdf", name: "doc.pdf", converted: { text: "first page", pages: 1, truncated: true } }),
+  ];
+  const out = attachmentInputs(attachmentsFromInput(input, "resend"), { surface: "chat" });
+  assert.deepEqual(out, [input[2], input[0], input[1]]);
+});
+
+test("skill chip recognition matches the command parser's case handling", () => {
+  assert.equal(skillChipInput("/AUDIT /audit/staging", { name: "audit", path: "command:audit" })?.text, "/audit/staging");
+});
 
 test("accept rules: PNG/JPEG/GIF/WebP by type or extension; anything else is a file entry", () => {
   assert.equal(imageMime({ name: "a.PNG" }), "image/png");

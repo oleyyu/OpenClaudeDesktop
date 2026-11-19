@@ -24,7 +24,7 @@
  *                      question tool ends the execution like a plain Deny)
  *   withdrawn          permission.replied / form.replied / form.cancelled settle a card; an execution's end or its
  *                      interrupt settles its session's cards (v2 publishes nothing for the asks an interrupt drops),
- *                      never another session's (a background sub-agent's). A failed interrupt cancels them with a message
+ *                      never another session's (a background sub-agent's). A failed Stop leaves those cards available
  *   plan card          no plan_exit in 2.x: a root turn the plan agent ran in Plan mode that succeeded shows its plan (a
  *                      plan file it wrote this turn, else its last answer) as a plan item, then the card, after
  *                      turn/completed. Approve: the mode after the plan (writeRuntime: the plugin's policy), the
@@ -34,6 +34,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { afterPlanState, allowedExternalDirs, decide, isReadOnlyMode, isSessionDecision, neverAsks, replyFor, sessionGrant, withinRoots } from '../policy.js'
 import { appToolsPrefix } from '../app-tools.js'
 import { toolPartId } from './history.js'
@@ -127,9 +128,8 @@ export const ASKS_V2 = {
     root.asksV2 ??= new Map()
     if (root.asksV2.has(id) || root.settledV2?.has(id)) return
     root.asksV2.set(id, this.sessionID)
-    void run().catch((error) => this.bridge.log(`ask ${id}: ${error?.stack || error}`)).finally(() => {
+    void run().then(() => root.noteSettledV2(id), (error) => this.bridge.log(`ask ${id}: ${error?.stack || error}`)).finally(() => {
       root.asksV2.delete(id)
-      root.noteSettledV2(id)
     })
   },
 
@@ -149,19 +149,6 @@ export const ASKS_V2 = {
   /** (root) The open asks of one session settle (its execution ended or was interrupted); `keep`: still open in v2. */
   withdrawAsksV2(sessionID, why, keep = null) {
     for (const [id, owner] of [...(this.asksV2 ?? [])]) if (owner === sessionID && !keep?.has(id)) this.settleAskV2(id, why)
-  },
-
-  /**
-   * (root) The open asks of one session, cancelled here though still open in v2 (its interrupt failed): their cards are
-   * withdrawn and answered with a message. Still taken (askOnceV2), but no longer the session's: its end, which follows,
-   * does not settle them unanswered.
-   */
-  cancelAsksV2(sessionID, why) {
-    for (const [id, owner] of [...(this.asksV2 ?? [])]) {
-      if (owner !== sessionID) continue
-      this.asksV2.set(id, null)
-      this.pendingFor(id)?.abort(why)
-    }
   },
 
   /** The tool part a request names (source {messageID, id}: the synthetic id v2/history.js gives it). */
@@ -189,8 +176,7 @@ export const ASKS_V2 = {
   async permissionV2(request) {
     const root = this.rootThread
     const api = await this.bridge.v2Api()
-    const reply = (decision, message) => api.post(sessionRoute(request.sessionID ?? this.sessionID, `/permission/${encodeURIComponent(request.id)}/reply`), { decision, ...(message ? { message } : {}) })
-      .catch((error) => { if (error?.status !== 404) this.bridge.log(`permission reply ${request.id}: ${error?.message}`) })
+    const reply = (decision, message) => this.answerAskV2(request.id, () => api.post(sessionRoute(request.sessionID ?? this.sessionID, `/permission/${encodeURIComponent(request.id)}/reply`), { decision, ...(message ? { message } : {}) }))
     const action = typeof request.action === 'string' ? request.action : ''
     // OpenClaude Desktop's own tools need no card here: the app asks the user itself where it matters (as for Codex).
     if (this.bridge.appTools && action.startsWith(appToolsPrefix(this.bridge.appTools))) return reply('once')
@@ -238,6 +224,7 @@ export const ASKS_V2 = {
     }
     // A card another card's "Allow for this session" covers is settled by that grant (resolveCoveredApprovals).
     let granted = false
+    const active = this.activeTurn
     const epoch = root.grantEpoch
     const covered = () => decideV2(root.permission, request, context()).action === 'allow'
     const result = await root.clientRequest(method, params, 'waitingOnApproval', request.id, { covered, granted: () => { granted = true } })
@@ -258,6 +245,7 @@ export const ASKS_V2 = {
     // included: settled by it), and the call shows declined. An interrupt that failed left the ask open: rejected with
     // a message instead (v2 gives it to the session's other asks too), so the execution does not wait on it.
     this.markDeclinedV2(part)
+    if (this.activeTurn !== active) return reply('reject', DECLINED_V2)
     await this.interruptV2({ failed: () => reply('reject', DECLINED_V2) })
   },
 
@@ -274,7 +262,7 @@ export const ASKS_V2 = {
     const root = this.rootThread
     const api = await this.bridge.v2Api()
     const base = sessionRoute(form.sessionID ?? this.sessionID, `/form/${encodeURIComponent(form.id)}`)
-    const cancel = (message) => api.delete(base, { query: { message } }).catch((error) => { if (error?.status !== 404) this.bridge.log(`form ${form.id}: ${error?.message}`) })
+    const cancel = (message) => this.answerAskV2(form.id, () => api.delete(base, { query: { message } }))
     // Only the question tool's forms have a card (MCP elicitations, a web search provider's set-up have none yet).
     if (form.metadata?.kind !== 'question') return cancel(OTHER_FORM_V2)
     if (root.noUser()) return cancel(UNATTENDED_V2)
@@ -283,15 +271,33 @@ export const ASKS_V2 = {
     const part = this.toolPartForV2(tool)
     const turnId = root.activeTurn?.id ?? this.turnOf.get(part?.messageID) ?? ''
     const itemId = part?.id ?? tool?.id ?? form.id
-    if (root.settledV2?.has(form.id)) return
-    const response = await root.clientRequest('item/tool/requestUserInput', {
-      threadId: root.id, turnId, itemId, questions: questionsOfFormV2(fields), isBlocking: true, autoResolutionMs: null,
-    }, 'waitingOnUserInput', form.id)
-    if (!response?.answers) return root.settledV2?.has(form.id) ? undefined : cancel(DISMISSED_V2)
-    await api.post(`${base}/reply`, { answer: formAnswerV2(fields, response.answers) }).catch((error) => {
-      this.bridge.log(`form reply ${form.id}: ${error?.message}`)
-      return cancel(DISMISSED_V2)
-    })
+    while (!this.closed && !root.settledV2?.has(form.id)) {
+      const response = await root.clientRequest('item/tool/requestUserInput', {
+        threadId: root.id, turnId, itemId, questions: questionsOfFormV2(fields), isBlocking: true, autoResolutionMs: null,
+      }, 'waitingOnUserInput', form.id)
+      if (!response?.answers) return root.settledV2?.has(form.id) ? undefined : cancel(DISMISSED_V2)
+      try {
+        await this.answerAskV2(form.id, () => api.post(`${base}/reply`, { answer: formAnswerV2(fields, response.answers) }))
+        return
+      } catch (error) {
+        this.bridge.log(`form reply ${form.id}: ${error?.message}`)
+        const stillOpen = await api.get(sessionRoute(form.sessionID ?? this.sessionID, '/form'))
+        if (!Array.isArray(stillOpen)) throw error
+        if (!stillOpen.some((entry) => entry?.id === form.id)) return
+      }
+    }
+  },
+
+  /** Keep a submitted answer across transient errors. A still-open ask can be presented again on resync. */
+  async answerAskV2(id, send) {
+    for (const retry of [true, false]) {
+      if ((!retry && this.closed) || this.rootThread.settledV2?.has(id)) return
+      try { await send(); return } catch (error) {
+        if (error?.status === 404) return
+        if (!retry || (error?.status && error.status < 500 && error.status !== 429)) throw error
+        await sleep(100)
+      }
+    }
   },
 
   // ---------------------------------------------------------------- plan card

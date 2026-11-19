@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { ionSource } from '../scripts/official-3.6556.2.mjs';
+import { ionSource as ionSource4 } from '../scripts/official-4.16336.0.mjs';
 
 // w13-chatfn-artifacts (research/w13-chatfn.md A3–A5, chatfn-27/28/31): the transcript chip, the artifact panel and the
 // library's Chat items, rendered with react-dom/server under Vite SSR. Official chunks are read as text, never executed.
@@ -15,6 +16,11 @@ const official = (prefix) => fs.readFileSync(path.join(ionSource, fs.readdirSync
 const local = (rel) => fs.readFileSync(path.join(app, rel), 'utf8');
 const h = React.createElement;
 
+// The panel's cds-core parts and the 4.16336.0 library graph touch `document` when they evaluate (the stub
+// tests/narrow-layout-session-fixes.test.mjs uses for the same session / editor vendors).
+globalThis.document ??= { cookie: '', body: { nodeType: 1, style: {} }, head: { appendChild() {}, querySelector: () => null },
+  documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false, querySelector: () => null, appendChild() {} }, createElement: () => ({ setAttribute() {}, appendChild() {}, style: {} }),
+  querySelector: () => null, querySelectorAll: () => [], getElementById: () => null, addEventListener() {}, removeEventListener() {} };
 globalThis.window ??= { navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, location: { pathname: '/', search: '', hash: '', href: 'app://local/' },
   addEventListener() {}, removeEventListener() {},
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) };
@@ -27,7 +33,8 @@ before(async () => {
   i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
   i18n.setLocale('en-US');
   panel = await server.ssrLoadModule('/src/source-chat-artifact-panel.jsx');
-  gen = await server.ssrLoadModule('/src/generated/artifact-library/index.mjs');
+  // library-pages-r1-01: the library host mounts the 4.16336.0 graph (was the 3.6556.2 artifact-library).
+  gen = await server.ssrLoadModule('/src/generated/artifact-library-v4/index.mjs');
 });
 after(() => server?.close());
 
@@ -54,18 +61,25 @@ test('panel: the file detail root and body classes, the title, Version {n} with 
   assert.ok(ca2.includes('"text-sm font-normal text-secondary min-w-0"'));
   assert.ok(ca2.includes('className:"flex items-center gap-1 text-sm text-success-200 ms-2 me-3 flex-shrink-0"'));
   const html = renderToStaticMarkup(h(panel.SourceChatArtifactPanel, { call: pending, threadId: 't1', artifactId: 'report', initialData: artifact() }));
-  assert.ok(html.startsWith('<section tabindex="-1" aria-label="Quarterly report" data-testid="chat-artifact-panel" data-artifact-type="text/markdown" class="chat-artifact-panel flex h-full flex-col relative outline-none bg-surface-3">'), html.slice(0, 240));
+  // chat-conversation r2-06 (stop-gap copy of 4.16336.0 cbaae0d6d's pane header; was the 3.6556.2 "Version {n}" / "Close"):
+  const cba = fs.readFileSync(path.join(ionSource4, fs.readdirSync(ionSource4).find((name) => name.startsWith('cbaae0d6d-') && name.endsWith('.js'))), 'utf8');
+  for (const copy of ['defaultMessage:"Artifact panel{title}",id:"+1j1W0j1Pv"', 'defaultMessage:"Switch artifact version, currently version {versionNum}"',
+    '`v${e}`', 'children:"\\u00B7"', 'a>1?i(b.Root,', '"data-testid":"artifact-version-trigger"', 'defaultMessage:"Latest",id:"adThp5MDl0"', 'defaultMessage:"Copy options",id:"2kvXTlOKnF"', 'defaultMessage:"Close artifact",id:"92qI2JZM2l"'])
+    assert.ok(cba.includes(copy), copy);
+  assert.ok(html.startsWith('<section tabindex="-1" aria-label="Artifact panel: Quarterly report" data-testid="chat-artifact-panel" data-artifact-type="text/markdown" class="chat-artifact-panel flex h-full flex-col relative outline-none bg-surface-3">'), html.slice(0, 240));
   assert.match(html, /<h2 class="text-sm font-normal text-secondary min-w-0 truncate" title="Quarterly report">Quarterly report<\/h2>/);
-  assert.match(html, /aria-label="Version history, 2 versions"/);
-  assert.match(html, /<span class="truncate">Version 2<\/span>/);
+  assert.match(html, /aria-label="Switch artifact version, currently version 2"/);
+  assert.match(html, /data-testid="artifact-version-trigger"/);
+  assert.match(html, />v2<span class="text-muted-as-secondary">·<\/span>Latest</);
+  assert.match(html, /class="chat-artifact-panel-header flex items-center justify-between gap-2 select-none ps-3 pe-2"/);
   assert.match(html, />Copy</);
-  assert.match(html, /aria-label="More options"/, 'the split button’s menu half (cF menuLabel default)');
-  assert.match(html, /aria-label="Close"/);
+  assert.match(html, /aria-label="Copy options"/, 'the split button’s menu half (cbaae0d6d menuLabel)');
+  assert.match(html, /aria-label="Close artifact"/);
   assert.match(html, /<div class="flex-1 min-h-0 bg-surface-3 overflow-auto" data-focus-region="artifact" data-focus-region-label="Quarterly report">/); // w13-chatui-artifact-inline: Jump to artifact (ca1d33d05 tn label)
   assert.doesNotMatch(html, /Publish artifact|Share artifact/);
   assert.doesNotMatch(html, /data-testid="chat-artifact-safety"/, 'the safety note is for HTML');
   const one = renderToStaticMarkup(h(panel.SourceChatArtifactPanel, { call: pending, threadId: 't1', artifactId: 'report', initialData: artifact({ versions: [{ n: 1 }], shown: 1, version: 1 }) }));
-  assert.match(one, /aria-label="Version history, 1 version"/);
+  assert.doesNotMatch(one, /artifact-version-trigger|Switch artifact version/, 'cbaae0d6d draws the version menu only past one version (a > 1)');
   const loading = renderToStaticMarkup(h(panel.SourceChatArtifactPanel, { call: pending, threadId: 't1', artifactId: 'report' }));
   assert.match(loading, /Loading artifact…/);
   assert.match(loading, /data-focus-region="artifact" data-focus-region-label="Artifact"/); // ca1d33d05 tn: no title → "Artifact" (07/fBlW5U3)
@@ -97,9 +111,10 @@ test('library: a Chat item (source "chat", markdown text) draws c69e9937a’s te
   assert.match(html, /data-gallery-card="chat:t1:report"/);
   assert.match(html, /aria-label="Quarterly report"/);
   // The cover is drawn lazily (on view); its Chat branch is the official one: a published artifact, or markdown /
-  // text / code with previewText, draws the text cover (generated c69e9937a `r.source === "chat" && Ot(r)`).
-  const cards = local('src/generated/artifact-library/c69e9937a-BIwXoJBq.mjs');
-  assert.ok(cards.includes('if (r.source === "chat" && Ot(r)) {'));
+  // text / code with previewText, draws the text cover (generated 4.16336.0 cff9648a4 `r.source === "chat" && et(r)`;
+  // 3.6556.2 c69e9937a `Ot(r)` before library-pages-r1-01).
+  const cards = local('src/generated/artifact-library-v4/cff9648a4-G8f3hGry.mjs');
+  assert.ok(cards.includes('if (r.source === "chat" && et(r)) {'));
   assert.ok(cards.includes('preview: r.previewText,'));
   const library = local('src/source-artifact-library.jsx');
   assert.match(library, /source: record\.source === 'chat' \? 'chat' : 'cowork'/);

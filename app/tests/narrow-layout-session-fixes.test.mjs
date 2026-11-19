@@ -72,7 +72,16 @@ test('the chat tile’s content stays in the part its neighbour does not cover',
   assert.equal(coveredWidth(320, Number.NaN, 12), 0);
   const css = read('src/source-tile-layout.css');
   assert.match(css, /\.source-chat-tile-content \{\n  height: 100%;\n  padding-inline-start: var\(--tile-covered-content-start, 0px\);\n  padding-inline-end: var\(--tile-covered-content-end, 0px\);\n\}/);
-  assert.match(css, /\.source-chat-tile-content > \.st-toolbar \{\n  margin-inline-start: var\(--tile-covered-extra-start, 0px\);\n  margin-inline-end: var\(--tile-covered-extra-end, 0px\);\n\}/);
+  // U-06: the titlebar takes the rest through its official margin (titlebar-classes wn, 100cqw), measured on the
+  // chat wrap — the tile-slot container (c9543da06 _s) — against the minimum less the content inset.
+  assert.doesNotMatch(css, /\.source-chat-tile-content > \.st-toolbar|--tile-covered-extra/);
+  assert.doesNotMatch(css, /^\.tiles-shell \{[^}]*container-type/m);
+  assert.match(css, /\.source-side-tile > \.tiles-shell \{\n  container-type: inline-size;\n\}/);
+  const wrap = read('src/source-tile-layout.jsx');
+  assert.match(wrap, /const TILE_SLOT_CONTAINER = \{ containerType: "inline-size", containerName: "tile-slot" \};/);
+  assert.match(wrap, /\.\.\.\(overflowMin \? TILE_SLOT_CONTAINER : null\)/);
+  assert.match(wrap, /"--tile-overflow-min": `\$\{overflowMin\.width - inset\.content\}px`/);
+  assert.match(read('src/generated/titlebar-frame/titlebar-classes.mjs'), /mr-\[max\(0px,var\(--tile-overflow-min,0px\)_-_100cqw\)\]/);
   // The transcript and composer keep 280 px: only the titlebar follows the chat down to its 100 px floor.
   assert.deepEqual(chatContentInset(51, 320), { content: 40, extra: 11 });
   assert.deepEqual(chatContentInset(20, 320), { content: 20, extra: 0 });

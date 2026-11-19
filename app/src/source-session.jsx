@@ -46,6 +46,7 @@ import { chapterOf } from "./agent-tool-titles.mjs";
 import { SourceClaudeChapter } from "./source-chapters.jsx";
 import { localizeBridgeNote } from "./bridge-text-model.mjs";
 import { ChatSurfaceAnswer } from "./source-chat-markdown.jsx"; // w13-chatui-markdown-code
+import { SourceChatAssistantMessage, CHAT_USER_ROW_CLASS, useChatReplyMessage } from "./source-chat-assistant-message.jsx"; // chat-conversation r2-02 / r2-03 / r3-03
 import { approvalIdentity, isPlanReviewRequest } from "./approval-draft-model.mjs";
 import { SourcePlanApprovalCard, planTargetOf, planAcceptOptions, PlanDecisions } from "./source-plan-card.jsx";
 import { useCardHotkeys } from './use-card-hotkeys.js';
@@ -705,7 +706,10 @@ function SourceUserMessage({ item, turnStart, sessionKey, cwd = null, onOpenFile
   const chatSurface = useChatThinkingSurface(); // w13-close-chat-messages: true in a Chat conversation's transcript
   return (
     <article
-      className="source-message source-user-message"
+      // chat-conversation r2-03: a Chat prompt's row is cc1aae219's `p("mb-1", "mt-[var(--msg-gap,1.5rem)]", "group group/message-row")`
+      // (the toolbar's reveal scope); the bubble inside stays the host's until cds-core publishes shared-3 Bd (UserMessage).
+      className={chatSurface ? `source-message source-user-message ${CHAT_USER_ROW_CLASS}` : "source-message source-user-message"}
+      data-chat-user-row={chatSurface ? "" : undefined}
       data-delivery-status={delivery?.status}
       data-transcript-item-id={item.id}
       data-cds="UserMessage"
@@ -714,7 +718,7 @@ function SourceUserMessage({ item, turnStart, sessionKey, cwd = null, onOpenFile
       onFocusCapture={latch}
     >
       <div className="source-user-group" data-cds="UserMessageGroup">
-        {heading && <h2 data-find-omitted="" className="sr-only select-none">{heading}</h2>}
+        {heading && (chatSurface ? <h3 data-find-omitted="" className="sr-only select-none">{heading}</h3> : <h2 data-find-omitted="" className="sr-only select-none">{heading}</h2>)}
         {/* A prompt the agent's scheduler fired (MiMo cron / loop: codeDesktop.origin), as the TUI's clock row. */}
         {item.codeDesktop?.origin?.kind === "cron" && <div className="source-user-scheduled" data-scheduled-prompt="">
           <Icon name="Clock" size={14} aria-hidden="true" />
@@ -737,7 +741,7 @@ function SourceUserMessage({ item, turnStart, sessionKey, cwd = null, onOpenFile
           shows it; a steer added mid-turn gets no time (no per-message timestamp). */}
       <SourceUserDelivery delivery={delivery} />
       {text && !agentNested && !delivery && <SourceUserActions sessionKey={sessionKey} itemId={item.id} text={text} interacted={interacted}
-        startedAtMs={turnStart ? turnStartedAtMs : null} rewind={userActions?.rewind ?? null} onFork={userActions?.fork ?? null} chat={userActions?.chat ?? null} />}
+        startedAtMs={turnStart ? turnStartedAtMs : null} rewind={userActions?.rewind ?? null} onFork={userActions?.fork ?? null} heading={heading} chat={userActions?.chat ?? null} />}
     </article>
   );
 }
@@ -863,9 +867,17 @@ export function SourceAgentMessageExtras({ item, isStreaming = false }) {
   </>;
 }
 
+// chat-conversation r3-03: one answer row's text inside its reply's kw / jw. The row keeps its item hook (find, the
+// message menu's closest row, scroll anchors) and tells the reply whether it streams (kw's data-is-streaming, At).
+function SourceChatReplyAnswer({ itemId, isStreaming, reply, children }) {
+  useEffect(() => { reply.reportStreaming(itemId, !!isStreaming); return () => reply.reportStreaming(itemId, false); }, [reply, itemId, isStreaming]);
+  return <div data-transcript-item-id={itemId} data-chat-answer="">{children}</div>;
+}
+
 export function SourceMessage({ isInterrupting = false, item, agentContext = null, agentNested = false, inToolGroup = false, turnStart = false, isStreaming = false, sessionKey = null, cwd = null, onOpenFileRef = null, onOpenChanges = null, transcriptView = "normal", pendingApprovalItemIds = NO_PENDING_APPROVALS, turnStartedAtMs = null, reasoningPlacement = "standalone", userActions = null, officialChecked = false, liveTail = false }) {
   // w13-chatui-thinking-search: in a Chat conversation a thought or a search is cc1aae219's timeline step (c05b96c7f Gg, shared-130 uq).
   const chatSurface = useChatThinkingSurface();
+  const chatReply = useChatReplyMessage(); // chat-conversation r3-03: inside a reply's one kw
   if (isHiddenTranscriptItem(item, transcriptView)) return null;
   if (chatSurface && !inToolGroup && chatThinkingRow(item)) return <SourceChatThinking item={item} isStreaming={isStreaming} />;
   if (userShellItem(item)) return <SourceUserShell item={item} turnStart={turnStart} />;
@@ -895,6 +907,16 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
   if (item.type === "agentMessage" || item.type === "plan" || (item.type === "exitedReviewMode" && typeof item.review === "string" && item.review.trim())) {
     // A bridge's own italic turn note (`_…_`, e.g. Gemini's turn-limit note) reads in the UI language.
     const answerText = isStreaming ? (item.text ?? item.review) || "" : localizeBridgeNote((item.text ?? item.review) || "");
+    // chat-conversation r3-03: inside a reply row the answer is one of the kw's content blocks (its text), not a kw of its own.
+    if (chatSurface && chatReply) return <SourceChatReplyAnswer itemId={item.id} isStreaming={isStreaming} reply={chatReply}>
+      <ChatSurfaceAnswer text={answerText} fallback={<SourceMarkdown text={answerText} isStreaming={isStreaming} paceReveal={item.type === "agentMessage"} isInterrupting={isInterrupting} sessionKey={sessionKey} itemId={item.id} cwd={cwd} onOpenFileRef={onOpenFileRef} />} />
+      <SourceAgentMessageExtras item={item} isStreaming={isStreaming} />
+    </SourceChatReplyAnswer>;
+    // chat-conversation r2-02: a Chat answer is cc1aae219 JY's classic kw / jw (c7dd2633f N / P) around the Chat renderer.
+    if (chatSurface) return <SourceChatAssistantMessage itemId={item.id} text={answerText} isStreaming={isStreaming} turnStart={turnStart}
+      after={<SourceAgentMessageExtras item={item} isStreaming={isStreaming} />}>
+      <ChatSurfaceAnswer text={answerText} fallback={<SourceMarkdown text={answerText} isStreaming={isStreaming} paceReveal={item.type === "agentMessage"} isInterrupting={isInterrupting} sessionKey={sessionKey} itemId={item.id} cwd={cwd} onOpenFileRef={onOpenFileRef} />} />
+    </SourceChatAssistantMessage>;
     return (
       <article
         className="source-message source-assistant-message"

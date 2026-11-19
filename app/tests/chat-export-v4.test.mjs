@@ -93,7 +93,7 @@ test('4.16336.0 dialog text the host follows (cf400e6a4 G2e / U2e / LL): same cu
 // (cds-integrate/wave4), and the staged graph is generated against that owner (e14252ee: the 13 states fallback names
 // renamed from the official provider / reader text; bindings and modules as in c868ae21).
 test('cds-core is the wave-4 graph (e14252ee) this contract is generated against', () => {
-  assert.equal(sha(fs.readFileSync(path.join(app, 'src/generated/cds-core/manifest.json'))), '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c');
+  assert.equal(sha(fs.readFileSync(path.join(app, 'src/generated/cds-core/manifest.json'))), 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd');
 });
 
 test(staged ? 'the staged 4.16336.0 graph matches its generator' : 'D46: the 4.16336.0 graph stops on cds-core module state without a publicName, and nothing is written', async () => {

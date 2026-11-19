@@ -1,17 +1,17 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-// 3.6556.2 artifact library page shell (c230724a2 Ns), sliced by scripts/extract-artifact-library.mjs.
-import { ArtifactLibraryPage } from './generated/artifact-library/index.mjs';
-import { CdsBanner, CdsButton, CdsDropdown } from './generated/view-tabs/index.js';
+// 4.16336.0 artifact library page shell (c230724a2 vc), sliced by scripts/extract-artifact-library-v4.mjs.
+import { ArtifactLibraryPage } from './generated/artifact-library-v4/index.mjs';
+import { CdsBanner, CdsButton, CdsDropdown } from './cds-core.mjs';
 import { fileKindIcon } from './file-kind-icon.mjs';
 import { SourceArtifactViewer } from './source-artifact-viewer.jsx';
 import { SourceChatArtifactPanel } from './source-chat-artifact-panel.jsx';
 import { t } from '../electron/i18n/index.mjs';
 
-// The item menu is the official path (w11-sweep-curchat): items carry no `menu`, so c69e9937a on renders sn -> the
-// generated cn "More options for {label}" trigger (label from shared-28 pP, "Untitled artifact" when empty) for cards and
-// rows, and a list row's right click goes through shared-16 uu's context branch (fu); both open the item's
-// `menuExtras` (src/source-artifact-v3-adapters.jsx ArtifactItemMenu: CdsDropdown / CdsContextMenu). The extras are
-// this host's actions on local files (the claude.ai artifact actions are not offered).
+// The item menu is the official path: items carry no `menu`, so c230724a2 Ns renders Ps -> the generated Fs "More
+// options for {label}" trigger for cards and rows, and a list row's right click goes through shared-140 Xo's context
+// branch (Qo); both open the item's `menuExtras` (src/source-artifact-library-v4-adapters.jsx ArtifactItemMenu: cds-core
+// CdsDropdown / CdsContextMenu). The extras are this host's actions on local files (the claude.ai artifact actions are
+// not offered).
 
 export function SourceArtifactLibrary({ call, onCreate, onSession, onPreviewChange, viewerNavigation, viewerWindowActions }) {
   const [selected, setSelected] = useState(null);

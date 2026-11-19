@@ -120,10 +120,13 @@ test('D46: no module state cds-core holds without a publicName is copied (engine
   assert.deepEqual(survey.stateConflicts, []);
   // What is sliced again from cds-core-held chunks is pure (compiler helpers, preload helper, shared-frame utilities; since
   // cds-core wave 5 also shared-0 Tl lazyValue and vendor-intl tn, the defineMessages identity, which cds-core now holds;
-  // since cds-core wave 6 also shared-0 T6 and vendor-motion Qn, pure helpers it holds without a publicName).
+  // since cds-core wave 6 also shared-0 T6 and vendor-motion Qn, pure helpers it holds without a publicName; since cds-core wave
+  // cc2 also the shared-1 / shared-2 pure bindings the UserMessage closure brings into cds-core — m7 and its action-bar siblings,
+  // the matchMedia helpers, the clipboard hook J$ — while the module state among them (X5 / Y5 / Q8 / W8 ...) is linked by
+  // publicName, which survey.stateConflicts above proves; was: shared-frame / preload-helper / shared-183 only).
   const held = manifest.modules.flatMap(m => m.heldByViewTabs.map(b => `${m.source}#${b}`));
   assert.ok(held.length > 0);
-  assert.ok(held.every(k => /^(shared-frame-CJdE5Ria|preload-helper-BBljBeZo|shared-183-B2N6Zy4J)\.js#/.test(k) || ['shared-0-CnnWnVrT.js#Tl', 'vendor-intl-BJgYK7RA.js#tn',
+  assert.ok(held.every(k => /^(shared-frame-CJdE5Ria|preload-helper-BBljBeZo|shared-183-B2N6Zy4J|shared-1-D1bGaTaN|shared-2-CsjIBQD8)\.js#/.test(k) || ['shared-0-CnnWnVrT.js#Tl', 'vendor-intl-BJgYK7RA.js#tn',
     'shared-0-CnnWnVrT.js#T6', 'vendor-motion-Ba5cqrBN.js#Qn'].includes(k)), held.join(' '));
 });
 
@@ -165,7 +168,10 @@ test('cutover not done: host and 3.6556.2 consumers still read src/generated/wor
     const { area, m } = adapterOwners.get(file);
     assert.ok(linkedNames(m).includes('working-line-v4'), `${file}: ${area} declares working-line-v4 in linkedAreas`);
   }
-  assert.deepEqual(hits.filter(file => !adapterOwners.has(file)), []);
+  // chat-cowork 1:1 r1 (chat-conversation r1-01 / r1-03): the Chat message toolbar (shared-2 m7 = cc1aae219 Sd) and the
+  // Chat thinking timeline (turn-status = c734f318c TurnStatus) are cut over to this graph; no other host file reads it.
+  // r2 chat-conversation-r2-04: the user-message actions row is the same MessageActions compound (shared-2 m7) — was: the two above.
+  assert.deepEqual(hits.filter(file => !adapterOwners.has(file)).sort(), ['src/source-chat-message-actions.jsx', 'src/source-chat-thinking.jsx', 'src/source-user-actions.jsx']);
   const reached = new Set(), stack = [path.join(app, 'src/main.jsx')];
   const specifiers = /(?:import|export)\s*(?:[^'"]*?from\s*)?["'](\.{1,2}\/[^"']+)["']|import\(\s*["'](\.{1,2}\/[^"']+)["']\s*\)/g;
   const resolveFile = spec => [spec, ...['.jsx', '.mjs', '.js'].map(ext => spec + ext), ...['index.jsx', 'index.mjs', 'index.js'].map(name => path.join(spec, name))]

@@ -8,6 +8,8 @@ import { TranscriptTail } from "./source-transcript-rows.jsx";
 // 3.6556.2 cb6930dae So (2.42304.0 Ja; c96d752d0 `ev`): whether a running tool row holds the turn's mark (the transcript's
 // TurnMarkBroker), under its working-line semantic name.
 import { useTurnMarkHeld } from "./generated/working-line/morph.mjs";
+import { useChatThinkingSurface } from "./source-chat-thinking.jsx";
+import { SourceChatFooter, chatFooterAvatarState } from "./source-chat-footer.jsx"; // chat-conversation r3-02
 
 
 const noElapsedOnServer = () => null;
@@ -54,6 +56,12 @@ export function SourceTranscriptStatus({ textSize = "m", turnId, turnStats, item
   const markHeld = useTurnMarkHeld();
   const line = workingLineProps(view, { retrying: state.retrying, elapsed, outputTokens: owned?.outputTokens, activity, thinking, waiting,
     runningTaskCount, finishedTaskCount, onToggleTasksPane, tasksPaneOpen, markHeld });
+  // chat-conversation r3-02: a Chat conversation ends with ca2ef848d ele's chat-footer-row (source-chat-footer.jsx), not
+  // the Code working line; an API retry keeps the host line (official Vce has no local counterpart).
+  const chatSurface = useChatThinkingSurface();
+  if (chatSurface && state.sessionKey && state.ready && !view.retry)
+    return <SourceChatFooter status={view.phase} isStreaming={working}
+      avatarState={chatFooterAvatarState({ working, turnId, items })} />;
   // Every invisible local presentation is a source state without a row (home, loading, hideLoader when the approval
   // card replaces the loader), so the tasks button never resurrects the row on its own.
   if (!line) return null;

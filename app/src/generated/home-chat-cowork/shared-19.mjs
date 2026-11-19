@@ -58,4 +58,15 @@ var fS = {
 function pS(e) {
   return fS[e];
 }
-export { pS as homeLayout, eS as greetingFrameClass, $x, Yx, dS, rS, uS };
+var aC =
+  "md:mt-[calc(0.75rem_-_min(var(--chorus-composer-lift,0px)_+_var(--band-slot-lift,0px),5rem))]";
+export {
+  pS as homeLayout,
+  eS as greetingFrameClass,
+  aC as greetingSlotLiftClass,
+  $x,
+  Yx,
+  dS,
+  rS,
+  uS,
+};

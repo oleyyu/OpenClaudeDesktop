@@ -153,6 +153,11 @@ test('R4T-08e: a Codex plan is an ExitPlanMode call (c96d752d0 exit_plan_mode st
   assert.deepEqual(codexPlanTool({ id: 'p', type: 'plan', text: '1. Go' }).map(({ hostItem, ...tool }) => tool),
     [{ status: 'completed', isError: false, id: 'p', name: 'ExitPlanMode', input: { plan: '1. Go' } }]);
   assert.equal(codexPlanTool({ id: 'p', type: 'plan', text: '  ' }), null);
+  // fix-r2 U-36: a plan whose review is pending (the request names the call, the item is `plan-<call id>`) is
+  // awaiting_approval, so turn-mark Rd draws no "Plan approved" line yet.
+  assert.equal(codexPlanTool({ id: 'p', type: 'plan', text: '1. Go' }, { awaiting: true })[0].status, 'awaiting_approval');
+  const pendingPlan = codeTranscriptEntries([USER, { id: 'plan-c1', type: 'plan', turnId: 't1', text: '1. Go' }], { awaitingIds: new Set(['c1']) });
+  assert.equal(pendingPlan[1].items[0].tools[0].status, 'awaiting_approval');
   const entries = codeTranscriptEntries([USER, { id: 'p', type: 'plan', turnId: 't1', text: '1. Go' }, REPLY]);
   assert.deepEqual(entries.map((e) => `${e.author}:${e.id}`), [`user:${userEntryId('u1')}`, 'assistant:p:reply']);
   assert.deepEqual(entries[1].items.map((i) => i.kind), ['tools', 'text']);

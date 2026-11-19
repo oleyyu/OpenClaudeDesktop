@@ -157,7 +157,11 @@
         "Hn": "guardStrayEnter",
         "Pt": "elementOf"
       },
-      "heldByCdsCore": []
+      "heldByCdsCore": [
+        "Hn",
+        "zn",
+        "Bn"
+      ]
     },
     {
       "target": "focus-on-click.mjs",

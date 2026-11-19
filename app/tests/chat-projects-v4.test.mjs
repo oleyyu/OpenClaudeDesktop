@@ -176,3 +176,45 @@ test('SSR host page over the 4.16336.0 graph (cutover edits): project detail hea
   assert.match(pinned, /data-cds="Toolbar" role="toolbar" aria-label="Page tools"/);
   assert.match(detail({}), /aria-label="Pin project"/);
 });
+
+// library-pages r2-02: the card menu's / project page's Edit details is the sliced shared-19 NI (c17beaa76 wr renders it as
+// ot), saving through the host CoworkSpaces bridge (shared-0 PO); the host-written "Edit project" dialog is gone.
+test('r3-02: a knowledge file’s Remove asks first through the sliced c9260427e ue (Jl "Remove {name}?" / "Remove file")', async () => {
+  assert.equal(ROOTS['c9260427e-CQ_106hh.js'].ue.name, 'KnowledgeRemoveDialog');
+  assert.equal(typeof gen.KnowledgeRemoveDialog, 'function');
+  const c52 = official('c52b32660-CmYsbpbF.js');
+  assert.ok(c52.includes('o({fileName:h,remove:()=>l({docUuid:a.uuid})})'), 'c52b32660 fe: Remove calls onAskToRemove');
+  assert.ok(c52.includes('t(me,{removal:J,onClose:pe},"remove-dialog")') && c52.includes('import{i as fe,l as pe,s as me,t as he}from"./c9260427e-CQ_106hh.js"'));
+  const mod = local(`${out}/c9260427e.mjs`);
+  assert.ok(mod.includes('CdsConfirmationDialog as p,') && mod.includes('defaultMessage: "Remove file",') && mod.includes('closeOnConfirm: !0,')
+    && mod.includes('confirmVariant: "danger",') && mod.includes('defaultMessage: "This can\\u2019t be undone.",'));
+  const host = local('src/source-project-knowledge.jsx');
+  assert.match(host, /onRemove=\{askToRemove\}/);
+  assert.match(host, /setPendingRemoval\(\{ projectId: project\.id, removal: \{ fileName: file\.name, remove: \(\) => \{ void remove\(file\); \} \} \}\)/);
+  assert.equal(count(host, '{removeDialog}'), 2, 'xe renders it last in the empty card and in the list column');
+  assert.ok(!/onRemove=\{remove\}/.test(host), 'Remove no longer deletes at once');
+  // Closed: nothing renders.
+  assert.equal(renderToStaticMarkup(h(gen.KnowledgeRemoveDialog, { removal: null, onClose() {} })), '');
+});
+
+test('r2-02: Edit details is the sliced shared-19 NI over the CoworkSpaces bridge (local-projects update)', async () => {
+  assert.equal(ROOTS['shared-19-UalAfDtn.js'].NI.name, 'ProjectEditDetailsDialog');
+  assert.equal(HOST_ADAPTERS['shared-0-CnnWnVrT.js#PO'].name, 'CoworkSpaces');
+  const s19 = local(`${out}/shared-19.mjs`);
+  assert.ok(s19.includes('defaultMessage: "Edit details",') && s19.includes('maxLength: 100,') && s19.includes('defaultMessage: "Description (optional)",'));
+  assert.match(s19, /async function PI\(e, t\) \{\n  if \(!\(await je\?\.updateSpace\?\.\(e, t\)\)\)/);
+  assert.ok(official('c17beaa76-CF6cnZoR.js').includes('t(ot,{isOpen:h,onClose:P,spaceId:a.id,spaceName:a.name,spaceDescription:a.description})'));
+  const host = local('src/source-projects.jsx');
+  assert.equal(count(host, '<ProjectEditDetailsDialog '), 2);
+  assert.ok(!host.includes("t('Edit project')") && !host.includes('function EditProject('));
+  const bridge = await server.ssrLoadModule('/src/source-project-spaces-bridge.mjs');
+  assert.equal(await bridge.CoworkSpaces.updateSpace('a', { name: 'X' }), false, 'no page installed: falsy, FI shows its own error');
+  assert.equal(bridge.CoworkSpaces.getAllSpaces, undefined);
+  const calls = [], updated = [];
+  const uninstall = bridge.installProjectSpacesHost({ call: async (channel, request) => { calls.push([channel, request]); return { id: request.id, name: request.name ?? 'Old' }; }, onUpdated: p => updated.push(p) });
+  try {
+    assert.equal(await bridge.CoworkSpaces.updateSpace('a', { name: 'New', description: 'D', other: 1 }), true);
+    assert.deepEqual(calls, [['local-projects', { action: 'update', id: 'a', name: 'New', description: 'D' }]]);
+    assert.deepEqual(updated, [{ id: 'a', name: 'New' }]);
+  } finally { uninstall(); }
+});

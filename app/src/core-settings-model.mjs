@@ -16,6 +16,8 @@ const LABELS = {
   "distill.auto": () => [t("Package workflows automatically"), t("When a session starts, MiMo Code turns repeated work into reusable workflows in the background (distill), which uses tokens.")],
   // OpenCode's Exa web search (OPENCODE_ENABLE_EXA).
   "websearch.enabled": () => [t("Web search"), t("Give OpenCode its web search tool with any provider. Searches go to Exa’s public search service. OpenCode restarts when nothing is running.")],
+  // OpenCode 2.x's own model service (opencode-bridge core-settings.js models.zen): off denies its provider.
+  "models.zen": () => [t("OpenCode Zen models"), t("The models OpenCode comes with, from its own OpenCode Zen service. Signed out, these are its free models. Turn this off to list only the providers you added.")],
   // OpenCode's experimental background sub-agents (OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS).
   "subagents.background": () => [t("Background sub-agents"), t("Let OpenCode run sub-agents in the background while it keeps working, and tell it when each finishes. Experimental in OpenCode. OpenCode restarts when nothing is running.")],
   "model.compressionThreshold": () => [t("Compress context at"), t("How full the context window gets before Gemini summarizes earlier messages (0.1 to 1). Its only compaction control.")],

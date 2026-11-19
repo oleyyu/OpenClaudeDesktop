@@ -373,10 +373,12 @@ export function sdkToolOf(item) {
  * `input.plan` is what the official row reads (turn-mark's plan body `t.input.plan`; c52b02f3f "Proposed plan"), and
  * c96d752d0 rolls it up "stands-alone". null for an empty plan.
  */
-export function codexPlanTool(item) {
+export function codexPlanTool(item, { awaiting = false } = {}) {
   const plan = str(item?.text);
   if (!plan.trim()) return null;
-  const flags = sdkToolStatus(item);
+  // fix-r2 U-36: while its plan review is pending the call is awaiting_approval, so turn-mark Rd draws only the plan body
+  // (its "Plan approved" line is for a settled call). A plan item carries no status of its own.
+  const flags = awaiting ? { status: "awaiting_approval" } : sdkToolStatus(item);
   return [{ ...flags, id: str(item.id), name: "ExitPlanMode", input: { plan }, hostItem: item }];
 }
 

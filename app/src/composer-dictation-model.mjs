@@ -66,6 +66,14 @@ export const languageHint = (pick) => DICTATION_LANGUAGES.find((entry) => entry.
 const DISABLING = new Set(["no_microphone_usage_description", "no_speech_usage_description", "native_unavailable", "unsupported_platform", "no_recognizer"]);
 export const disablesDictation = (reason) => DISABLING.has(reason);
 
+/**
+ * marlin-chin fix2: shared-9 t_'s stableDictationAvailable for the host. Official reads it from shared-36 yM → gM
+ * (`Mr()?.dictationAvailable === !0`, the desktop build's dictation capability), not from a mic permission, so a build or
+ * Mac that cannot dictate (the DISABLING reasons) answers false and n_ renders nothing; a denied permission still shows the
+ * button (its click opens the guidance popover). `dictation` is use-composer-dictation.js's result.
+ */
+export const stableDictationAvailable = (dictation) => !!dictation?.shown && !dictation.disabledReason;
+
 export function disabledReasonText(reason) {
   switch (reason) {
     case "no_microphone_usage_description":

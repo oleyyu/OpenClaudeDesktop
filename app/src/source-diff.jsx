@@ -1147,7 +1147,8 @@ export function pierreCompleteFile(section, completeContext, context = PIERRE_CO
     if (last && start <= last.end + 1) last.end = Math.max(last.end, end); else groups.push({ start, end });
   }
   const hunk = section.hunks[0];
-  const before = (index, key, origin) => { for (let at = index - 1; at >= 0; at--) if (items[at][key] != null) return items[at][key]; return origin - 1; };
+  const before = (index, key, origin) => { for (let at = index - 1; at >= 0; at--) if (items[at][key] != null) return items[at][key]; return Math.max(0, origin - 1); };
+  // an added / deleted file's empty side starts at 0 (`@@ -0,0 +1,N @@`); `-1` is rejected by the official parser.
   const body = groups.map(({ start, end }) => {
     const part = items.slice(start, end + 1);
     const oldCount = part.filter((item) => item.type !== "added").length, newCount = part.filter((item) => item.type !== "removed").length;

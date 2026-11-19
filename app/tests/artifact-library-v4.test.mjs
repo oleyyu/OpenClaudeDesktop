@@ -1,5 +1,5 @@
 // Round 2 unit artifact-library: the 4.16336.0 artifact library (scripts/extract-artifact-library-v4.mjs ->
-// src/generated/artifact-library-v4, staged next to the 3.6556.2 src/generated/artifact-library the host still mounts).
+// src/generated/artifact-library-v4, mounted by the hosts since library-pages-r1-01; the 3.6556.2 graph stays generated).
 // Source only: manifest, the generator's --check, the official chunk text, D1 links and ownership, the host boundaries,
 // and SSR of the roots through Vite. No browser, no network; the official chunks are read as text and never executed.
 import test, { before, after } from 'node:test';
@@ -115,12 +115,16 @@ test('host boundaries: each adapted original pinned; answered by the v4 adapter 
   const adapterText = local('src/source-artifact-library-v4-adapters.jsx');
   assert.match(adapterText, /^import \{ CdsContextMenu, CdsDropdown \} from '\.\/cds-core\.mjs';$/m);
   assert.doesNotMatch(adapterText, /generated\/view-tabs|generated\/artifact-library\//);
-  assert.deepEqual([...adapterText.matchAll(/^export \{[^}]*\} from '([^']+)';/gm)].map(m => m[1]), ['./source-routines-shared-adapters.jsx']);
+  // U-49: the Chat artifact preview is the host's follow of c33ae67d6 j, shared with the 3.6556.2 adapters.
+  assert.deepEqual([...adapterText.matchAll(/^export \{[^}]*\} from '([^']+)';/gm)].map(m => m[1]), ['./source-routines-shared-adapters.jsx', './source-artifact-chat-preview.jsx']);
   // Same answers as the 3.6556.2 adapters for the closed services.
   assert.equal(adapters.artifactMenuItemsLazy, oldAdapters.artifactMenuItemsLazy);
   assert.deepEqual(adapters.artifactMenuActions(), oldAdapters.artifactMenuActions());
   assert.equal(adapters.useArtifactOwners()({ rel: 'shared', ownerAccountUuid: 'x' }), undefined);
-  assert.equal(adapters.ChatArtifactPreview({}), null);
+  // U-49 (was `null`, the blank Chat card): c33ae67d6 j draws a text / code excerpt, else the type icon.
+  assert.equal(adapters.ChatArtifactPreview, oldAdapters.ChatArtifactPreview);
+  assert.match(renderToStaticMarkup(React.createElement(adapters.ChatArtifactPreview, { type: 'application/vnd.ant.code', preview: 'print(1)' })), /font-mono-ui[^>]*>print\(1\)</);
+  assert.match(renderToStaticMarkup(React.createElement(adapters.ChatArtifactPreview, { type: 'text/html', preview: '<p>x</p>' })), /data-gallery-type-media/);
   assert.equal(adapters.beginStarDrag(item('a'), {}), false);
   // The original drag start answers false for a host item (not a frame artifact, no onToggleStar) and behind GrowthBook.
   const s5 = official('shared-5-u8kha2eH.js');
@@ -203,9 +207,15 @@ test('SSR: library page grid, list, no search match, empty and loading', t => {
   assert.doesNotMatch(text(loading), /No artifacts matching/);
 });
 
-test('staged: the 3.6556.2 graph and the host mount are unchanged', () => {
+// library-pages-r1-01 (cutover, round2/artifact-library/patches applied): the library and viewer hosts mount this graph; the
+// 3.6556.2 graph stays generated for its other importers (chat artifact card / panel). The old assertion (hosts unchanged)
+// encoded the staged state.
+test('cutover: the hosts mount the 4.16336.0 graph; the 3.6556.2 graph stays generated', () => {
   assert.equal(JSON.parse(local('src/generated/artifact-library/manifest.json')).referenceVersion, '3.6556.2');
-  assert.doesNotMatch(local('src/source-artifact-library.jsx'), /artifact-library-v4/);
-  assert.doesNotMatch(local('src/source-artifact-viewer.jsx'), /artifact-library-v4/);
+  for (const file of ['src/source-artifact-library.jsx', 'src/source-artifact-viewer.jsx']) {
+    assert.match(local(file), /from '\.\/generated\/artifact-library-v4\/index\.mjs';/, file);
+    assert.doesNotMatch(local(file), /generated\/artifact-library\/index/, file);
+  }
+  assert.match(local('src/source-artifact-library.jsx'), /import \{ CdsBanner, CdsButton, CdsDropdown \} from '\.\/cds-core\.mjs';/);
   assert.doesNotMatch(local('src/main.jsx'), /artifact-library-v4/);
 });

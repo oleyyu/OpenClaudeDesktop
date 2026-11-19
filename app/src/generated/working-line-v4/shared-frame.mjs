@@ -176,20 +176,6 @@ function pr(e, t) {
 function mr(e, t) {
   return (fr(e, t), () => pr(e, t));
 }
-function Or(e) {
-  typeof reportError == "function"
-    ? reportError(e)
-    : queueMicrotask(() => {
-        throw e;
-      });
-}
-function kr(e) {
-  try {
-    e();
-  } catch (e) {
-    Or(e);
-  }
-}
 var gi = /[\t\n\r]/g;
 function _i(e) {
   let t = e.replace(gi, ""),
@@ -1371,7 +1357,6 @@ export {
   iB,
   iu,
   jA,
-  kr,
   kz,
   mr,
   nB,

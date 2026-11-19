@@ -51,7 +51,7 @@ import {
 // D10: the presets switch (shared-11 Qo, claudeai_cc_epitaxy_session_presets_main) is on locally.
 export const PRESETS_ON = true;
 // main.jsx sendMessage / clearSession's developerInstructions for a Code session on a core without customization.
-export const CODE_DEVELOPER_INSTRUCTIONS = "You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. Do not claim to be Claude.";
+export const CODE_DEVELOPER_INSTRUCTIONS = "You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. For Dynamic Workflow requests, look up and call mcp__code_desktop__Workflow when available. Do not claim to be Claude.";
 
 const EMPTY = Object.freeze([]);
 const EMPTY_MAP = new Map();

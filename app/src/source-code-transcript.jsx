@@ -40,6 +40,9 @@ import { CodeTranscriptFeed } from "./source-code-feed.jsx";
 import { ContainedImageLoaderProvider, ImageLoaderProvider, SessionFileReadableProvider } from "./generated/code-transcript/c856385e2-aEyDzrcK.mjs";
 // W14-code r2 R2T-12: the turn error recovery scope (c227f4d5e PZ, which cf74bc599 mounts around the transcript as Xp).
 import { TurnErrorRecoveryProvider } from "./generated/code-transcript/c227f4d5e-B-FYKrwT.mjs";
+// fix-r2 U-35: c96d752d0 Aat's table expand store (`[An] = I(Xm)`), its context (`f(Jm.Provider, {value: An, …})`) and
+// the expanded table dialog (`f(Ym, {store: An})`): c19e90103 Fg / Ig / zg.
+import { TableExpandDialog, TableExpandStoreContext, createTableExpandStore } from "./generated/code-transcript/c19e90103-BQFzF8EA.mjs";
 // W14-code transcript-rest TM-1 / TM-12: the list rows of c96d752d0 i9 the host's list draws (fork rows, the truncated note)
 // and the desktop's sessions store they read (shared-8 og), filled from the host's sessions.
 import { og as desktopSessionsStore } from "./generated/transcript-rows/rows-shared-8-Db1QN4mf.mjs";
@@ -259,6 +262,7 @@ export function SourceCodeTranscript({ sessionId, entries: given = null, items =
     closingLine: createValueStore(undefined), tailActions: createValueStore(null) };
   const { fragments, share, closingLine, tailActions } = keyed.current;
   const [published] = useState(() => createValueStore(undefined));
+  const [tableExpand] = useState(createTableExpandStore);
   const sessionRef = useMemo(() => (sessionId ? { type: "local", id: sessionId } : undefined), [sessionId]);
   // bat: `Ce = Z ? Se(rat(s)) : O7`, `Xe = {baseEntries: Ce, hasEarlier: Ee, isResponding: O}`.
   // r7 复核 R7T-06: while the stream's snapshot is laid over the feed's entries, the renderer folds the raw ones (bat's
@@ -530,6 +534,9 @@ export function SourceCodeTranscript({ sessionId, entries: given = null, items =
                       {/* W14-code r7 R7T-02: Aat's list sits in TA (`f(TA, {children: f(n8, …)})`, both returns): the message
                           menu M7 / EA open at a row (xA) and its one ContextMenu (_De → DA). */}
                       <TranscriptMessageMenuHost>
+                      {/* fix-r2 U-35: Aat `f(Jm.Provider, {value: An, …})` around the feed, `f(Ym, {store: An})` after it: a
+                          wide reply table (c19e90103 Lg → Rg) gets data-overflowing and "Expand table". */}
+                      <TableExpandStoreContext.Provider value={tableExpand}>
                       {listRows ? <CodeTranscriptFeed rows={listRows} entries={entries} rendererEntryCount={baseEntries.length} sessionId={sessionId} responding={responding} fragments={fragments} intl={intl} messagesRef={messagesRef} />
                         : <>{lead}{feedRows.map((row) => <React.Fragment key={row.id}>{row.render()}</React.Fragment>)}
                           {failedRows.map((row) => <React.Fragment key={row.id}>{row.render()}</React.Fragment>)}
@@ -537,6 +544,8 @@ export function SourceCodeTranscript({ sessionId, entries: given = null, items =
                               (cf74bc599 vA EpitaxySessionBands, `inTranscript: Xr(i, _)` with _ the tailRowsRenderable: the sleep
                               band `s(wO, {sessionRef, inTranscript, scopeStore, focusComposer}, `${t}:sleep`)`, …). */}
                           {host.transcriptNotices ?? null}</>}
+                      <TableExpandDialog store={tableExpand} />
+                      </TableExpandStoreContext.Provider>
                       </TranscriptMessageMenuHost>
                     </CodeTranscriptSessionLinks.Provider>
                   </CodeTranscriptRenderer>

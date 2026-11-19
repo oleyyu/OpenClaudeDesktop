@@ -3,6 +3,7 @@ import { CoworkHome as CoworkHomeV3 } from './generated/cowork-home/index.mjs';
 import { CoworkHomeV3Context, HOME_V3_CLEAR_EVENT } from './source-cowork-home-v3-adapters.jsx';
 // 4.16336.0 (scripts/extract-home-v4.mjs): shared-23 dw, the Cowork new page body, over src/source-home-v4-adapters.jsx.
 import { CoworkHome } from './generated/home-chat-cowork/shared-23.mjs';
+import { COMPOSER_MARLIN_DESIGN } from './composer-marlin.mjs';
 import { HomeHost, HOME_CLEAR_EVENT, HOME_MARK_READ_EVENT, HOME_MARK_UNREAD_EVENT } from './source-home-v4-adapters.jsx';
 import { RoutinesSharedHost } from './source-routines-shared-adapters.jsx';
 import { coworkHomeState } from './cowork-home-model.mjs';
@@ -18,10 +19,11 @@ import { sourceRoutine } from './source-routine-adapters.jsx';
 //
 // The box is the official below-composer slot (shared-19 composer `h(iu, { className: p(Ne, G), children: V })`):
 // Ne = `z ?? (ke ? "mx-auto w-full max-w-[40rem]" : "mx-auto w-full max-w-2xl")` where ke needs shared-78 Fy (the
-// voyage_composer_marlin design, off by default here: no GrowthBook payload, device latch "classic"; FS reads the same
-// Fy for its "max-w-none px-2" list), G = shared-5 oC(greetingPhoneSeat) for the "home" layout (seat "top" → QS).
+// voyage_composer_marlin design; U-MARLIN 2026-11-18: on, src/composer-marlin.mjs — 4.16336.0 shared-19 ED reads it as
+// Wi(), and the generated CoworkHome reads the same answer for its "max-w-none px-2" list), G = shared-5
+// oC(greetingPhoneSeat) for the "home" layout (seat "top" → QS).
 // Region / busy attributes are the host's (its clear action is asynchronous).
-const belowSlotClass = 'mx-auto w-full max-w-2xl dock:order-2 dock:flex dock:flex-col';
+const belowSlotClass = `mx-auto w-full ${COMPOSER_MARLIN_DESIGN ? 'max-w-[40rem]' : 'max-w-2xl'} dock:order-2 dock:flex dock:flex-col`;
 
 // RouterLink targets of the generated rows (shared-46 Jb `/cowork/${id}`, unencoded as in the original; the scheduled
 // rows `/scheduled-task/${encodeURIComponent(id)}`).

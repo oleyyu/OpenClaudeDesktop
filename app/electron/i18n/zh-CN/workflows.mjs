@@ -11,7 +11,8 @@ export default {
   'Workflow engine': '工作流引擎',
   '{core} runs workflows with its own engine and tools. The Tasks pane shows them either way.': '{core} 用自己的引擎和工具运行工作流。两种方式都会显示在任务面板中。',
   'OpenClaude Desktop runs {core}’s workflows: its own workflow tool is hidden from the model.': '由 OpenClaude Desktop 运行 {core} 的工作流：模型看不到它自带的工作流工具。',
-  '{core}’s own workflows (default)': '{core} 自带的工作流（默认）',
+  // U-42: the core's own engine; short enough for the 220px select (the row's description names the core).
+  'Built-in (default)': '自带（默认）',
   'OpenClaude Desktop': 'OpenClaude Desktop',
   '{core} has no workflow engine of its own, so OpenClaude Desktop runs its workflows.': '{core} 没有自己的工作流引擎，因此由 OpenClaude Desktop 运行它的工作流。',
   'Ultracode keyword trigger': 'Ultracode 关键词触发',

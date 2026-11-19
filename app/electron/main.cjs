@@ -314,7 +314,8 @@ let desktopSettings;
 let workflowService;
 const {createAccountOperations,perTokenAccount,perTokenRefusal}=require('./account-operations.cjs');
 const accountOperations=createAccountOperations({getClient:()=>client,openExternal:url=>shell.openExternal(url),
-  onState:auth=>emit({kind:'account-auth',auth}),onAccount:account=>{if(initial)initial={...initial,account};emit({kind:'account-snapshot',account});}});
+  onState:auth=>emit({kind:'account-auth',auth}),onAccount:account=>{if(initial)initial={...initial,account};emit({kind:'account-snapshot',account});},
+  onModels:models=>{if(initial)initial={...initial,models};emit({kind:'models',models});}});
 const {createWorkflowService,workflowCoreCommand}=require("./workflow-service.cjs");
 const {createWorkflowToolService}=require("./workflow-tool-service.cjs");
 const {resolveWorkflowSettings,workflowRunnerEnv,workflowEngineFor}=require("./prefs/workflow-settings.mjs");
@@ -3016,6 +3017,8 @@ app.whenReady().then(async () => {
     const owner = client;
     await owner.start();
     if (owner !== client) throw new Error("The core connection changed. Try again.");
+    // A core that respawned by itself (a crash, a task's own start) left `initial` cleared and its models unlisted.
+    if (!initial) await connect();
     return { owner, coreId: coreForEngine(owner.serverInfo?.engine).id, models: initial?.models ?? [],
       hints: owner.serverInfo?.capabilities?.permissionHints === true, autoReview: await autoReviewFeature(owner),
       // R4g-routines RT3: a Code task starts like a Code session (main.jsx: no developerInstructions on a core with customization).
@@ -3194,6 +3197,9 @@ app.whenReady().then(async () => {
           // dynamicWorkflows false: the bridge withholds its own workflow tool (off, or OpenClaude Desktop's engine chosen).
           params.codeDesktop = { ...params.codeDesktop, dynamicWorkflows: workflowsOn && currentWorkflowEngine() === "native" };
         }
+        // Settings › Prompt suggestions off: a core that predicts the next prompt itself (MiMo's /predict) stops asking for it.
+        if (["thread/start", "thread/resume", "turn/start"].includes(p.method) && coreSupports(client?.serverInfo, "promptSuggestion"))
+          params.codeDesktop = { ...(params.codeDesktop && typeof params.codeDesktop === "object" ? params.codeDesktop : {}), promptSuggestions: config.promptSuggestions !== false };
         if (p.method === "codeDesktop/workflow/stop" && (typeof params.threadId !== "string" || !config.threadIds.includes(params.threadId))) throw new Error("Unknown session.");
         if (p.method === "codeDesktop/sideQuestion" && (typeof params.threadId !== "string" || ![...config.threadIds, ...config.archivedThreadIds].includes(params.threadId))) throw new Error("Unknown session.");
         if (p.method === "codeDesktop/sideQuestion" && nativeSideQuestions()) return nativeSideChat.ask(params);
@@ -3663,6 +3669,7 @@ app.whenReady().then(async () => {
     if (!thread || thread.id !== threadId) throw new Error("That session can’t be opened.");
     const gone = typeof thread.cwd === "string" && thread.cwd && !fs.existsSync(thread.cwd);
     const cwd = gone && typeof folder === "string" && path.isAbsolute(folder) && fs.existsSync(folder) ? { cwd: folder } : {};
+    if (cwd.cwd && coreCapabilities(owner.serverInfo).forkCwd === false) throw new Error("This core cannot fork into the selected folder.");
     const params = await importStartParams("thread/fork", { threadId, ...(thread.historyMode === "legacy" ? {} : { excludeTurns: true }), ...cwd }, owner);
     const result = await owner.request("thread/fork", params, 120000);
     if (owner !== client) throw new Error("The core connection changed. Try again.");
@@ -4027,10 +4034,13 @@ app.whenReady().then(async () => {
             pending.promise = (async () => { await owner.start(); const result = await artifactIndex.backfillArtifacts(snapshot, (method, params) => coworkSessions.owns(params.threadId) ? coworkSessions.request(method, params) : owner.request(method, params), artifactIndexed.get(owner)); if (snapshot === config) save(); return result; })().finally(() => { if (artifactRead === pending) artifactRead = null; });
             artifactRead = pending;
           }
+          // The backfill's .finally clears artifactRead; when it settles during the awaits below (warm second visit) a later
+          // read of artifactRead is null, so the listing keeps this call's read.
+          const read = artifactRead;
           // w13-chatfn-artifacts (chatfn-31): Chat artifacts join the library as c230724a2 "chat" items (opened in the artifact panel).
           const { chatLibraryRecords } = await import('./chat-artifact-store.mjs'), { sessionSurface } = await import('./surface-policy.mjs');
           const chatThread = (id) => [...config.threadIds, ...config.archivedThreadIds].includes(id) && sessionSurface(id, config.sessionMetadata) === 'chat';
-          return artifactRead.promise.then(async (result) => ({ ...result, records: [...result.records, ...chatLibraryRecords(await chatArtifacts.listAll(chatThread))] }));
+          return read.promise.then(async (result) => ({ ...result, records: [...result.records, ...chatLibraryRecords(await chatArtifacts.listAll(chatThread))] }));
         }
         const chatKey = (await import('./chat-artifact-types.mjs')).parseChatArtifactKey(p.key); // w13-chatfn-artifacts: a Chat artifact's pin lives in its store.
         if (p.action === 'pin' && chatKey) { await chatArtifacts.pin(chatKey.threadId, chatKey.id, p.starred); return (await import('./chat-artifact-store.mjs')).chatLibraryRecords((await chatArtifacts.listAll((id) => id === chatKey.threadId)).filter((row) => row.id === chatKey.id))[0]; }
@@ -4524,11 +4534,11 @@ app.whenReady().then(async () => {
         const { savedWorkflows } = await import(require("node:url").pathToFileURL(path.join(__dirname, "workflow-tool-model.mjs")).href);
         knownSavedWorkflowPaths.clear();
         return savedWorkflows({ cwd: root, home: os.homedir(), folders: coreWorkflowFolders() }).workflows.slice(0, 200).map((entry) => {
-          if (typeof entry.path === "string" && path.isAbsolute(entry.path)) knownSavedWorkflowPaths.add(entry.path);
+          if (typeof entry.filePath === "string" && path.isAbsolute(entry.filePath)) knownSavedWorkflowPaths.add(entry.filePath);
           return {
             name: entry.name, description: entry.description ?? "", whenToUse: entry.whenToUse ?? "", source: entry.source,
             phases: (Array.isArray(entry.phases) ? entry.phases : []).filter((phase) => phase && typeof phase.title === "string").slice(0, 30).map((phase) => phase.title),
-            disableModelInvocation: entry.disableModelInvocation === true, ...(typeof entry.path === "string" ? { path: entry.path } : {}),
+            disableModelInvocation: entry.disableModelInvocation === true, ...(typeof entry.filePath === "string" ? { path: entry.filePath } : {}),
           };
         });
       }
@@ -4551,6 +4561,7 @@ app.whenReady().then(async () => {
       }
       case "workflow-pick": { const picked=await dialog.showOpenDialog(win,{properties:['openFile'],filters:[{name:i18n.t('Workflow JavaScript'),extensions:['js','mjs','cjs']}]});return picked.canceled?null:picked.filePaths[0]; }
       case "workflow-start": {
+        if(!p.plan&&!initial)await connect().catch(()=>null);// a core that respawned by itself has no model list yet
         if(!p.plan&&!initial?.models?.some(model=>(model.id===p.model||model.model===p.model)))throw Error(i18n.t('Choose an available model.'));
         if(p.effort&&!initial?.models?.find(model=>(model.id===p.model||model.model===p.model))?.supportedReasoningEfforts?.some(e=>e.reasoningEffort===p.effort))throw Error(i18n.t('Choose an available reasoning effort.'));
         // Agents take the session Mode's access (permission-policy.mjs workflowAccess), derived here, never sent.
@@ -4690,7 +4701,7 @@ app.whenReady().then(async () => {
         if (error) throw new Error(error);
         return true;
       }
-      case "model-settings": return modelSettings.run(p);
+      case "model-settings": { const owner = client, result = await modelSettings.run(p); if (p.op === "codex-provider-save" && result?.pending) coreRestart.mark(owner); return result; }
       // Code › Local › "Edit local environment": get / save the variables (applied when the core next starts).
       // W14-code fr6-02: official c3f9f1667 Ne/Pe only closes the dialog; the variables apply from the next new session,
       // so a changed save marks the core for the restart before the next thread/start, when idle (core-restart.cjs).
@@ -5192,7 +5203,7 @@ app.whenReady().then(async () => {
       case "file": {
         // Files pane viewer: classified results (files.cjs); force re-reads a binary file as text.
         const root = p.cwd || config.cwd;
-        const readOptions = { force: p.force === true, documentBytes: action === 'file:document-bytes' };
+        const readOptions = { force: p.force === true, documentBytes: action === 'file:document-bytes', allowOutside: true };
         const result = await readFile(root, p.relative, readOptions);
         // B32: a file outside the working folder but inside one of the session's added folders (the outside-root
         // card's Add folder, /add-dir) reads from that folder, as the original reads every session folder.

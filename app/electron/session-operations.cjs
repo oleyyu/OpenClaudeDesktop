@@ -19,6 +19,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { coreForEngine } = require('./core-registry.mjs');
 const coreLabelOf = (owner) => coreForEngine(owner?.serverInfo?.engine).name;
+// U-20: names and notes this module writes follow the UI language (the main process's i18n instance: main.cjs imports
+// the same module and setLocale()s it from preferences.json).
+const i18n = require('./i18n/index.mjs');
 
 /**
  * The folder a /cd fork continues in: the path as typed (~ for home, relative to the session's folder), an existing
@@ -259,7 +262,7 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
         // onThreadCreated(params, thread): the agent tools bind the fork's start identity to the new thread (main.cjs).
         if (result.thread?.id && result.thread.id !== threadId) { try { onThreadCreated(forkParams, result.thread); } catch {} }
         if (cwd && result.thread?.cwd && path.resolve(result.thread.cwd) !== cwd && fs.realpathSync.native(result.thread.cwd) !== cwd)
-          result.warning = `The session continues in ${result.thread.cwd}: ${coreLabelOf(owner)} kept its folder.`;
+          result.warning = i18n.t('The session continues in {folder}: {core} kept its folder.', { folder: result.thread.cwd, core: coreLabelOf(owner) });
         if (!result.thread?.id || result.thread.id === threadId) throw coreError(owner, '{core} did not return a new fork.');
         // Persist immediately so a later name failure cannot orphan a real fork.
         const fork = result.thread;
@@ -275,12 +278,13 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
           ...(reminders && typeof reminders === 'object' ? { workflowReminders: { ...reminders } } : {}) };
         save();
         const name = typeof payload.name === 'string' && payload.name.trim() ? payload.name.trim().slice(0, 120)
-          : cwd ? `${thread.name || 'Session'} (${path.basename(cwd)})`.slice(0, 120) : `Fork of ${thread.name || 'session'}`.slice(0, 120);
+          : cwd ? i18n.t('{name} ({folder})', { name: thread.name || i18n.t('Session'), folder: path.basename(cwd) }).slice(0, 120)
+            : i18n.t('Fork of {name}', { name: thread.name || i18n.t('session') }).slice(0, 120);
         try {
           check();
           await owner.request('thread/name/set', { threadId: fork.id, name }); check();
           fork.name = name; config.threadMetadata[fork.id].name = name; save();
-        } catch { result.warning = 'The fork was created, but its title could not be updated.'; }
+        } catch { result.warning = i18n.t('The fork was created, but its title could not be updated.'); }
         finish(entry, 'completed');
         return { ...result, sessionMetadata: config.sessionMetadata[fork.id] };
       }

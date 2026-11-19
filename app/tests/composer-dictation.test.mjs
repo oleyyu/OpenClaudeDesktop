@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { dictationLocale, unspacedLocale, readDictationPrefs, writeDictationPrefs, guidanceFor, disablesDictation, dictationButtonLabel, microphoneRows, DICTATION_PREFS_KEY } from '../src/composer-dictation-model.mjs';
+import { dictationLocale, unspacedLocale, readDictationPrefs, writeDictationPrefs, guidanceFor, disablesDictation, stableDictationAvailable, dictationButtonLabel, microphoneRows, DICTATION_PREFS_KEY } from '../src/composer-dictation-model.mjs';
 
 const require = createRequire(import.meta.url);
 const { createDictation } = require('../electron/dictation.cjs');
@@ -125,4 +125,12 @@ test('dictation service: open-settings goes to the named privacy pane only', asy
   await service.call({ op: 'open-settings', pane: 'dictation' });
   await service.call({ op: 'open-settings', pane: 'https://example.com' });
   assert.deepEqual(opened, ['x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition', 'x-apple.systempreferences:com.apple.Keyboard-Settings.extension', 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone']);
+});
+
+// marlin-chin fix2: shared-9 t_'s stableDictationAvailable (shared-36 gM: the build's capability, not a permission).
+test('stableDictationAvailable: shown and not refused by the build / Mac', () => {
+  assert.equal(stableDictationAvailable({ shown: true, disabledReason: null }), true);
+  assert.equal(stableDictationAvailable({ shown: true, disabledReason: 'no_speech_usage_description' }), false);
+  assert.equal(stableDictationAvailable({ shown: false, disabledReason: null }), false);
+  assert.equal(stableDictationAvailable(null), false);
 });

@@ -321,12 +321,12 @@ test('source wiring: the card imports markCardPick from the generated landing an
   assert.match(source, /questionCardKeyDown\(event, \{[\s\S]*?\}, markCardPick, root\.current\)/);
   assert.match(source, /event\.nativeEvent\?\.stopImmediatePropagation\?\.\(\);/);
   // W12: CDS parts come through a facade (R6), the card's rows and listeners from the question-card target. host-wiring/chat
-  // (4.16336.0): the card's own CDS markup comes from the cds-core facade; only what QuestionCardHeader / QuestionRadioMark
-  // (3.6556.2 question-card) render keeps the view-tabs facade.
-  assert.match(source, /import \{ CdsButton, CdsTextArea, CdsShortcut, CdsCheckboxIndicator, cdsCheckboxTopAlignClass, cdsClassNames \} from "\.\/cds-core\.mjs";/);
-  assert.match(source, /import \{ CdsButton as ViewTabsCdsButton, CdsIcon as ViewTabsCdsIcon, cdsCheckboxTopAlignClass as viewTabsCheckboxTopAlignClass \} from "\.\/generated\/view-tabs\/index\.js";/);
-  assert.doesNotMatch(source, /generated\/view-tabs\/(?!index\.js)/);
-  assert.match(source, /from "\.\/generated\/question-card\/option-row\.mjs";/);
+  // (4.16336.0): the card's own CDS markup comes from the cds-core facade. chat-cowork-1to1 r2 (cowork-r2-02): the header
+  // and rows are 4.16336.0 question-card-v4, so the header's `trailing` Buttons / Icon and the radio mark's top-align class
+  // are cds-core too (no view-tabs facade left); the digit listener stays on the 3.6556.2 landing store with markCardPick.
+  assert.match(source, /import \{ CdsButton, CdsIcon, CdsTextArea, CdsShortcut, CdsCheckboxIndicator, cdsCheckboxTopAlignClass, cdsClassNames \} from "\.\/cds-core\.mjs";/);
+  assert.doesNotMatch(source, /generated\/view-tabs\//);
+  assert.match(source, /from "\.\/generated\/question-card-v4\/option-row\.mjs";/);
   assert.match(source, /from "\.\/generated\/question-card\/digit-shortcuts\.mjs";/);
   assert.equal(fs.existsSync(path.join(ROOT, 'src/source-question-card.css')), false, 'the host sq-* stylesheet is gone');
 });

@@ -67,7 +67,8 @@
     "c71860c77-Cuocl2LF.js": "1051613cb60e5ee4d671233af39bed4d6e584be24314d21d1d81cafb6751df51",
     "shared-153-DMw2VzSq.js": "7e609971286c1de3bb64e01d2567c0dc95a1407a6c4b5b6d8525c44093aedea9",
     "c34e6410a-BLtdknyP.js": "a955ef89007f23a02dd70759e5cb2d3147e865fd0c05aaee70a94aa48d5efbfd",
-    "c2d87f9e7-Bk6d74Ey.js": "453d8fd5287f646bf36a3fb20d8f661fbcca241ed09ff20b6533352d43560b90"
+    "c2d87f9e7-Bk6d74Ey.js": "453d8fd5287f646bf36a3fb20d8f661fbcca241ed09ff20b6533352d43560b90",
+    "shared-20-DUEo90UF.js": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc"
   },
   "roots": {
     "GeneralAppearance": {
@@ -157,6 +158,16 @@
       "start": 18856,
       "end": 19637,
       "declarationSha256": "ab174ff5679cf89de1a916b0e6b05771955444c60340f84726cb71ec70c7e8a2",
+      "uniqueByFeatures": true,
+      "oldCounterpart": null
+    },
+    "useCodeFontSizeRoot": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "bb",
+      "export": "ys",
+      "start": 54889,
+      "end": 55033,
+      "declarationSha256": "ba0483db3dc59b8eb11224f4e3e4ba8d42c9f1f3baebb5cd82ee6e28ee93010c",
       "uniqueByFeatures": true,
       "oldCounterpart": null
     }
@@ -422,7 +433,7 @@
   "hostAdapterSha256": "d4761d6da28a0933459f39ede6008c52b522a7f2d9095cd49696f0744e26d3f3",
   "cdsCore": {
     "manifest": "app/src/generated/cds-core/manifest.json",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   },
   "settingsNav": {
     "manifest": "app/src/generated/settings-nav/manifest.json",
@@ -430,6 +441,6 @@
   },
   "filesChangesV4": {
     "manifest": "app/src/generated/files-changes-v4/manifest.json",
-    "manifestSha256": "35740c17397e4a05b8f5a12f408061040cdd39e4fb28ca86b43c02f786e1b93e"
+    "manifestSha256": "708013539535ccec0498a3f2272b037af2628234eca68c6d1f94353c24b2848b"
   }
 }

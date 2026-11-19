@@ -132,7 +132,7 @@ test('kn "Turn off memory": Pause memory / Reset memory with their descriptions;
   assert.equal(dialog.props.title, 'Turn off memory');
   const [radio] = findAll(dialog, node => Array.isArray(node.props?.options));
   assert.deepEqual(radio.props.options, [
-    { value: 'pause', label: 'Pause memory', description: 'Claude keeps its existing memory but won’t use memory or make new memories.' },
+    { value: 'pause', label: 'Pause memory', description: 'DeepSeek keeps its existing memory but won’t use memory or make new memories.' }, // fix-r2 U-14 (E83), was Claude
     { value: 'reset', label: 'Reset memory', description: 'This will permanently delete all memories, including project memories. This can’t be undone.' }]);
   assert.equal(radio.props.value, 'pause');
   const buttons = findAll(dialog, node => typeof node.props?.variant === 'string' && typeof node.props?.onClick === 'function');

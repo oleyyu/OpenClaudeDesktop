@@ -113,6 +113,9 @@ function createCustomizeOperations({ getClient, getConfig, knownCwd, stat = fs.p
   // Per-connector settings (on/off, per-tool on/off and approval) live in a native core's own config.toml
   // (Codex mcp_servers.<name>: enabled, enabled_tools, disabled_tools, default_tools_approval_mode,
   // tools.<tool>.approval_mode; verified against codex 0.155.1 with an isolated CODEX_HOME).
+  // The server's own table in a native core's TOML keyPath: a bare `my.server` would name the table my → server
+  // (removing nothing, or another server's env subtable). A bridge reads everything after `mcp_servers.` as the name.
+  const serverKey = (owner, name) => descriptorOf(owner).kind === "native" && !/^[A-Za-z0-9_-]+$/.test(name) ? keySegment(name) : name;
   function assertNativeMcp(owner) {
     if (descriptorOf(owner).kind !== "native" || owner.serverInfo?.capabilities?.mcpConfigWrite === false) throw refusal("Connector settings are not supported by {core}.", { core: coreLabel(owner) });
   }
@@ -337,7 +340,10 @@ function createCustomizeOperations({ getClient, getConfig, knownCwd, stat = fs.p
       case "mcp-logout": {
         const owner = await client();
         if (owner.serverInfo?.capabilities?.mcpLogout !== true) throw refusal("Connector sign-out is not supported by {core}.", { core: coreLabel(owner) });
-        await owner.request("codeDesktop/mcpServer/logout", { name: serverName(p.name) }, MCP_WRITE_TIMEOUT);
+        // threadId: a project-level connector is signed out in that session's folder (acp-bridge mcpManageHost), as mcp-login.
+        const params = { name: serverName(p.name) }, threadId = threadIdParam(p.threadId);
+        if (threadId) params.threadId = threadId;
+        await owner.request("codeDesktop/mcpServer/logout", params, MCP_WRITE_TIMEOUT);
         return {};
       }
       case "mcp-add": {
@@ -350,7 +356,7 @@ function createCustomizeOperations({ getClient, getConfig, knownCwd, stat = fs.p
         if (knownServerNames.has(name)) throw refusal("A connector named {name} is already in {file}. Remove it first or choose another name.", { name, file: configFileOf(owner) });
         // oauth (a pre-registered OAuth client) only where the core takes it (capabilities.mcpOAuthClient: OpenCode).
         const value = mcpServerValue(p, { oauth: owner.serverInfo?.capabilities?.mcpOAuthClient === true });
-        await owner.request("config/batchWrite", { edits: [{ keyPath: `mcp_servers.${name}`, value, mergeStrategy: "upsert" }], reloadUserConfig: true }, MCP_WRITE_TIMEOUT);
+        await owner.request("config/batchWrite", { edits: [{ keyPath: `mcp_servers.${serverKey(owner, name)}`, value, mergeStrategy: "upsert" }], reloadUserConfig: true }, MCP_WRITE_TIMEOUT);
         await owner.request("config/mcpServer/reload", {}, MCP_WRITE_TIMEOUT);
         return { name, value };
       }
@@ -360,7 +366,10 @@ function createCustomizeOperations({ getClient, getConfig, knownCwd, stat = fs.p
         const name = serverName(p.name);
         const owner = await client();
         assertMcpWritable(owner);
-        await owner.request("config/batchWrite", { edits: [{ keyPath: `mcp_servers.${name}`, value: null, mergeStrategy: "replace" }], reloadUserConfig: true }, MCP_WRITE_TIMEOUT);
+        // A bridge core removes a project-level connector from the project file of the session's folder (threadId);
+        // Codex's config/batchWrite takes no threadId.
+        const threadId = descriptorOf(owner).kind === "native" ? null : threadIdParam(p.threadId);
+        await owner.request("config/batchWrite", { edits: [{ keyPath: `mcp_servers.${serverKey(owner, name)}`, value: null, mergeStrategy: "replace" }], reloadUserConfig: true, ...(threadId ? { threadId } : {}) }, MCP_WRITE_TIMEOUT);
         await owner.request("config/mcpServer/reload", {}, MCP_WRITE_TIMEOUT);
         knownServerNames.delete(name);
         return { name };

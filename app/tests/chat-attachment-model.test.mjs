@@ -134,7 +134,8 @@ test("main.jsx: Chat's Add menu has the item after Record a skill; staged files 
   // places after teach (Record a skill) — tests/chat-tools-model.test.mjs renders the order.
   const add = main.indexOf('case "add": {');
   const chat = main.slice(main.indexOf('if (mode === "chat") {', add), main.indexOf('return <ChatAddMenuItems', add));
-  assert.match(chat, /chatAddMenuSlots\(\{ attach, attachShortcut: "cmd\+u", screenshot: captureScreenshot, teach: addTeachRow,/);
+  // r2 chat-home-r2-01: teach is now the c752b32f8 descriptor (chatTeachSlot) instead of the SourceMenu row addTeachRow.
+  assert.match(chat, /chatAddMenuSlots\(\{ attach, attachShortcut: "cmd\+u", screenshot: captureScreenshot, project: projectSlot,\n\s+teach: chatTeachSlot\(\{/);
   assert.match(main, /call\("convert-document", \{ path: entry\.path \}\)/);
   assert.match(main, /pendingConversions\(attachments, \{ surface: mode, inFlight: conversionsInFlight\.current \}\)/);
   assert.match(main, /call\("capture-screenshot"\)/);

@@ -83,53 +83,47 @@ export async function startCodexSession(opts = {}) {
     }
   }
 
-  const client = await getClient(opts.clientOptions); // shared, self-healing singleton
-  const model = resolveModel(requestedModel, getAvailableModels(), log, modelResolution(opts.pinnedModel ?? opts.defaultModel));
-  let threadParams;
+  const signal = opts.signal;
+  const retries = opts.retries ?? 3;
+  let resumeThreadId = opts.resumeThreadId;
   try {
-    // Local: the same tool narrowing as agent() — narrowed for this core, or refused (toolNarrowing.js).
-    threadParams = await narrowThreadParams(client, buildThreadParams({ sandbox, cwd, model, systemPrompt, personality: opts.personality }), opts);
+    for (let attempt = 0; ; attempt++) {
+      try {
+        signal?.throwIfAborted();
+        const client = await getClient(opts.clientOptions);
+        signal?.throwIfAborted();
+        const model = resolveModel(requestedModel, getAvailableModels(), log, modelResolution(opts.pinnedModel ?? opts.defaultModel));
+        const threadParams = await narrowThreadParams(client, buildThreadParams({ sandbox, cwd, model, systemPrompt, personality: opts.personality }), opts);
+        signal?.throwIfAborted();
+        // Warm resume is an optimization. If this fails, start a new thread.
+        if (resumeThreadId) {
+          const id = resumeThreadId;
+          resumeThreadId = undefined;
+          try {
+            const res = await client.resumeThread({ ...threadParams, threadId: id });
+            const threadId = res?.thread?.id;
+            if (!threadId) throw new Error("thread/resume did not return thread.id");
+            markResumedThread(threadId);
+            log(`  ↻ session re-attached to thread ${threadId} (warm context)`);
+            return new CodexSessionDriver({ client, threadId, model, worktree, log, resumed: true });
+          } catch (e) {
+            log(`  ↻ thread/resume failed (${String(e?.message ?? e).slice(0, 120)}) — starting a fresh thread`);
+          }
+        }
+        signal?.throwIfAborted();
+        const res = await client.startThread(threadParams);
+        const threadId = res?.thread?.id;
+        if (!threadId) throw new Error("thread/start did not return thread.id");
+        return new CodexSessionDriver({ client, threadId, model, worktree, log });
+      } catch (e) {
+        if (signal?.aborted || attempt >= retries || !isRetryable(e)) throw e;
+        await sleep(Math.min(8000, 500 * 2 ** attempt), undefined, { signal });
+      }
+    }
   } catch (e) {
     if (worktree) { try { await worktree.cleanup(); } catch {} }
     throw e;
   }
-
-  // Warm-context resume: when a prior run journaled this worker's thread id, try
-  // re-attaching to the PERSISTED thread (thread/resume loads its rollout from
-  // disk) instead of starting cold. Falls back to a fresh thread on any failure
-  // (rollout gone, old codex, ephemeral thread) — resume is an optimization, never
-  // a correctness requirement. The caller can tell which happened via `resumed`.
-  if (opts.resumeThreadId) {
-    try {
-      const res = await client.resumeThread({ ...threadParams, threadId: opts.resumeThreadId });
-      const threadId = res?.thread?.id;
-      if (!threadId) throw new Error("thread/resume did not return thread.id");
-      markResumedThread(threadId); // don't bill prior-run history to this run's meter
-      log(`  ↻ session re-attached to thread ${threadId} (warm context)`);
-      return new CodexSessionDriver({ client, threadId, model, worktree, log, resumed: true });
-    } catch (e) {
-      log(`  ↻ thread/resume failed (${String(e?.message ?? e).slice(0, 120)}) — starting a fresh thread`);
-    }
-  }
-
-  const retries = opts.retries ?? 3;
-  let threadId;
-  for (let attempt = 0; ; attempt++) {
-    try {
-      const res = await client.startThread(threadParams);
-      threadId = res?.thread?.id;
-      if (!threadId) throw new Error("thread/start did not return thread.id");
-      break;
-    } catch (e) {
-      if (attempt >= retries || !isRetryable(e)) {
-        if (worktree) { try { await worktree.cleanup(); } catch {} } // don't leak a worktree on a failed start
-        throw e;
-      }
-      await sleep(Math.min(8000, 500 * 2 ** attempt));
-    }
-  }
-
-  return new CodexSessionDriver({ client, threadId, model, worktree, log });
 }
 
 // Protocol-only session handle. One active turn at a time (enforced by the runtime
@@ -161,22 +155,34 @@ export class CodexSessionDriver {
     const model = turnOpts.model ?? this.model;
     const turnParams = buildTurnParams({ threadId, prompt, model, effort: turnOpts.effort, schema: turnOpts.schema });
 
-    const collector = attachAgentMessageCollector(client, threadId, turnOpts.onProgress);
+    const idleMs = turnOpts.timeoutMs ?? DEFAULT_TURN_TIMEOUT_MS, stop = new AbortController(), tools = new Set();
+    let timer;
+    const arm = () => { clearTimeout(timer); if (!tools.size && idleMs > 0) timer = setTimeout(() => stop.abort(new Error(`Session turn timed out after ${idleMs}ms without progress`)), idleMs); };
+    const activity = (n) => {
+      const p = n.params ?? {};
+      if (n.method === "item/started" && p.item?.id && !["agentMessage", "reasoning", "userMessage", "plan"].includes(p.item.type)) tools.add(p.item.id);
+      if (n.method === "item/completed") tools.delete(p.item?.id);
+      if (n.method === "thread/tokenUsage/updated") turnOpts.onActivity?.();
+      arm();
+    };
+    const collector = attachAgentMessageCollector(client, threadId, turnOpts.onProgress, activity);
     const startedAt = Date.now();
     // tokenUsage is reported cumulatively per thread, so this turn's tokens are the
     // delta over the thread's running total at the moment the turn began.
     const tokensBefore = tokensForThread(threadId)?.total ?? 0;
 
     let turnId = null;
+    this._active = true;
     try {
       const res = await client.startTurn(turnParams);
       turnId = res?.turn?.id ?? null;
     } catch (e) {
+      this._active = false;
       collector.detach();
       throw e; // could not even start the turn — let start()/steer() surface it
     }
-    this._active = true;
     this.currentTurnId = turnId;
+    collector.bindTurn(turnId);
 
     const finish = (turn, errObj) => {
       const text = collector.text();
@@ -199,16 +205,6 @@ export class CodexSessionDriver {
       return { status: finalStatus, result, text, error, model: model ?? null, tokens, ms, turnId };
     };
 
-    const idleMs = turnOpts.timeoutMs ?? DEFAULT_TURN_TIMEOUT_MS, stop = new AbortController(), tools = new Set();
-    let timer;
-    const arm = () => { clearTimeout(timer); if (!tools.size && idleMs > 0) timer = setTimeout(() => stop.abort(new Error(`Session turn timed out after ${idleMs}ms without progress`)), idleMs); };
-    const activity = (n) => {
-      const p = n.params ?? {}; if (p.threadId !== threadId) return;
-      if (n.method === "item/started" && p.item?.type !== "agentMessage" && p.item?.type !== "reasoning") tools.add(p.item.id);
-      if (n.method === "item/completed") tools.delete(p.item?.id);
-      arm();
-    };
-    client.on("notification", activity);
     arm();
     const completion = (async () => {
       try {
@@ -228,9 +224,9 @@ export class CodexSessionDriver {
         return finish({ status: "failed", error: { message: String(e?.message ?? e) } }, e);
       } finally {
         clearTimeout(timer);
-        client.off("notification", activity);
         collector.detach();
         this._active = false;
+        this.currentTurnId = null;
       }
     })();
 

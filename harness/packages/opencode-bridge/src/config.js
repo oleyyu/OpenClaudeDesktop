@@ -48,6 +48,27 @@ export function sdkBaseURL(api, baseURL) {
   return url
 }
 
+/**
+ * What a custom provider says about one of its models: { name?, reasoning?, attachment?, limit? }.
+ * Settings › Models saves the user's marks (prefs/model-settings.mjs validateProvider): `imageModels` (the ids that
+ * take images; absent until the user chooses) and `contextWindows` (id → tokens). `modelInfo` (id → {name, reasoning,
+ * attachment, limit}) adds what the app derives from the model family; the user's marks win over it.
+ * attachment: true / false when known, undefined when nothing says. limit: { context, output } (output 0 = the agent's default).
+ */
+export function providerModelInfo(provider, id) {
+  const meta = isRecord(provider?.modelInfo?.[id]) ? provider.modelInfo[id] : {}
+  const attachment = Array.isArray(provider?.imageModels) ? provider.imageModels.includes(id) : typeof meta.attachment === 'boolean' ? meta.attachment : undefined
+  const window = Number(provider?.contextWindows?.[id])
+  const limit = isRecord(meta.limit) ? { ...meta.limit } : null
+  const context = Number.isFinite(window) && window > 0 ? Math.floor(window) : limit?.context
+  return {
+    ...(typeof meta.name === 'string' && meta.name ? { name: meta.name } : {}),
+    ...(typeof meta.reasoning === 'boolean' ? { reasoning: meta.reasoning } : {}),
+    ...(attachment !== undefined ? { attachment } : {}),
+    ...(Number.isFinite(context) && context > 0 ? { limit: { ...limit, context, output: Number.isFinite(limit?.output) ? limit.output : 0 } } : {}),
+  }
+}
+
 /** Settings › Models custom providers → OpenCode `provider` entries. */
 export function providerOverlay(providers, env = process.env) {
   const out = {}
@@ -59,8 +80,11 @@ export function providerOverlay(providers, env = process.env) {
     const models = {}
     for (const id of Array.isArray(provider.models) ? provider.models : []) {
       if (typeof id !== 'string' || !id) continue
-      const meta = isRecord(provider.modelInfo?.[id]) ? provider.modelInfo[id] : {}
-      models[id] = { name: meta.name ?? id, tool_call: true, temperature: true, ...(meta.reasoning ? { reasoning: true } : {}), ...(meta.attachment ? { attachment: true, modalities: { input: ['text', 'image'], output: ['text'] } } : {}), ...(meta.limit ? { limit: meta.limit } : {}) }
+      const meta = providerModelInfo(provider, id)
+      // A model the user left unmarked says text only, so a catalog entry under the same id can't turn images back on.
+      const modalities = meta.attachment === true ? { attachment: true, modalities: { input: ['text', 'image'], output: ['text'] } }
+        : meta.attachment === false ? { attachment: false, modalities: { input: ['text'], output: ['text'] } } : {}
+      models[id] = { name: meta.name ?? id, tool_call: true, temperature: true, ...(meta.reasoning ? { reasoning: true } : {}), ...modalities, ...(meta.limit ? { limit: meta.limit } : {}) }
     }
     out[provider.route] = {
       npm,

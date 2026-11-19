@@ -15,7 +15,9 @@
 // The read-only reasons ("read_only", the organization / role "cowork_off*" / "hub_off_role") come from a claude.ai plan
 // or admin policy; this host has no account or organization (E59), so they never occur here.
 import React, { useCallback } from 'react';
-import { CoworkSessionEndedNotice } from './generated/cowork-session-states/index.mjs';
+// chat-cowork-1to1 r1 (cowork-r1-11): the 4.16336.0 notice (c21f11e6d-Cyj5xu_D SN, src/generated/cowork-session-states-v4;
+// its buttons are the cds-core CdsButton). The 3.6556.2 graph stays for session-rail's band-frame link.
+import { CoworkSessionEndedNotice } from './generated/cowork-session-states-v4/index.mjs';
 import { COWORK_NEW_TASK_HREF } from './source-cowork-session-states-adapters.jsx';
 
 // The official ended reason of a host session row, or undefined while it can take messages. `liveStatus` is the thread's

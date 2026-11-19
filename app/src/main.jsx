@@ -19,9 +19,11 @@ import { SourceArtifactLibrary } from './source-artifact-library.jsx';
 import { SourceProjects } from './source-projects.jsx';
 import { SourceNewProjectDialog } from './source-new-project-dialog.jsx'; // w13-close-chat-projects-memory
 import { SourceSurfaceGreeting, SourceSurfaceHome, homeScrollClass, SourceCoworkProgress, coworkStepRow, revealCoworkStep } from './source-surfaces.jsx';
+import { LANDING_SCROLL_CLASS, useLandingOverflow } from './landing-overflow.mjs';
 // w13-chatui-home: the Chat greeting is the 3.6556.2 shared-23 Dy choice ("You’re here!" unless a local greeting slot applies).
-import { SourceChatGreeting } from './source-chat-home.jsx';
-import { SourceChatMessageActions, useChatFeedback, useChatBranches, withChatBranchMetadata, turnAttachments } from './source-chat-message-actions.jsx'; // w13-chatui-message-actions, w13-chatfn-branches, w13-close-chat-messages
+import { SourceChatGreeting, SourceNewPageFrame, SourceNewPageCardSlot, NEW_PAGE_SCROLL_COLUMN } from './source-chat-home.jsx';
+import { SourceChatMessageActions, SourceChatDisclaimer, useChatFeedback, useChatBranches, withChatBranchMetadata, turnAttachments } from './source-chat-message-actions.jsx'; // w13-chatui-message-actions, w13-chatfn-branches, w13-close-chat-messages
+import { chatMessageRows } from './source-chat-message-row.jsx'; // chat-conversation r1-01
 import { incognitoLeft, isIncognitoSession, withIncognito } from './chat-incognito-model.mjs'; // w13-chatfn-history
 import { retryPrompt } from './chat-feedback-model.mjs'; // w13-chatui-message-actions
 import { SourceCoworkHome } from './source-cowork-home.jsx';
@@ -83,6 +85,7 @@ import { SourceForkLineage, SourceForkMarker } from "./source-fork-lineage.jsx";
 import { forkMarkersFor } from "./fork-marker-model.mjs";
 import { requestCodexCustomEndpoint } from "./source-settings-models.jsx";
 import { SourceSettings } from "./source-settings";
+import { pendingSignIn } from "./source-account-settings.jsx";
 import { appearancePreferences, fastTierForModel, savedPermission, savedSpeed, speedTiersForModel, tierForSpeed, STANDARD_SPEED } from "../electron/preferences.mjs";
 import { SourceTitlebar, SourceCollapsedChrome, LocalReleaseNotes, LOCAL_RELEASE_NOTE_VERSIONS } from "./source-titlebar";
 import { version as clientVersion } from "../package.json";
@@ -122,7 +125,7 @@ import { sessionPullRequestUrl } from "./sidebar-palette-model.mjs";
 import { humanPrompts } from "./prompt-history-model.mjs";
 import { composerPlaceholder, composerFirstRun } from "./composer-placeholder.mjs";
 import { QUEUED_COUNT_CLASS, QUEUED_PREVIEW_CLASS, QUEUED_ROW_CLASS, SourceQueuedMessages, useQueuedBandExit } from "./source-queued-messages";
-import { stageFiles, markReady, markFailed, removeAttachment, attachmentInputs, isMaxImagesNotice, MAX_IMAGES_TIMEOUT, makeSnippet, addSnippet, removeSnippetByKey, snippetText, withHeldText, isHeldText, makeHeldText, editHeldText, coreTakesFileMentions, modelAcceptsImages, skillChipInput, IMAGE_PROCESS_ERROR, basename as attachmentBasename, shownThread, shownUserItem, shownUserItems, shownTurns, shownQueueList, firstMessageName } from "./composer-attachments-model.mjs";
+import { stageFiles, markReady, markFailed, removeAttachment, attachmentInputs, attachmentsFromInput, isMaxImagesNotice, MAX_IMAGES_TIMEOUT, makeSnippet, addSnippet, removeSnippetByKey, snippetText, withHeldText, isHeldText, makeHeldText, editHeldText, coreTakesFileMentions, modelAcceptsImages, skillChipInput, IMAGE_PROCESS_ERROR, basename as attachmentBasename, shownThread, shownUserItem, shownUserItems, shownTurns, shownQueueList, firstMessageName } from "./composer-attachments-model.mjs";
 import { draftKey as sessionDraftKey, saveDraft, takeDraft, clearDraft, mapDraftAttachments, browserStorage, persistDraft, readPersistedDraft, forgetDraft } from "./composer-draft-store.mjs";
 import { makeSelectedElementAttachment, addSelectedElementAttachment, selectedElementInputs } from './preview-element-attachments.mjs';
 import { IMAGE_FALLBACK_NOTE, imageRefusedNotice } from './composer-attachments-model.mjs';
@@ -215,8 +218,8 @@ import { AddPluginsPopup } from "./source-add-plugins-menu.jsx";
 // w13-chatfn-attachments: Chat documents converted to text, the Chat image budget, Add › Take a screenshot.
 import { pendingConversions, conversionPatch, conversationImageCount, imageLimitNotice, SCREENSHOT_ICON, SCREENSHOT_TESTID } from "./chat-attachment-model.mjs";
 // w13-chatfn-tools: the Chat + menu (c752b32f8 Js) and its Web search / Research switches.
-import { ChatAddMenuItems, chatAddMenuEntries, chatAddMenuSlots } from "./source-chat-tools-menu.jsx";
-import { ChatProjectPopup } from "./source-chat-project-popup.jsx";
+import { ChatAddMenuItems, chatAddMenuEntries, chatAddMenuSlots, chatConnectorsSlot, chatPluginsSlot, chatSkillsSlot, chatTeachSlot } from "./source-chat-tools-menu.jsx";
+import { chatProjectSlot } from "./source-chat-project-popup.jsx";
 import { chatSettingsFor, chatThinkingSection, chatToolSlots, chatToolsMessages, searchSupport, toggleResearch, toggleThinking, toggleWebSearch, webSearchNudge } from "./chat-tools-model.mjs";
 import { ChatMessageWarning } from "./generated/chat-messages-v4/index.mjs"; // w13-chatfn-tools: cc1aae219 eP (round 4 S11 cutover: 4.16336.0 chat-messages-v4)
 import { SourceSwitch } from "./source-switch.jsx";
@@ -244,7 +247,7 @@ import { createPreviewLinkRouter, previewChooserStore } from "./preview-link-rou
 import { SourcePreviewLinkChooser } from "./source-preview-link-chooser.jsx";
 import { KeyboardShortcutsDialog, SlashHelp, RewindPicker, RewindConfirmDialog, ReviewDialog, SessionStatusDialog, FeedbackShareDialog } from "./source-session-actions";
 import { SourceConfirmationDialog, SourceDialog, SourceDialogFooter, useDialogRetention } from "./source-dialog.jsx";
-import { CdsButton, CdsBadge } from "./cds-core.mjs"; // W14-code r5 cleanup css5-settings-button-replica: the official Button, not the host replica; host-wiring root: 4.16336.0 shared-frame Xu (export Id) through the cds-core facade
+import { CdsButton, CdsCounter } from "./cds-core.mjs"; // W14-code r5 cleanup css5-settings-button-replica: the official Button, not the host replica; host-wiring root: 4.16336.0 shared-frame Xu (export Id) through the cds-core facade
 import { withLocalCommandRows, rewindChoices, transcriptMarkdown } from "./slash-actions-model.mjs";
 import { REWIND_PREVIEW_DELAY_MS, rewindPreview, rewindRequestStep, rewindRestoreItems, rewindRestoresFiles, turnRows } from "./rewind-flow-model.mjs";
 import { chapterOf, withWorkflowToolRuns } from "./agent-tool-titles.mjs";
@@ -272,6 +275,7 @@ import { SourceSessionsPage } from "./source-sessions-page.jsx";
 import { SourceChatsPage } from "./source-chats-page.jsx";
 // w13-chatfn-artifacts: Chat artifacts' transcript chip and side panel (cc1aae219 chip, ca2ef848d file detail view).
 import { SourceChatArtifactPanel } from "./source-chat-artifact-panel.jsx";
+import { useNarrowSessionBody } from "./session-panel-narrow.mjs";
 // w13-chatui-artifact-inline: a Chat's artifacts call is the official artifact block (cc1aae219 Y3 → shared-9 sO, artifact-block-cell).
 import { SourceChatArtifactCard, restoreChatArtifactTrigger } from "./source-chat-artifact-card.jsx";
 import { artifactToolCall, withArtifactChips } from "./chat-artifact-model.mjs";
@@ -282,7 +286,7 @@ import { HostFrameRoot, hostRouteGutter } from "./frame-sidebar-host.jsx"; // fr
 // the session lists) under its host (frame-sidebar-nav-body.jsx installs the host table before the nav body evaluates).
 import { HostSidebarNavBody } from "./frame-sidebar-nav-body.jsx";
 import { hostSupportedFeaturesV4 } from "./host-app-features.mjs";
-import { officialLocalSession, officialSessionLive, officialPathToHostRoute } from "./frame-sidebar-nav-host.jsx";
+import { officialLocalSession, officialAgentSession, officialSessionLive, officialPathToHostRoute } from "./frame-sidebar-nav-host.jsx";
 import { SourceSessionDeleteDialog, SourceWorktreeDirtyDialog } from "./source-worktree-dispose-dialog.jsx";
 import { SidebarBulkWorktreeConfirm } from "./source-sidebar-bulk-worktree.jsx";
 import { connectWorktreeConfirmQueue, worktreeConfirmVariant, sessionWorktreeGate, worktreeGatedAction, settleWorktreeQueue, connectNestedFamilies, nestedSessionFamily, nestedFamilyAsks, familyWorktreeProbe, singleDeleteStep, confirmCouldntCheck, familyUnknownRead, connectWorktreeProbes, archiveWorktreeGate, lateArchiveWorktree, prefetchWorktreeProbes, mapConcurrent } from "./sidebar-bulk-model.mjs";
@@ -306,6 +310,7 @@ import { pendingCommandItemIds } from "./command-row-model.mjs";
 import { approvalItem, pendingElicitationItemIds, planHandoff } from "./approval-card-model.mjs";
 import { setCodeThemes } from "./code-theme-store.mjs";
 import { applyAppearanceRoot, cdsFontFor } from "./appearance-root.mjs";
+import { useOfficialEditorPrefsRoot } from "./settings-pages-host.jsx";
 import codeThemeColors from "./generated/code-theme-colors.json";
 import { fileListRoute, paneShortcut, paneShortcutKind } from "./pane-shortcuts.mjs";
 import { SourceTerminalPane } from "./source-terminal-pane.jsx";
@@ -340,7 +345,7 @@ import { useCdsDensity } from "./cds-core.mjs";
 // SB-0 / H11 (round4 wave8b sidebar): the official frame store shared-92 Y (qg), held by cds-core; main.jsx drives its actions.
 import { store_shared92_Y as officialFrameStore } from "./cds-core.mjs";
 import { SourceIncognitoShell, frameShellMounted } from "./source-incognito-shell.jsx"; // w13-close-chat-surface (E77)
-import { CdsIcon } from "./cds-core.mjs"; // w12c-wiring: the account menu's Learn more links (cd75f6c8c X); host-wiring root: 4.16336.0 shared-frame Bs (export lf)
+import { CdsDropdown, CdsIcon } from "./cds-core.mjs"; // w12c-wiring: the account menu's Learn more links (cd75f6c8c X); host-wiring root: 4.16336.0 shared-frame Bs (export lf)
 import { CdsLocaleContext } from "./generated/view-tabs/index.js"; // w11-sweep-rest: the root CDS locale (below)
 // R4i-graph GR2 (Y1-R3-graph-1): the app root's CDS labels (shared-23 UG passes CdsRoot `labels: Ev()`); see cds-labels.mjs.
 import { CdsLabelsContext } from "./generated/view-tabs/index.js";
@@ -506,6 +511,8 @@ function App({ side = 0, initialSession = null }) {
   const [mode, setModeState] = useState('code');
   const [artifactPreviewOpen, setArtifactPreviewOpen] = useState(false);
   const [surfaceActivity, setSurfaceActivity] = useState({});
+  // U-05 (shared-6 Cg): under 768px the session body's side panels overlay the conversation; the toggle opens the overlay.
+  const sessionBody = useNarrowSessionBody();
   const modeRef = useRef('code'), surfaceNavigation = useRef(0), surfaceFolders = useRef({});
   const setMode = value => { modeRef.current = value; setModeState(value); };
   const [projectDraftId, setProjectDraftId] = useState(null);
@@ -974,6 +981,9 @@ function App({ side = 0, initialSession = null }) {
   // data-band-enter, so a band that appears later (archived note, queued messages) enters by shared-styles'
   // `.epitaxy-root [data-band-enter] .epitaxy-band-enter`; a band already there on load does not animate.
   const bandEnterRef = useBandEnter(current && !loading ? current : null);
+  // U-07: the Code landing scrolls its row and keeps the dock column whole (cc43287c9 un / Zke, landing-overflow.mjs).
+  const codeLanding = !current && mode === 'code' && section === 'new';
+  const landingColumnRef = useLandingOverflow(codeLanding);
   // Watch-record, "Record a skill" (source-watch-record.jsx, official shared-6 Sz): the Add menu's and Customize ›
   // Skills' entry, the macOS permissions dialog, and the delivery of a finished recording (deliverDemonstration).
   const watchRecordNotice = useCallback((message) => { if (toasts) toasts.add(message, { variant: "warning" }); else setError(message); }, [toasts]);
@@ -2106,7 +2116,9 @@ function App({ side = 0, initialSession = null }) {
   // while one of its own approval requests is still unresolved, and its
   // running footer is withheld. The link is the request's itemId; an MCP elicitation's is its in-progress
   // mcpToolCall when it is unambiguous (same server and turn, matching arguments; approval-card-model elicitationItem).
+  // fix-r2 U-36: a plan review (exit_plan_mode's question) names its call too; the plan row is awaiting_approval meanwhile.
   const pendingApprovalItems = useMemo(() => new Set([...pendingCommandItemIds(approvals), ...approvals.filter(a => a.method === "item/fileChange/requestApproval").map(a => a.params?.itemId).filter(Boolean),
+    ...approvals.filter(isPlanReviewRequest).map(a => a.params?.itemId).filter(Boolean),
     ...pendingElicitationItemIds(approvals, items)]), [approvals, items]);
   // R07 one card at a time (cc43287c9 :31744 om → mc, :37426): only the oldest answerable
   // request mounts; the rest stay pending and their rows keep 'Needs approval' above.
@@ -2980,7 +2992,14 @@ function App({ side = 0, initialSession = null }) {
           coreSwitchReload.current = true;
           setTimeout(() => location.reload(), 150);
         } else if (e.error && !coreSwitchReload.current) setError(e.error);
+        // The event carries no catalog: a reconnect this side didn't start (Restart core in another window or the other
+        // split side, main's own core-restart.cjs) leaves the model menu on the old core's list. init waits for main's
+        // connect (model/list) and answers with it; the effect on `models` re-picks a model the new list lacks.
+        else if (e.connected && !coreSwitchReload.current)
+          call("init").then((fresh) => { if (fresh?.connected && Array.isArray(fresh.models)) setBoot((b) => b && ({ ...b, models: fresh.models })); }, () => {});
       }
+      // A sign-in or sign-out changed what the core lists (account-operations modelsChanged → main.cjs onModels).
+      if (e.kind === "models" && Array.isArray(e.models)) setBoot((b) => b && ({ ...b, models: e.models }));
       if (e.method === "thread/started" && e.params?.thread?.id && isSubAgentThread(e.params.thread)) childThreads.current.add(e.params.thread.id);
       if (e.method === "turn/completed") { refreshSession(e.params.threadId); if (e.params.threadId === currentRef.current) { loadQueue(e.params.threadId); refreshRepoIdentity(workdirRef.current); } }
       // Steers the model never took: an interrupted turn discards them on the server, so they come back to the
@@ -3066,6 +3085,8 @@ function App({ side = 0, initialSession = null }) {
     return () => media.removeEventListener("change", update);
   }, [theme]);
   const prefs = appearancePreferences(localPreferences);
+  // fix-r2 U-33 / U-34: the official editorPrefs store's root writers (settings-pages-host.jsx).
+  useOfficialEditorPrefsRoot(prefs);
   // Official rg/sR: html carries data-system-font / data-dyslexic-font, and every
   // cds-root gets data-font (anthropic → "sans", otherwise the system branch;
   // OpenDyslexic rides on that branch through --font-ui-dyslexic).
@@ -3166,6 +3187,7 @@ function App({ side = 0, initialSession = null }) {
   const shownBypass = useDialogRetention(bypassMode.confirming && !menu), shownRename = useDialogRetention(rename?.id ?? null);
   // renameSelected: Jd's h ref, set once this open's field has selected its name on focus (renameDialogFor resets it).
   const lastRename = useRef(null), renameInput = useRef(null), renameSelected = useRef(null);
+  const latestRename = useRef(new Map());
   if (rename) lastRename.current = rename;
   const renameShown = rename ?? lastRename.current;
   const actionDialogProps = (kind) => ({ open: shownActionDialog.open && actionDialog?.kind === kind, onExited: shownActionDialog.onExited });
@@ -3458,7 +3480,11 @@ function App({ side = 0, initialSession = null }) {
   // pane's Select element. While bound, the titlebar button's tooltip shows "cmd+shift+s" (shared-16 Oc `C = vc(kc)`).
   const activityKeyBound = mode !== "code" && !!current && section === "new";
   const activityToggleRef = useRef(null);
-  activityToggleRef.current = () => setSurfaceActivity(value => ({ ...value, [current]: !(value[current] ?? mode === "cowork") }));
+  // U-05: shared-6 toggleForSession: while the session body is narrow the toggle flips the overlay, not the in-flow column.
+  const activityInFlow = !sessionBody.narrow && (surfaceActivity[current] ?? mode === "cowork");
+  const activityShown = sessionBody.narrow ? sessionBody.overlayOpen : activityInFlow;
+  const toggleActivity = () => sessionBody.narrow ? sessionBody.setOverlayOpen(open => !open) : setSurfaceActivity(value => ({ ...value, [current]: !(value[current] ?? mode === "cowork") }));
+  activityToggleRef.current = toggleActivity;
   useEffect(() => {
     if (!activityKeyBound) return;
     const mac = isMacPlatform();
@@ -4102,6 +4128,7 @@ function App({ side = 0, initialSession = null }) {
   function composerInput(text, turnCwd, { issueContext = "" } = {}) {
     const parsed = parseSessionCommand(text, commandContext);
     const chip = parsed?.skill ? skillChipInput(text, parsed.skill) : null;
+    if (chip && ["opencode", "mimo"].includes(coreForEngine(boot?.core?.engine).id)) chip.item.commandArgumentsSeparated = true;
     // A session mention reads as ZCode's '[#title](#id)'; a literal @ target ('@mcp:github') stays text (agentMentionText).
     // Context snippets (Quote pills) lead the message as Markdown quotes (snippetText; Claude's be).
     // W14-code composer-15: a Saved draft (held text pill) goes before the composer text, a blank line apart (c4d199b75 xe).
@@ -4202,12 +4229,17 @@ function App({ side = 0, initialSession = null }) {
   // Interrupted steers go back to the composer of their session (appended to whatever is typed there).
   function restoreSteers(threadId, entries) {
     const text = entries.map((entry) => entry.text).filter((value) => typeof value === "string" && value.trim()).join("\n\n");
-    if (!text) return;
-    if (threadId === currentRef.current) setDraft((value) => value.trim() ? `${value}\n\n${text}` : text);
+    const files = entries.flatMap((entry) => attachmentsFromInput(entry.input, `steer:${entry.id}`))
+      .map((entry) => entry.kind === "image" ? { ...entry, previewUrl: /^data:image\//i.test(entry.path) ? entry.path : filePreviewUrl(entry.path) } : entry);
+    if (!text && !files.length) return;
+    if (threadId === currentRef.current) {
+      if (text) setDraft((value) => value.trim() ? `${value}\n\n${text}` : text);
+      if (files.length) setAttachments((value) => [...value, ...files]);
+    }
     else {
       // Another session's stashed draft (composerDrafts, keyed like the live switch) takes the text.
       const key = draftKey(threadId), stashed = composerDrafts.current.get(key);
-      const value = { text: stashed?.text?.trim() ? `${stashed.text}\n\n${text}` : text, attachments: stashed?.attachments ?? [], mentions: stashed?.mentions ?? [] };
+      const value = { text: [stashed?.text, text].filter((value) => value?.trim()).join("\n\n"), attachments: [...(stashed?.attachments ?? []), ...files], mentions: stashed?.mentions ?? [] };
       composerDrafts.current = saveDraft(composerDrafts.current, key, value);
       persistComposer(key, value);
     }
@@ -4446,7 +4478,9 @@ function App({ side = 0, initialSession = null }) {
     setError("");
     const text = draft;
     const entries = attachments, mentionList = mentions;
-    const turnInput = () => demonstration ? demonstration.input : resend ? [{ type: "text", text, text_elements: [] }] : composerInput(text, turnCwd, { issueContext });
+    const turnInput = () => demonstration ? demonstration.input : resend
+      ? [{ type: "text", text, text_elements: [] }, ...attachmentInputs(entries, { fileMentions: coreTakesFileMentions(boot?.core), surface: mode })]
+      : composerInput(text, turnCwd, { issueContext });
     // dH: the issue's <github_issue> block (its body when it was read), after the message text.
     const issueContext = githubIssueContext(sentIssue);
     let id = demonstration?.newSession ? null : current;
@@ -4541,7 +4575,7 @@ function App({ side = 0, initialSession = null }) {
           // persona and custom instructions come from the profile and codeDesktop.customization instead.
           codeDesktop: withIncognito({ surface: mode, ...(projectDraftId ? { projectId: projectDraftId } : {}), ...(selectedEnvironment ? { environmentId: selectedEnvironment.id } : {}) }, { surface: mode, incognito: incognitoDraft }), // w13-chatfn-history
           ...(mode !== 'code' ? { developerInstructions: surfaceInstructions(mode) } : coreSupports(boot?.core, "customization") ? {} : { developerInstructions:
-            "You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. Do not claim to be Claude." }),
+            "You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. For Dynamic Workflow requests, look up and call mcp__code_desktop__Workflow when available. Do not claim to be Claude." }),
         };
         // The draft's turned-off tools (Add › Tools); main saves them as the new session's.
         if (toolSelection) startParams.codeDesktop = { ...startParams.codeDesktop, tools: sessionTools };
@@ -4850,7 +4884,7 @@ function App({ side = 0, initialSession = null }) {
         serviceTier,
         ...threadPermissionParams({ permission: effectivePermission, mode, ...permissionHints() }),
         ...(coreSupports(boot?.core, "customization") ? {} : { developerInstructions:
-          "You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. Do not claim to be Claude." }),
+          "You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. For Dynamic Workflow requests, look up and call mcp__code_desktop__Workflow when available. Do not claim to be Claude." }),
       };
       const tools = toolSelection ? normalizeSelection(boot?.config?.threadTools?.[origin]) : null;
       if (tools) startParams.codeDesktop = { ...startParams.codeDesktop, tools };
@@ -4949,7 +4983,7 @@ function App({ side = 0, initialSession = null }) {
       if (currentRef.current === origin) setDraft((value) => value === sourceDraft ? "" : value);
       else clearStashedDraft(origin, sourceDraft);
       if (result?.kind === "error") notice(result.text || t("/{command} didn’t finish.", { command: entry.name }), { variant: "warning" });
-      else if (feedback && boot?.config?.deepseekFeedbackSharing !== true) notice(t("Feedback saved on this computer. To send it to DeepSeek, turn on Share feedback with DeepSeek in Settings › Code › Privacy."));
+      else if (feedback && boot?.config?.deepseekFeedbackSharing !== true) notice(t("Feedback saved on this computer. To send it to DeepSeek, turn on Share feedback with DeepSeek in Settings › Account › Data sharing."));
       else if (result?.text) notice(result.text);
     } catch (e) { setError(e.message); }
   }
@@ -5884,23 +5918,33 @@ function App({ side = 0, initialSession = null }) {
   // A generated title replaces the first-message name only while the session still has that name (the Codex TUI keeps a
   // name the user gave meanwhile). Best effort: no title, no change.
   async function requestThreadTitle(id, placeholder, text, titleCwd) {
+    const previous = latestRename.current.get(id);
     try {
       const result = await rpc("codeDesktop/threadTitle", { threadId: id, text, ...(titleCwd ? { cwd: titleCwd } : {}) });
       const title = typeof result?.title === "string" ? result.title.trim() : "";
-      if (!title || title === placeholder || knownThread(id)?.name !== placeholder) return;
+      if (!title || title === placeholder || knownThread(id)?.name !== placeholder || latestRename.current.get(id) !== previous) return;
+      const request = Symbol();
+      latestRename.current.set(id, request);
       await rpc("thread/name/set", { threadId: id, name: title });
-      setSessions((list) => list.map((thread) => thread.id === id && thread.name === placeholder ? { ...thread, name: title } : thread));
+      setSessions((list) => latestRename.current.get(id) === request
+        ? list.map((thread) => thread.id === id && thread.name === placeholder ? { ...thread, name: title } : thread)
+        : list);
     } catch (error) { console.warn(error); }
   }
   // onFailure (the Rename session dialog): report the failure there instead of the composer error row.
   async function renameSession(id, name, { onFailure } = {}) {
+    const request = Symbol();
+    latestRename.current.set(id, request);
     try {
       await rpc("thread/name/set", { threadId: id, name });
-      setSessions(list => list.map(thread => thread.id === id ? { ...thread, name } : thread));
+      setSessions(list => latestRename.current.get(id) === request
+        ? list.map(thread => thread.id === id ? { ...thread, name } : thread)
+        : list);
       return true;
     } catch (error) {
       // r4-composer-07: c4ae8f050 rename mutation onError `"Rename failed. You can try again." (RPJrwRuqFv); L(a), c(a, {error,
       // messageForLogging: "Code session rename failed"})` — in Code that warning toast (as the dialog's), the reason logged.
+      if (latestRename.current.get(id) !== request) return false;
       if (onFailure) { console.warn("Rename failed:", error); onFailure(error); }
       else if (mode === "code" && toasts) { console.warn("Code session rename failed", error); toasts.add(t("Rename failed. You can try again."), { variant: "warning" }); }
       else setError(error.message);
@@ -6174,10 +6218,17 @@ function App({ side = 0, initialSession = null }) {
   const signInPrompt = boot?.connected && onboarding !== "signin" ? coreSignInPrompt(boot.account, boot.core) : null;
   // The composer's warning and the send gate: a core whose account/read says a sign-in is required.
   const signInRequired = !!signInPrompt && boot.account?.requiresOpenaiAuth === true;
+  // A sign-in already under way (account-operations boot.auth): Home's card shows its next step instead of Sign in.
+  const signInPending = !!boot?.auth?.login && ["waiting", "cancelling"].includes(boot.auth.phase);
   // Home card's Sign in, the composer warning's Sign in and the send gate: a native core's browser sign-in starts here,
-  // a bridge core's (one of several providers) is chosen in Settings › Preferences › Account.
+  // a bridge core's (one of several providers) is chosen in Settings › Account.
   function startCoreSignIn() {
     if (signInPrompt?.action === "login") {
+      // A sign-in already under way (account-operations refuses a second start): its page opens again; one starting,
+      // being cancelled or being checked is left to finish.
+      const phase = boot?.auth?.phase || "idle";
+      if (phase === "waiting") { call("account-auth", { operation: "open" }).catch((e) => setError(e.message)); return; }
+      if (phase !== "idle") return;
       call("login", { type: signInBrowser?.type || "chatgpt", ...(signInBrowser?.provider ? { codeDesktop: { provider: signInBrowser.provider } } : {}) }).catch((e) => setError(e.message));
       return;
     }
@@ -6316,6 +6367,9 @@ function App({ side = 0, initialSession = null }) {
   // The row's status dot (running / awaiting input) follows the engine state: active turns, pending approvals and their owners.
   const navLocalSessions = useMemo(() => codeSessions.map((session) => officialLocalSession(session, sessionMetadata[session.id], officialSessionLive(session, { active: state.active, approvals: state.approvals, threadParents: state.threadParents }))),
     [codeSessions, sessionMetadata, state.active, state.approvals, state.threadParents]);
+  // U-03: the Chat and Cowork sessions for the nav's LocalAgentModeSessions bridge (the merged rail's "Chats and tasks").
+  const navAgentSessions = useMemo(() => surfaceSessions(sessions, "cowork", sessionMetadata).map((session) => officialAgentSession(session, sessionMetadata[session.id], officialSessionLive(session, { active: state.active, approvals: state.approvals, threadParents: state.threadParents }))),
+    [sessions, sessionMetadata, state.active, state.approvals, state.threadParents]);
   // The sidebar's list keeps its identity across renders: a fresh filter per render re-ran the sidebar's [sessionById]
   // effects on every keystroke, and their queued updates chained into React #185 under fast typing.
   const sidebarSessions = useMemo(() => surfaceSessions(sessions, mode, sessionMetadata), [sessions, mode, sessionMetadata]);
@@ -6730,12 +6784,12 @@ function App({ side = 0, initialSession = null }) {
       <SourceMenu.Popup label={t("Transcript view")}>
         <SourceMenu.Group>
           {rows.items.map(row => <SourceMenu.Item key={row.view} checked={row.checked} checkedRole="radio" data-transcript-view={row.view}
-            onClick={() => { if (row.view !== rows.current) pickSessionView(sessionId, row.view, "view_menu"); }}>{row.label}</SourceMenu.Item>)}
+            onClick={() => { if (row.view !== rows.current) pickSessionView(sessionId, row.view, "view_menu"); }}>{t(row.label)}</SourceMenu.Item>)}
         </SourceMenu.Group>
         {rows.makeDefault && <>
           <SourceMenu.Separator />
           <SourceMenu.Item data-transcript-view-default={rows.makeDefault.view}
-            onClick={() => { updatePreferences({ transcriptView: rows.makeDefault.view }).catch(actionFailed("save-preference")); }}>{rows.makeDefault.label}</SourceMenu.Item>
+            onClick={() => { updatePreferences({ transcriptView: rows.makeDefault.view }).catch(actionFailed("save-preference")); }}>{/* U-17: cc43287c9 "Make {mode} the default" (41fOlD8UGe), mode = the view's own message */ t("Make {mode} the default", { mode: t(TRANSCRIPT_VIEW_LABELS[rows.makeDefault.view]) })}</SourceMenu.Item>
         </>}
       </SourceMenu.Popup>
     </SourceMenu.Submenu>;
@@ -6866,15 +6920,29 @@ function App({ side = 0, initialSession = null }) {
             projectDraftRef.current = next;
             setProjectDraftId(next);
           };
-          const projectSlot = section !== "projects" ? { popup: <ChatProjectPopup projects={boot?.config?.localProjects ?? []} currentProjectId={currentProjectId} onPick={pickChatProject}
-            onCreate={(name) => setNewProjectFor(current ? { sessionId: current, name } : { draft: true, name })} /> } : undefined; // w13-close-chat-projects-memory: Es's create rows
+          // r2 chat-home-r2-01: ks's renderPopup slot (CDS rows, source-chat-project-popup.jsx chatProjectSlot).
+          const projectSlot = section !== "projects" ? chatProjectSlot({ projects: boot?.config?.localProjects ?? [], currentProjectId, onPick: pickChatProject,
+            onCreate: (name) => setNewProjectFor(current ? { sessionId: current, name } : { draft: true, name }) }) : undefined; // w13-close-chat-projects-memory: Es's create rows
           const slots = {
-            ...chatAddMenuSlots({ attach, attachShortcut: "cmd+u", screenshot: captureScreenshot, teach: addTeachRow, skills: addSkillsRow, project: projectSlot,
-              connectors: addConnectorsRow,
+            // r2 chat-home-r2-01: the host rows as c752b32f8 row descriptors on the CDS popup (source-chat-tools-menu.jsx).
+            ...chatAddMenuSlots({ attach, attachShortcut: "cmd+u", screenshot: captureScreenshot, project: projectSlot,
+              teach: chatTeachSlot({ available: watchRecord.available, isStarting: watchRecord.isStarting, label: t(WATCH_RECORD_COPY.menuLabel), onStart: () => watchRecord.tryStart("plus_menu") }),
+              skills: chatSkillsSlot({ items: addSkills.items, onSkill: applySkill, onManage: () => setSettings("customize-skills") }),
+              connectors: boot?.connected ? chatConnectorsSlot(addConnectorsEntry({ rows: customizeSnapshot.mcp?.rows || [], status: customizeSnapshot.mcp?.status,
+                settingFor: (row) => customizeSnapshot.mcpConfig?.status === "ready" ? customizeSnapshot.mcpConfig.servers?.[row.name]
+                  : customizeCore(boot?.core).connectorToggle ? { enabled: row.kind !== "disabled", editable: true } : null }), {
+                statusLabel: (row) => row.kind !== "connected" ? MCP_STATUS_LABELS[row.kind] || undefined : undefined, reconnectHint: (count) => tn(count, "{count} needs reconnection", "{count} need reconnection"),
+                onManage: () => setSettings("customize-connectors"), onOpen: (row) => setSettings(`customize-connectors#${encodeURIComponent(row.name)}`),
+                onToggle: (row, setting) => { customizeStore.setMcpEnabled(row.name, setting.enabled === false).catch((e) => { if (toasts) toasts.add(e.message, { variant: "warning" }); else setError(e.message); }); } }) : null,
+              // r2 chat-home-r2-02: shared-8 xN — claude_ai_plugins_in_chat on (host-growthbook) makes arePluginsAvailable true and
+              // isChatModeGatedOff false, so Chat gets gs's normal branch (loading / Add plugins / Plugins submenu), as Code does.
+              plugins: hostGrowthBookFlag("claude_ai_plugins_in_chat")
+                ? chatPluginsSlot(addPluginsEntry({ loading: addPlugins.loading, status: customizeSnapshot.plugins.status, groups: addPlugins.groups }),
+                  { rows: addPluginRows, onSkill: applySkill, onManage: () => setSettings("customize-plugins"), onBrowse: () => setSettings("customize-plugins") })
+                : { type: "button", label: t(chatToolsMessages.plugins.defaultMessage), icon: "Plugin", disabled: true, tooltip: t(chatToolsMessages.pluginsUnavailableInChat.defaultMessage) },
               webSearch: toolSlots.webSearch && { ...toolSlots.webSearch, onToggle: () => switchTools(toggleWebSearch({ ...toolsInput, on: !toolSlots.webSearch.checked })) },
               research: toolSlots.research && { ...toolSlots.research, tooltip: toolSlots.research.tooltip ? t(toolSlots.research.tooltip.defaultMessage) : undefined,
                 onToggle: () => switchTools(toggleResearch({ ...toolsInput, on: !toolSlots.research.checked })) } }),
-            plugins: { type: "button", label: t(chatToolsMessages.plugins.defaultMessage), icon: "Plugin", disabled: true, tooltip: t(chatToolsMessages.pluginsUnavailableInChat.defaultMessage) },
             memory: { type: "checkbox", label: t("Memory"), icon: "Memory", checked: memoryOn, closeOnClick: true, onAction: () => {
               call("chat-memory", { op: "thread", threadId: current || null, enabled: !memoryOn })
                 .then((result) => { if (result?.settings) setBoot((previous) => ({ ...previous, config: { ...previous.config, chatMemory: result.settings } })); }, (e) => setError(e.message));
@@ -6964,11 +7032,12 @@ function App({ side = 0, initialSession = null }) {
               `k = XT(a, {icon: "ListCard", label: Hide/Show session rail, onSelect: a?.onToggle})`, unchecked. */}
           {railRows.map((item) => <SourceMenu.Item key="session-rail"
             icon={item.icon} onClick={item.onSelect}>{t(item.label)}</SourceMenu.Item>)}
-          {/* cf74bc599 mM: a count above 0 is the trailing neutral sm Badge; a counted row that is not checked keeps no check slot. */}
+          {/* cf74bc599 mM: a count above 0 is the trailing neutral sm Counter (`ee` = shared-frame ks, data-cds "Counter": the filled
+              bg-neutral pill, not the outlined Badge); a counted row that is not checked keeps no check slot. */}
           {viewRows
             .map(item => <SourceMenu.Item key={item.kind} className="st-view-item" icon={item.icon} shortcut={item.shortcut}
               {...(item.count !== undefined && !item.checked ? { role: "menuitemcheckbox", "aria-checked": false } : { checked: item.checked })}
-              trailing={item.count > 0 ? <CdsBadge size="sm" variant="neutral">{item.count}</CdsBadge> : undefined}
+              trailing={item.count > 0 ? <CdsCounter size="sm" variant="neutral" value={item.count} /> : undefined}
               onClick={item.onSelect}>{t(item.label)}</SourceMenu.Item>)}
           {/* cf74bc599 ZT (11900-12070) View options: the view items, then a separator and 'Keep computer awake' (only
               for this session). Lifecycle items (rename, export, fork, archive, delete), Open in and Transcript view live in
@@ -7046,38 +7115,41 @@ function App({ side = 0, initialSession = null }) {
         // confirmed two-step logout.
         return (
           <>
-            <SourceMenu.Header className="account-menu-header">
-              <span className="smenu-header-line" data-testid="user-menu-header">{accountLines.identity}</span>
-              {accountLines.orgPrimary && <span className="smenu-header-line smenu-header-secondary" data-testid="user-menu-header-org">{accountOrgLine(accountLines)}</span>}
-            </SourceMenu.Header>
-            <SourceMenu.Item icon="Settings" shortcut="cmd+," data-testid="user-menu-settings" onClick={() => setSettings(true)}>{t("Settings")}</SourceMenu.Item>
+            {/* sidebar-titlebar r2-03: the official menu is the CDS Dropdown (shared-19 Y = shared-frame UD, cds-core CdsDropdown)
+                drawn by frame-sidebar-host.jsx AccountMenu (shared-19 BF / qF: Y.Root > Y.Popup side "top"); xF's header is
+                Y.Header "truncate" > span.block.truncate user-menu-header + div.truncate.font-normal user-menu-header-org. */}
+            <CdsDropdown.Header className="truncate">
+              <span className="block truncate" data-testid="user-menu-header">{accountLines.identity}</span>
+              {accountLines.orgPrimary && <div className="truncate font-normal" data-testid="user-menu-header-org">{accountOrgLine(accountLines)}</div>}
+            </CdsDropdown.Header>
+            <CdsDropdown.Item icon="Settings" shortcut="cmd+," data-testid="user-menu-settings" onClick={() => setSettings(true)}>{t("Settings")}</CdsDropdown.Item>
             {/* sidebar-rows.js:16769-16793 uV (claudified_usage_page_pace treatment): Usage, right after Settings,
                 opens the nav-hidden Usage section in the stacked Settings dialog (fidelity F14). */}
-            <SourceMenu.Item icon="UsageGaugeMiddle" data-testid="user-menu-usage" onClick={() => setSettings("usage")}>{t("Usage")}</SourceMenu.Item>
+            <CdsDropdown.Item icon="UsageGaugeMiddle" data-testid="user-menu-usage" onClick={() => setSettings("usage")}>{t("Usage")}</CdsDropdown.Item>
             {/* shared-21 $B :16218-16227: Language (Globe, user-menu-language) opens "Choose your language". */}
-            <SourceMenu.Item icon="Globe" data-testid="user-menu-language" onClick={() => setLanguagePicker(true)}>{t("Language")}</SourceMenu.Item>
-            {boot?.account?.deepseek && <SourceMenu.Item icon="Key" data-testid="user-menu-deepseek-key" onClick={() => setSettings("preferences")}>{t("DeepSeek API key")}</SourceMenu.Item>}
-            <SourceMenu.Separator />
-            <SourceMenu.Item icon="Scroll" onClick={() => setWhatsNew(true)}>{t("View changelog")}</SourceMenu.Item>
-            <SourceMenu.Submenu>
-              <SourceMenu.SubmenuTrigger icon="Info">{t("Learn more")}</SourceMenu.SubmenuTrigger>
-              <SourceMenu.Popup label={t("Learn more")} className="account-learn-more">
+            <CdsDropdown.Item icon="Globe" data-testid="user-menu-language" onClick={() => setLanguagePicker(true)}>{t("Language")}</CdsDropdown.Item>
+            {boot?.account?.deepseek && <CdsDropdown.Item icon="Key" data-testid="user-menu-deepseek-key" onClick={() => setSettings("account#account")}>{t("DeepSeek API key")}</CdsDropdown.Item>}
+            <CdsDropdown.Separator />
+            <CdsDropdown.Item icon="Scroll" onClick={() => setWhatsNew(true)}>{t("View changelog")}</CdsDropdown.Item>
+            <CdsDropdown.Submenu>
+              <CdsDropdown.SubmenuTrigger icon="Info">{t("Learn more")}</CdsDropdown.SubmenuTrigger>
+              <CdsDropdown.Popup className="min-w-[208px]">
                 {/* w12c-wiring (w12b-settings-dialogs S6; 3.6556.2 cd75f6c8c `c.Popup,{className:"min-w-[208px]",…children:[Qt,en,…,fn,pn,gn]}`):
                     the external links first, each St `c.Item,{trailing:X,href:o,target:"_blank",rel:"noopener"}` with
                     `X=n(g,{name:"ArrowOutSquare",size:"sm"})`, then the Separator (pn), Keyboard shortcuts (gn) last. */}
                 {boot?.connected && /^https:\/\//.test(coreForEngine(boot?.core?.engine).homepage || "") && <>
-                  <SourceMenu.Item data-testid="user-menu-core-homepage" trailing={<CdsIcon name="ArrowOutSquare" size="sm" />}
+                  <CdsDropdown.Item data-testid="user-menu-core-homepage" trailing={<CdsIcon name="ArrowOutSquare" size="sm" />}
                     onClick={() => call("external", { url: coreForEngine(boot.core?.engine).homepage }).catch(actionFailed("open-link"))}>
-                    {t("{core} project page", { core: coreName(boot.core) })}</SourceMenu.Item>
-                  <SourceMenu.Separator />
+                    {t("{core} project page", { core: coreName(boot.core) })}</CdsDropdown.Item>
+                  <CdsDropdown.Separator />
                 </>}
                 {/* shared-21-D098Wd--.js:16424-16431: J.Item {shortcut: Mn("shortcuts_modal").shortcutString} → ⌘/, no icon. */}
-                <SourceMenu.Item shortcut={SHORTCUTS_DIALOG_KEYS} onClick={()=>setActionDialog({kind:"shortcuts"})}>{t("Keyboard shortcuts")}</SourceMenu.Item>
-              </SourceMenu.Popup>
-            </SourceMenu.Submenu>
+                <CdsDropdown.Item shortcut={SHORTCUTS_DIALOG_KEYS} onClick={()=>setActionDialog({kind:"shortcuts"})}>{t("Keyboard shortcuts")}</CdsDropdown.Item>
+              </CdsDropdown.Popup>
+            </CdsDropdown.Submenu>
             {accountMenuSignOut(boot?.account, { engine: boot?.core, connected: boot?.connected }) && <>
-              <SourceMenu.Separator />
-              <SourceMenu.Item icon="Logout" data-testid="user-menu-sign-out" onClick={() => setActionDialog({ kind: "sign-out" })}>{t("Sign out")}</SourceMenu.Item>
+              <CdsDropdown.Separator />
+              <CdsDropdown.Item icon="Logout" data-testid="user-menu-sign-out" onClick={() => setActionDialog({ kind: "sign-out" })}>{t("Sign out")}</CdsDropdown.Item>
             </>}
           </>
         );
@@ -7493,7 +7565,7 @@ function App({ side = 0, initialSession = null }) {
   // pg over c227f4d5e PZ); r4 R4T-08d (E95): every failed turn, the host card only in the renderer's fallback.
   const codeTurnErrors = codeRendererOn ? rendererTurnErrors(state.turnErrors?.[current]) : null;
   const codeTranscriptRows = (rows, render) => {
-    if (!codeRendererOn) return rows.map(render);
+    if (!codeRendererOn) return mode === "chat" ? chatMessageRows(rows, render) /* chat-conversation r1-01: cc1aae219 JY's group/message-row */ : rows.map(render);
     const at = new Map(rows.map((row, index) => [row, index]));
     const draw = (row) => render(row, at.get(row) ?? rows.indexOf(row), rows);
     return <CodeTranscriptBoundary sessionId={current} fallback={() => rows.map(render)}>
@@ -7689,7 +7761,7 @@ function App({ side = 0, initialSession = null }) {
     <CdsRoot density={windowDensity} font={cdsFont} platform="desktop" experimental={codePaneExperimental} className="contents">
     <CdsCoreRoot density={themeDensity(boot?.config)} font={cdsCoreFont} platform="desktop" experimental={codePaneExperimental} className="contents">
     <SourceComposer
-      afterComposer={!current && mode === "code" && openPanes.size > 0 ? <SourceTaskBacklog folder={workdir} call={call}
+      afterComposer={!current && mode === "code" && hasPane ? <SourceTaskBacklog folder={workdir} call={call}
         onTake={takeStartTask} onFocusComposer={() => textarea.current?.focus()} onError={setError} /> : undefined}
       fastMode={fastEnabled}
       speedLabel={activeTier?.name ?? null}
@@ -7730,6 +7802,8 @@ function App({ side = 0, initialSession = null }) {
       // code-start v4: 4.16336.0 draws the Clawd inside the start card (cc43287c9 Aye / Dve lead H5 -> g_e), not above the
       // composer (3.6556.2 jfe), so the composer's pet slot stays off.
       showPet={false}
+      // marlin-chin (U-MARLIN): ca2ef848d Zle's chin child, H9 `inline: !0` for the open Chat conversation.
+      chatDisclaimer={mode === "chat" && current ? <SourceChatDisclaimer inline conversationUuid={current} onOpenLink={transcriptActions.onOpenLink} incognito={isIncognitoSession(current, sessionMetadata)} /> : null}
       showContext={mode === "code" && !current}
       // cc43287c9 :28686 placeholder Yn ? 'Type / for commands' : 'Describe a task or ask a question'
       // (Yn = Pn?.id ?? null, :27454) — composer-placeholder.mjs; chat mode keeps its own copy.
@@ -7808,7 +7882,7 @@ function App({ side = 0, initialSession = null }) {
       mentionActions={mentionActions}
       // A DeepSeek core without a key: the warning row stands in for the sign-in gate (send() refuses), and
       // its Add key opens the same key step as the home key card's.
-      warning={boot !== null && boot?.connected === false && !loading ? t("Connection to {core} lost.", { core: coreName(boot?.core) })
+      warning={boot !== null && boot?.connected === false && !loading ? t("Connection to {core} lost.", { core: coreName(boot?.core ?? bootEngine(boot)) })
         : boot?.connected && boot.account?.deepseek && !boot.account.account ? t("Add a DeepSeek API key to start a session.")
         : signInRequired ? t("Sign in to {name} to start a session.", { name: signInPrompt.name }) : undefined}
       // A missing sign-in's action is the sign-in itself (send() starts it too); a missing DeepSeek key's is
@@ -7830,6 +7904,14 @@ function App({ side = 0, initialSession = null }) {
       permission={boot || initSettled ? effectivePermission : null}
       permissionOpen={menu?.kind === "permission"}
       modelOpen={menu?.kind === "model"}
+      // chat-home r1-05: the Chat / Cowork card's model menu is shared-8 $H's own CDS Dropdown (Root / Trigger in
+      // source-chat-composer.jsx); this is its Popup (KH, source-chat-model-menu.jsx), opened by the host menu state.
+      chatModelMenu={mode !== "code" ? <SourceChatModelMenu models={models} selected={model} defaultModel={boot?.config?.model || null} isNewConversation={!current}
+        onSelect={m => { Promise.resolve(chooseModel({model:m.model, effort:m.defaultReasoningEffort})).catch(e=>setError(e.message)); }} effortOpen={!!menu?.data?.effortOpen}
+        effort={efforts.length > 0 ? { levels: markDefaultEffort(efforts, chosen?.defaultReasoningEffort), value: effort, onPick: pickEffort } : null}
+        thinking={chatThinking && { ...chatThinking, onToggle: toggleChatThinking }} /> : undefined}
+      // r2 chat-home-r2-01: the Chat + menu's rows for shared-8 wP's own CDS Dropdown (source-chat-tools-menu.jsx ChatAddMenu).
+      chatAddMenu={mode === "chat" ? (menu?.kind === "add" ? menuContent() : null) : undefined}
       modelsLoading={boot === null}
       menuKind={menu?.kind}
       usage={state.usage[current]} planUsage={planUsage}
@@ -7921,13 +8003,17 @@ function App({ side = 0, initialSession = null }) {
   };
   const sidebarNavValue = {
     mode, section, current: splitView.open ? splitView.sides[splitView.active].current : current, routineId: routineSelection,
-    localSessions: navLocalSessions,
+    localSessions: navLocalSessions, agentSessions: navAgentSessions,
     // The manager's load state (getSessionList waits for "loaded"; "failed" is the settled init without a list, as the
     // SourceSidebar loading / loadFailed props below read it).
     localSessionsState: sessionsLoaded ? "loaded" : initSettled && !loading ? "failed" : "loading",
-    sessionAction: (action, id) => action === "fork" ? sessionAction("fork", sessions.find((session) => session.id === id) ?? { id })
+    // sidebar-titlebar r1-01: + archive / delete / rename, the LocalAgentModeSessions bridge's CoworkSessionRow actions.
+    sessionAction: (action, id, payload) => ["fork", "archive", "delete", "rename"].includes(action) ? sessionAction(action, sessions.find((session) => session.id === id) ?? { id }, payload)
       : Promise.reject(new Error(t("This action is not available in OpenClaude Desktop."))),
-    searchOpen: !!showSearch, setSearchOpen: (open) => setShowSearch(open ? "search" : false),
+    // sidebar-titlebar r2-01: the entry the official CommandPaletteToggle value carries ("default" / "search"); the Search row
+    // opens "search" (closing the row menu as ⇧⌘K does).
+    searchOpen: !!showSearch, searchEntry: showSearch || null,
+    setSearchOpen: (open) => { if (open) setMenu(null); setShowSearch(open ? (open === "default" ? "default" : "search") : false); },
     navigateOfficial: (pathname) => { const routed = officialPathToHostRoute(pathname, sidebarNavRoutes, { mode }); if (!routed) console.warn(`frame-sidebar-nav: no host route for ${pathname}`); return routed; },
     travel, account: { display_name: accountButton.name, full_name: accountButton.avatarName },
     markUnread: (id) => updateSessionMetadata(id, { unread: true }),
@@ -7949,6 +8035,12 @@ function App({ side = 0, initialSession = null }) {
     openImport: mode === "code" && boot?.connected
       ? () => { closePeek(); setMenu(null); setActionDialog({ kind: "import-history" }); }
       : undefined,
+    // U-01: the awaiting row's hover card body (frame-sidebar-nav-awaiting-body.jsx, the host answer for ca0409d7c) under
+    // SidebarHoverCardHost: the session's pending approvals (state.approvals it owns, oldest first), runtime and answer.
+    hoverCard: {
+      requestsFor: (id) => (state.approvals || []).filter((approval) => approval?.params?.threadId && ownerThreadId(state, approval.params.threadId) === id),
+      runtime: approvalRuntime.current, respond: respondApproval,
+    },
   };
   // W14-code r4 sidebar-new fr4-06: the Code sidebar's Routines section host (source-sidebar-routines.jsx): the scheduler's
   // Code tasks at app level, the routine runs, the unread store and the delete confirmation. frame-sidebar-nav 4.16336.0: it
@@ -8093,7 +8185,10 @@ function App({ side = 0, initialSession = null }) {
     // sidebar-body (surfaces-prod-2): the account tray (shared-22 QL / shared-19 QF), the mode switch (shared-21 x_) and the
     // resize handle (ZA) are sliced; the host answers them with its account, menu, switchMode, settings and sidebar model.
     account: { name: accountButton.name, plan: accountButton.plan, avatarName: accountButton.avatarName, menuOpen: menu?.kind === "account",
-      openMenu: (e, entry) => openMenu("account", e.currentTarget, undefined, entry) },
+      openMenu: (e, entry) => openMenu("account", e.currentTarget, undefined, entry),
+      // r2-03: the CDS Dropdown's controlled open state and its items (menuContent's account case, CdsDropdown parts).
+      setMenuOpen: (open) => setMenu((m) => open ? (m?.kind === "account" ? m : { kind: "account", token: ++menuToken.current }) : (m?.kind === "account" ? null : m)),
+      menuItems: menu?.kind === "account" ? menuContent() : null },
     homeMode: homeModeFor({ coworkEnabled: boot?.coworkEnabled === true }), switchMode,
     openSettings: (tab) => { setMenu(null); setSettings(tab); },
     announcer: <SourceLiveAnnouncer />,
@@ -8333,8 +8428,8 @@ function App({ side = 0, initialSession = null }) {
           // a drop anywhere over the Code pane goes to the composer; inert (filesElsewhere) on Chat / Cowork.
           <SourcePaneDropZone dropRef={paneDropRef} owner={fileContextOwner} filesElsewhere={mode !== "code"} disabled={!composerAttachable}>
           <div className="source-chat-tile-content" data-surface={mode} data-section={section} data-home={!current && section === "new" || undefined}>
-            {!artifactPreviewOpen && <SourceTitlebar surface={mode} activityOpen={surfaceActivity[current] ?? mode === "cowork"}
-              onToggleActivity={() => setSurfaceActivity(value => ({ ...value, [current]: !(value[current] ?? mode === "cowork") }))} activityShortcut={activityKeyBound} onExitIncognito={incognitoActive && !incognitoShell ? () => incognitoKey.current?.() : undefined /* w13-close-chat-surface (E77): in the shell, Iy sits in the Fy row */} collapsed={effectiveCollapsed && !SESSION_POPOUT} onExpand={expandSidebar} section={section}
+            {!artifactPreviewOpen && <SourceTitlebar surface={mode} activityOpen={activityShown}
+              onToggleActivity={toggleActivity} activityShortcut={activityKeyBound} onExitIncognito={incognitoActive && !incognitoShell ? () => incognitoKey.current?.() : undefined /* w13-close-chat-surface (E77): in the shell, Iy sits in the Fy row */} collapsed={effectiveCollapsed && !SESSION_POPOUT} onExpand={expandSidebar} section={section}
               sectionLabel={mode !== 'code' && section === 'routines' ? t('Scheduled') : undefined}
               session={session} panes={openPanes} onTogglePane={(kind) => (kind === "terminal" ? toggleTerminalPane() : togglePaneTile(kind))} onMenu={openMenu} menuKind={menu?.kind} menuAtPointer={!!menu?.point} loading={loading}
               terminalAvailable={terminalAvailable} terminalBusy={terminalBusy} spawning={!current && !!spawnPhase}
@@ -8349,11 +8444,13 @@ function App({ side = 0, initialSession = null }) {
               changesDirty={!!(gitStatus?.isRepo && gitStatus.hasChanges)}
               onCloseSplit={side !== 0 && splitView.open ? () => void closeSplitSide(side, splitStore.close) : undefined}
               popoutWindow={SESSION_POPOUT ? { alwaysOnTop: popoutPinned, onDock: dockSessionPopout, onTogglePin: toggleSessionPopoutPin } : null} />}
-            <div className="source-chat-body">
+            <div ref={sessionBody.ref} className="source-chat-body" data-panel-narrow={(mode !== 'code' && sessionBody.narrow) || undefined}>
             {/* R4f-rail SR-7 (cc43287c9 jre): the body row (geometry, the rail's providers), the conversation as its inner box
                 (Ey band padding while docked) and, last, the docked column (bH). */}
             <SessionRailRow rail={sessionRail} host={sessionRailHost}>
-          <div ref={bandEnterRef} className={`conversation ${!current && mode !== 'code' && section === 'new' ? homeScrollClass : ''} ${sessionRail.bandClassName}`}>
+          {/* chat-home r1-06: shared-23 TT's frame and scroll column on the Chat new page (source-chat-home.jsx SourceNewPageFrame). */}
+          <SourceNewPageFrame home={!current && mode === 'chat' && section === 'new'}>
+          <div ref={bandEnterRef} {...(!current && mode === 'chat' && section === 'new' ? { [NEW_PAGE_SCROLL_COLUMN]: "" } : {})} className={`conversation ${!current && mode !== 'code' && section === 'new' ? homeScrollClass : codeLanding ? LANDING_SCROLL_CLASS : ''} ${sessionRail.bandClassName}`}>
             {section === "new" ? (
               <SourceSurfaceHome active={!current && mode !== 'code'}>
                 {/* R4f-error E36: the chat panel's load error boundary (c11959232 Nm / Pm, c5638815a lt: RenderErrorBoundary with
@@ -8404,7 +8501,7 @@ function App({ side = 0, initialSession = null }) {
                         onSelect={pickRecentFolder} onChoose={anchor => openMenu("home-environment", anchor)} chooseOpen={menu?.kind === "home-environment"}
                         call={call} onError={setError} sessions={startCardSessions} onOpenSession={navigate}
                         workspace={workspaceInfo} worktree={worktree} onSetWorktree={setWorktree} starting={!!spawnPhase}
-                        onStartBesideDraft={startBesideDraft}
+                        onStartBesideDraft={startBesideDraft} showTasks={!hasPane}
                         onTake={takeStartTask} onFocusComposer={() => textarea.current?.focus()} />}
                       {/* W14-code r3 r3-shared-02: h2 xi, the picker's sr-only "{name} selected" status after a chord pick. */}
                       <EnvironmentChordStatus picked={environmentChords.chordPicked} />
@@ -8435,14 +8532,21 @@ function App({ side = 0, initialSession = null }) {
                           <div className="sh-card is-outline connection-card" data-testid="core-sign-in-card" data-core-sign-in={signInPrompt.action}>
                             <div className="connection-card-copy">
                               <span className="connection-card-title">{t("Sign in to {name}", { name: signInPrompt.name })}</span>
-                              <span className="connection-card-body">{signInPrompt.action === "login" ? (signInBrowser?.label ? t(signInBrowser.label) : t("Sign in in your browser to continue.")) : t("Sign in or add an API key in Settings › General › Account so {name} can answer.", { name: signInPrompt.name })}</span>
+                              <span className="connection-card-body">{signInPrompt.action === "login" ? (signInPending ? pendingSignIn(boot.auth.login, signInPrompt.name).text : signInBrowser?.label ? t(signInBrowser.label) : t("Sign in in your browser to continue.")) : t("Sign in or add an API key in Settings › Account so {name} can answer.", { name: signInPrompt.name })}</span>
+                              {signInPrompt.action === "login" && signInPending && boot.auth.login?.userCode && <code className="ss-account-code" aria-label={t("Sign-in code")}>{boot.auth.login.userCode}</code>}
                             </div>
                             <div className="connection-card-actions">
-                              {signInPrompt.action === "login"
+                              {/* A sign-in under way (started here, from the composer or in Settings): its page again, or Cancel. */}
+                              {signInPrompt.action === "login" && signInPending
+                                ? <>
+                                  {pendingSignIn(boot.auth.login, signInPrompt.name).reopen && <CdsButton size="sm" disabled={boot.auth.phase !== "waiting" || !boot.auth.login?.url} onClick={() => call("account-auth", { operation: "open" }).catch((e) => setError(e.message))}>{pendingSignIn(boot.auth.login, signInPrompt.name).reopen}</CdsButton>}
+                                  <CdsButton size="sm" disabled={boot.auth.phase !== "waiting"} onClick={() => call("account-auth", { operation: "cancel" }).catch((e) => setError(e.message))}>{t("Cancel sign-in")}</CdsButton>
+                                </>
+                                : signInPrompt.action === "login"
                                 ? <CdsButton size="sm" variant="primary" onClick={startCoreSignIn}>{t("Sign in")}</CdsButton>
                                 : <>
                                   <CdsButton size="sm" onClick={() => call("account-auth", { operation: "refresh" }).catch((e) => setError(e.message))}>{t("Refresh")}</CdsButton>
-                                  <CdsButton size="sm" variant="primary" onClick={() => setSettings("preferences")}>{t("Open Settings")}</CdsButton>
+                                  <CdsButton size="sm" variant="primary" onClick={() => setSettings("account#account")}>{t("Open Settings")}</CdsButton>
                                 </>}
                             </div>
                           </div>
@@ -8525,7 +8629,8 @@ function App({ side = 0, initialSession = null }) {
                             onRetry={chatBranch.onRetry ?? (chatPrompt ? () => void sendMessage(chatPrompt, turnAttachments(items, footer.turnId), [], { resend: true }) : null)}
                             versions={chatBranch.versions} onVersion={chatBranches.select /* w13-chatfn-branches: a version where the core forks at a turn */}
                             retryBlocked={running || sending || !boot?.connected || !!session?.archived}
-                            createdAt={turnSecondsToMs(state.turnTimes?.[current]?.[footer.turnId]?.completedAt) /* w13-close-chat-messages: r1 Ic.Timestamp */} /></SourceTranscriptRowBoundary>;
+                            createdAt={turnSecondsToMs(state.turnTimes?.[current]?.[footer.turnId]?.completedAt) /* w13-close-chat-messages: r1 Ic.Timestamp */}
+                            last={footer.turnId === latestTurnId /* chat-conversation r1-01: JY Pt (isLastMessage) */} /></SourceTranscriptRowBoundary>;
                         }
                         // The reply the rating belongs to: the turn's last agent message.
                         // An imported prefix turn has no rating and no fork (import-history-display.mjs).
@@ -8706,7 +8811,7 @@ function App({ side = 0, initialSession = null }) {
                     region and the composer — as one near-bottom toast safe region, so OP's 200px test reads the column's
                     bottom. Code wraps them in that column (a flex column of c6a992d55 utilities, the old .conversation flow);
                     Chat / Cowork keep the same element as display:contents (no layout change, no remount on a mode switch). */}
-                <div className={mode === "code" ? "code-dock-column flex min-w-0 shrink-0 flex-col" : "contents"}
+                <div ref={landingColumnRef} className={mode === "code" ? "code-dock-column flex min-w-0 shrink-0 flex-col" : "contents"}
                   data-toast-safe-region={mode === "code" ? "near-bottom" : undefined}>
                 {/* F09 review: no Home connection card shows the reason any more, so a failed start,
                     initialize or reconnect shows here on Home too, above the composer's warning row. */}
@@ -8769,6 +8874,7 @@ function App({ side = 0, initialSession = null }) {
                       // the worktree queue's "discard" confirm, then worktree-remove; failures are toasts).
                       sessionId={current} call={call} confirmDiscard={worktreeGateHost.enqueue}
                       onDiscardError={(message) => { if (toasts) toasts.add(message, { variant: "danger" }); else setError(message); }} /></div>
+                  : !current && mode === 'chat' ? <SourceNewPageCardSlot>{renderMainComposer({ notices: true })}</SourceNewPageCardSlot> /* r2 chat-home-r2-05: shared-19 ED's card column */
                   : renderMainComposer({ notices: true })}
                 {!current && mode === 'cowork' && <SourceCoworkHome call={call} sessions={sessions} metadata={sessionMetadata} state={state} ready={sessionsLoaded}
                   sidebarCollapsed={NO_SIDEBAR || collapsed || narrowViewport}
@@ -8846,12 +8952,14 @@ function App({ side = 0, initialSession = null }) {
               </div>
             )}
           </div>
-              {mode !== 'code' && (surfaceActivity[current] ?? mode === 'cowork') && current && section === 'new' && <SourceCoworkProgress key={current} sessionId={current} plan={state.plans[current]} items={items} cwd={workdir} gates={COWORK_PANEL_GATES}
+          </SourceNewPageFrame>
+              {mode !== 'code' && current && section === 'new' && <SourceCoworkProgress key={current} sessionId={current} plan={state.plans[current]} items={items} cwd={workdir} gates={COWORK_PANEL_GATES}
+                overlay={sessionBody.narrow} shown={activityShown} onCloseOverlay={() => sessionBody.setOverlayOpen(false)}
                 running={running} onOpenFile={openFileRef} call={call} sessions={sessions} metadata={sessionMetadata} state={state}
                 onOpenSession={navigate} onOpenRoutine={id => { setRoutineSelection(id); setSection('routines'); }}
                 canRevealStep={id => !!coworkStepRow(scope(), id)} onRevealStep={id => { transcriptRef.current?.release?.(); revealCoworkStep(scope(), id); }} />}{/* w13-close-cowork-ui panel-04: AT onRevealStep / canRevealStep */}
               {/* w13-chatfn-artifacts (A4): the open Chat artifact beside the conversation; a later write of it reloads the panel. */}
-              {mode === 'chat' && current && section === 'new' && chatArtifact?.threadId === current && <SourceChatArtifactPanel key={`${current}:${chatArtifact.id}`} call={call}
+              {mode === 'chat' && current && section === 'new' && chatArtifact?.threadId === current && <SourceChatArtifactPanel key={`${current}:${chatArtifact.id}`} call={call} overlay={sessionBody.narrow}
                 threadId={current} artifactId={chatArtifact.id} initialVersion={chatArtifact.version} refreshKey={items.filter((row) => row.status === 'completed' && artifactToolCall(row)?.id === chatArtifact.id).length}
                 onClose={() => { setChatArtifact(null); restoreChatArtifactTrigger(); }} onNotice={(message, variant) => { if (toasts) toasts.add(message, { variant }); else setError(message); }} />}
               <SessionRailColumn />
@@ -8877,17 +8985,14 @@ function App({ side = 0, initialSession = null }) {
         load={(query) => call("github-issues", { operation: "list", cwd: issueFolder, query })} />}
       {shownBypass.value && <SourceBypassDialog key={`bypass-${shownBypass.key}`} open={shownBypass.open} onExited={shownBypass.onExited} cwd={workdir || cwd} guide={bypassGuide(coreForEngine(boot?.core?.engine))} mode={bypassMode.confirmingMode} onConfirm={() => { const done = bypassMode.confirmingMode === "auto" ? autoSwitchDone.current : null; autoSwitchDone.current = null; if (done) { consentToAuto(); bypassMode.adopt("auto"); done(true); } else bypassMode.confirm(); }}
         onClose={() => { const done = bypassMode.confirmingMode === "auto" ? autoSwitchDone.current : null; autoSwitchDone.current = null; bypassMode.cancel(); done?.(false); }}/> }
-      {/* w13-close-chat-composer (K4): the Chat / Cowork card's menu is shared-8 $H → KH (source-chat-model-menu.jsx), with the Effort submenu (shared-28 wE) and Chat's thinking rows (hE). */}
-      {menu?.kind === "model" && mode !== "code" ? <SourceChatModelMenu key={menu.token ?? "model"} anchor={menu.anchor} models={models} selected={model} defaultModel={boot?.config?.model || null} isNewConversation={!current}
-        onSelect={m => { Promise.resolve(chooseModel({model:m.model, effort:m.defaultReasoningEffort})).catch(e=>setError(e.message)); }} onClose={closeMenu} initialHighlight={menu.entry}
-        effort={efforts.length > 0 ? { levels: markDefaultEffort(efforts, chosen?.defaultReasoningEffort), value: effort, onPick: pickEffort } : null}
-        thinking={chatThinking && { ...chatThinking, onToggle: toggleChatThinking }} />
+      {/* w13-close-chat-composer (K4) / chat-home r1-05: the Chat / Cowork card's menu is shared-8 $H → KH (source-chat-model-menu.jsx), with the Effort submenu (shared-28 wE) and Chat's thinking rows (hE), rendered inside the card's own CDS Dropdown (renderMainComposer chatModelMenu), not here. */}
+      {menu?.kind === "model" && mode !== "code" ? null
       : menu?.kind === "model" ? <SourceModelMenu key={menu.token ?? "model"} anchor={menu.anchor} models={models} selected={model} defaultModel={boot?.config?.model || null} onSelect={m => { Promise.resolve(chooseModel({model:m.model, effort:m.defaultReasoningEffort})).catch(modelChangeFailed(model)); }} fastTier={fastTier} fastMode={fastEnabled} speedTiers={speedTiers} speed={activeTier?.key ?? STANDARD_SPEED} onSpeedChange={value=>changeSpeed(value).catch(fastModeFailed)} fastDisabled={fastSaving || sending || !boot?.connected} fastSaving={fastSaving} onFastModeChange={value=>changeFastMode(value).catch(fastModeFailed)} onClose={closeMenu} initialHighlight={menu.entry} effortOpen={!!menu.data?.effortOpen}
         effort={menu.anchor?.closest?.("[data-env-bar-host], .sc-composer") && efforts.length > 0 ? { levels: markDefaultEffort(efforts, chosen?.defaultReasoningEffort), value: effort, onPick: pickEffort } : null} /> : menu?.kind === "permission" ? <SourcePermissionMenu key={menu.token ?? "permission"} anchor={menu.anchor} value={effectivePermission} defaultValue={permission} bypassEnabled={bypassMode.available} bypassKept={bypassMode.kept}
         bypassOffer={bypassOffer({ enabled: bypassOptIn && !bypassRefusal, availability: bypassOptIn ? bypassRefusal : bypassRequirements })}
         onEnableBypass={() => { closeMenu(); setSettings("code#bypass"); }} onChange={value => bypassMode.select(value)} onClose={closeMenu} onSelectComplete={() => textarea.current?.focus()} initialHighlight={menu.entry}
         agents={primaryAgents?.rows ?? null} agentValue={agentChoice ?? primaryAgents?.defaultAgent ?? null} defaultAgent={primaryAgents?.defaultAgent ?? null}
-        onAgentChange={(name) => setAgentChoices((choices) => ({ ...choices, [current || ""]: name }))} /> : ["session", "session-title", "titlebar"].includes(menu?.kind) ? <SourceSidebarMenu key={menu.token ?? menu.kind} anchor={menu.anchor} point={menu.point} kind={menu.kind} onClose={closeMenu} initialHighlight={menu.entry} align={menu.kind === "session-title" && mode !== "chat" ? "start" : undefined}>{menuContent()}</SourceSidebarMenu> : menu?.kind === "account" ? <SourceMenu.Popup key={menu.token ?? "account"} anchor={menu.anchor} side="top" align="start" label={t("Account menu")} className="account-menu" onClose={closeMenu} initialHighlight={menu.entry}>{menuContent()}</SourceMenu.Popup> : menu?.kind === "add" ? <ComposerAddMenuPopup key={menu.token ?? "add"} anchor={menu.anchor} label={t("Add")} className="add-menu" onClose={closeMenu} initialHighlight={menu.entry}>{menuContent()}</ComposerAddMenuPopup> : menu?.kind === "effort" ? <SourceEffortPopover key={menu.token ?? "effort"} anchor={menu.anchor} levels={markDefaultEffort(efforts, chosen?.defaultReasoningEffort)} value={effort}
+        onAgentChange={(name) => setAgentChoices((choices) => ({ ...choices, [current || ""]: name }))} /> : ["session", "session-title", "titlebar"].includes(menu?.kind) ? <SourceSidebarMenu key={menu.token ?? menu.kind} anchor={menu.anchor} point={menu.point} kind={menu.kind} onClose={closeMenu} initialHighlight={menu.entry} align={menu.kind === "session-title" && mode !== "chat" ? "start" : undefined}>{menuContent()}</SourceSidebarMenu> : menu?.kind === "account" ? null /* r2 sidebar-titlebar-r2-03: the account menu is the official CDS Dropdown under frame-sidebar-host.jsx AccountMenu (frameHost.account.menuItems) */ : menu?.kind === "add" && mode === "chat" ? null /* r2 chat-home-r2-01: the Chat + menu is wP's own CDS Dropdown (chatAddMenu) */ : menu?.kind === "add" ? <ComposerAddMenuPopup key={menu.token ?? "add"} anchor={menu.anchor} label={t("Add")} className="add-menu" onClose={closeMenu} initialHighlight={menu.entry}>{menuContent()}</ComposerAddMenuPopup> : menu?.kind === "effort" ? <SourceEffortPopover key={menu.token ?? "effort"} anchor={menu.anchor} levels={markDefaultEffort(efforts, chosen?.defaultReasoningEffort)} value={effort}
         onChange={pickEffort} onClose={closeMenu} />
       : menu?.kind === "usage" ? <SourceUsagePopover key={menu.token ?? "usage"} anchor={menu.anchor} usage={state.usage[current]} fresh={!current}
         plan={planUsage} onViewUsage={() => { closeMenu(); setSettings("usage"); }}

@@ -21,7 +21,19 @@ import {
   ny as fu,
   QC as qu,
 } from "./shared-92.mjs";
-import { J0, J9, K0 } from "./shared-frame.mjs";
+import {
+  J0,
+  J1,
+  J2,
+  J3,
+  J8,
+  J9,
+  K0,
+  K1,
+  K2,
+  K3,
+  Ga as re,
+} from "./shared-frame.mjs";
 import {
   fe as ad,
   ae as fd,
@@ -29,7 +41,13 @@ import {
   ie as od,
   v as sd,
 } from "./vendor-all-0.mjs";
-import { createContext as T } from "react";
+import {
+  useContext as E,
+  createContext as T,
+  useState as _,
+  useRef as k,
+  useEffect as w,
+} from "react";
 var Lf = new Set(["light", "dark", "system"]);
 function Rf(e) {
   return typeof e == "string" && Lf.has(e) ? e : "system";
@@ -859,6 +877,82 @@ function vW(e) {
 var SW = T(!1);
 var V$ = new Map();
 var H$ = new Map();
+function J$(e) {
+  let $ = J9(11),
+    { timeout: t, trim: n } = J1($, 0, e)
+      ? K1($, 0, e, e === void 0 ? {} : e)
+      : $[1],
+    r = t === void 0 ? 2e3 : t,
+    i = n === void 0 || n,
+    [a, o] = _(!1),
+    s = k(void 0),
+    c = k(!0),
+    l = E(re),
+    u = k(0),
+    d,
+    f;
+  ($[2] === J8
+    ? ((d = () => (
+        (c.current = !0),
+        () => {
+          ((c.current = !1),
+            s.current !== void 0 &&
+              (clearTimeout(s.current), (s.current = void 0)),
+            o(!1));
+        }
+      )),
+      (f = []),
+      ($[2] = d),
+      ($[3] = f))
+    : ((d = $[2]), (f = $[3])),
+    w(d, f));
+  let p = J3($, 4, l, r, i)
+    ? K3($, 4, l, r, i, async (e, t) => {
+        let n = typeof e == "string" ? e : e.text,
+          a = i ? n.trim() : n,
+          d = typeof e == "string" ? void 0 : e.html,
+          f = (u.current += 1),
+          p = await Y$(a, d, t ?? l);
+        return !c.current || f !== u.current
+          ? p
+          : (s.current !== void 0 &&
+              (clearTimeout(s.current), (s.current = void 0)),
+            p
+              ? (o(!0),
+                (s.current = setTimeout(() => {
+                  (o(!1), (s.current = void 0));
+                }, r)),
+                !0)
+              : (o(!1), !1));
+      })
+    : $[7];
+  return J2($, 8, p, a)
+    ? K2($, 8, p, a, { didCopy: a, copyToClipboard: p })
+    : $[10];
+}
+async function Y$(e, t, n) {
+  let r = n?.ownerDocument;
+  if (r && r.defaultView === null) return !1;
+  let i = (r?.defaultView ?? globalThis).navigator?.clipboard;
+  if (!i) return !1;
+  if (t)
+    try {
+      return (
+        await i.write([
+          new ClipboardItem({
+            "text/plain": new Blob([e], { type: "text/plain" }),
+            "text/html": new Blob([t], { type: "text/html" }),
+          }),
+        ]),
+        !0
+      );
+    } catch {}
+  try {
+    return (await i.writeText(e), !0);
+  } catch {
+    return !1;
+  }
+}
 var o0 = new Set([
   "messaging/token-update-failed",
   "messaging/token-update-no-token",
@@ -914,6 +1008,7 @@ export {
   Eb,
   H$,
   IP,
+  J$,
   Lf,
   MR,
   NB,

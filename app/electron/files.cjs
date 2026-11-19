@@ -95,7 +95,7 @@ async function missingCreatable(realRoot, lexical) {
     return (await fs.stat(parent)).isDirectory();
   } catch { return false; }
 }
-async function readFile(root, relative, { force = false, documentBytes = false } = {}) {
+async function readFile(root, relative, { force = false, documentBytes = false, allowOutside = false } = {}) {
   const requested = relative;
   let target;
   try {
@@ -107,13 +107,21 @@ async function readFile(root, relative, { force = false, documentBytes = false }
       let creatable;
       try {
         const realRoot = await fs.realpath(root), lexical = path.resolve(realRoot, relative);
-        if (lexical !== realRoot && !lexical.startsWith(realRoot + path.sep)) return { path: requested, unavailable: "missing_outside" };
+        // 2026-11-19 (allowOutside, the Files viewer): outside files are readable there, so a missing one is plainly missing.
+        if (lexical !== realRoot && !lexical.startsWith(realRoot + path.sep))
+          return allowOutside ? { path: requested, unavailable: "missing", creatable: false } : { path: requested, unavailable: "missing_outside" };
         creatable = await missingCreatable(realRoot, lexical);
       } catch { return { path: requested, unavailable: "read_error" }; }
       return { path: requested, unavailable: "missing", creatable };
     }
-    if (/outside the selected workspace/.test(error?.message ?? "")) return { path: requested, unavailable: "outside_root" };
-    return { path: requested, unavailable: "read_error" };
+    // User decision 2026-11-19 ("这个不需要 都可以显示"): with allowOutside (only the Files viewer's read, main.cjs
+    // "file" / "file:document-bytes") a file outside the working directory is read from its real path instead of the
+    // outside_root card. Other callers (artifacts, writes, the tree, search) keep the traversal guard.
+    if (/outside the selected workspace/.test(error?.message ?? "")) {
+      if (!allowOutside) return { path: requested, unavailable: "outside_root" };
+      try { target = await fs.realpath(path.resolve(await fs.realpath(root), relative)); }
+      catch { return { path: requested, unavailable: "read_error" }; }
+    } else return { path: requested, unavailable: "read_error" };
   }
   try {
     const stat = await fs.stat(target);

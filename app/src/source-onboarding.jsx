@@ -5,6 +5,8 @@
 // core's own connection, any other vendor as a custom provider (model-settings.cjs connection-save /
 // provider-save); "Test and continue" first sends one 1-token request the way the core will.
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { holdModalInert } from "./modal-inert.mjs";
 import { SourceSpark } from "./source-spark.jsx";
 import { Icon } from "./icons";
 import { SourceSettingsButton } from "./source-settings-button.jsx";
@@ -13,11 +15,15 @@ import { cleanErrorReason } from "./action-error-model.mjs";
 import { useExtensionImport } from "./source-extension-import.jsx";
 import { allCores, registerCores } from "../electron/core-registry.mjs";
 import { SourceBrandLogo } from "./source-brand-logo.jsx";
+import { pendingSignIn } from "./source-account-settings.jsx";
 import { PRESETS, presetById, presetDisplayName, presetRoute } from "../electron/prefs/provider-presets.mjs";
 import { modelDisplayName } from "../electron/prefs/model-families.mjs";
 import { OFFICIAL_BASE_URL, PROVIDER_PROTOCOLS } from "../electron/prefs/model-settings.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import "./source-onboarding.css";
+
+// source-coachmark.jsx's list: the attributes a portal root copies from where its owner renders.
+const PORTAL_ATTRIBUTES = ["data-density", "data-mode", "data-chat-source-version", "data-cds-theme", "data-platform", "data-font", "data-page-bg"];
 
 const PROTOCOL_LABELS = { "anthropic-messages": "Anthropic Messages", "openai-completions": "OpenAI Chat Completions", "openai-responses": "OpenAI Responses" };
 
@@ -61,7 +67,7 @@ function ConnectCard({ desktopCall, onDone, onBack, onOpenExternal }) {
     if (!model) { setError(t("Choose a model.")); return; }
     setError("");
     // The stage that failed, for the message (state is stale inside this handler).
-    let stage = "test";
+    let stage = "test", savedRoute = "";
     try {
       setBusy("test");
       await call("provider-test", { model });
@@ -74,13 +80,22 @@ function ConnectCard({ desktopCall, onDone, onBack, onOpenExternal }) {
           : { op: "connection-save", connection: { mode: "relay", relayBaseURL: form.baseURL.trim() }, relayKey: apiKey.trim() });
       } else {
         const models = [...new Set([model, ...form.extraModels.split(/[\s,]+/), ...preset.models].map(id => id.trim()).filter(Boolean))];
-        await desktopCall("model-settings", { op: "provider-save", apiKey: apiKey.trim(),
-          provider: { route: form.route.trim() || presetRoute(preset, variant) || "custom", displayName: form.displayName.trim(), api: form.api, baseURL: form.baseURL.trim(), models,
+        // An id already in Settings › Models: the same endpoint is set up again (updated in place); another provider keeps
+        // its id, and this one takes the first free `<id>-2`, `<id>-3`… unless the user typed the id (then the save says so).
+        const typed = form.route.trim(), wanted = typed || presetRoute(preset, variant) || "custom";
+        const saved = (await desktopCall("model-settings", { op: "providers-read" }).catch(() => null))?.providers ?? [];
+        const same = saved.find(item => item.route === wanted);
+        const sameEndpoint = same && same.baseURL.replace(/\/+$/, "") === form.baseURL.trim().replace(/\/+$/, "");
+        let route = wanted;
+        if (same && !sameEndpoint && !typed) for (let n = 2; saved.some(item => item.route === route); n++) route = `${wanted.slice(0, 32 - String(n).length - 1)}-${n}`;
+        savedRoute = route;
+        await desktopCall("model-settings", { op: "provider-save", apiKey: apiKey.trim(), ...(sameEndpoint ? { previousRoute: wanted } : {}),
+          provider: { route, displayName: form.displayName.trim(), api: form.api, baseURL: form.baseURL.trim(), models,
             ...(form.contextWindow.trim() ? { contextWindows: { [model]: form.contextWindow.trim() } } : {}) } });
       }
       stage = "restart";
       setBusy("restart");
-      await onDone({ model, route: preset.builtIn ? "deepseek" : form.route.trim() });
+      await onDone({ model, route: preset.builtIn ? "deepseek" : savedRoute });
     } catch (failure) {
       const message = cleanErrorReason(failure?.message || String(failure));
       setError(stage === "test" ? t("Connection test failed: {message}", { message }) : message);
@@ -211,12 +226,32 @@ function AgentCard({ desktopCall, onChooseDeepSeek, onCoreChosen, onBack, initia
   };
   const status = (entry) => entry.download ? (entry.download.phase === "download" && entry.download.total ? t("Downloading… {done} of {total}", { done: megabytes(entry.download.received || 0), total: megabytes(entry.download.total) }) : t("Installing…"))
     : entry.kind === "builtin" ? t("Ready to use") : entry.installed ? t("Installed") : entry.release ? t("{size} download", { size: megabytes(entry.release.size || 0) }) : t("Not installed");
+  // U-48: in a short window the pinned Continue/Back bar (.sob-agent-actions, sticky) can sit over the chosen row; keep
+  // that row clear of the bar when the choice changes and when the window is resized.
+  const listRef = useRef(null);
+  const revealChosen = useCallback(() => {
+    const list = listRef.current, shell = list?.closest(".sob-shell"), row = list?.querySelector('.sob-agent[aria-checked="true"]');
+    const bar = list?.parentElement?.querySelector(".sob-agent-actions");
+    if (!shell || !row || !bar) return;
+    const rowBox = row.getBoundingClientRect(), barBox = bar.getBoundingClientRect(), shellBox = shell.getBoundingClientRect();
+    if (rowBox.bottom > barBox.top) shell.scrollTop += Math.ceil(rowBox.bottom - barBox.top);
+    else if (rowBox.top < shellBox.top) shell.scrollTop -= Math.ceil(shellBox.top - rowBox.top);
+  }, []);
+  useLayoutEffect(() => { revealChosen(); }, [core?.id, revealChosen]);
+  const listed = state !== null;
+  useEffect(() => {
+    const shell = listRef.current?.closest(".sob-shell");
+    if (!listed || !shell || typeof ResizeObserver !== "function") return undefined;
+    const observer = new ResizeObserver(() => revealChosen());
+    observer.observe(shell);
+    return () => observer.disconnect();
+  }, [listed, revealChosen]);
   const label = busy === "download" ? t("Downloading…") : busy === "start" ? t("Starting…")
     : needsDownload ? t("Download {name} and continue", { name: core.name }) : t("Continue with {name}", { name: core?.name ?? "" });
   return (
     <div className="sob-agents" {...importer.dropProps} data-dragging={importer.dragging || undefined}>
       <p className="sob-subtitle">{t("Pick the AI that writes code with you. You can switch any time in Settings.")}</p>
-      <div className="sob-agent-list" role="radiogroup" aria-label={t("Agent")}>
+      <div className="sob-agent-list" role="radiogroup" aria-label={t("Agent")} ref={listRef}>
         {state === null && <span className="sob-muted sob-agent-loading">{t("Loading…")}</span>}
         {cores.map((entry) => {
           const selected = entry.id === core?.id;
@@ -261,7 +296,7 @@ function SignInCard({ signIn, onSkip, onBack }) {
   const { core, auth, account, connected, onLogin, onAccountAction, onOpenExternal } = signIn;
   const login = core?.login ?? {};
   const keys = login.apiKey ?? [];
-  const [template, setTemplate] = useState(keys[0]?.template ?? null), [apiKey, setApiKey] = useState("");
+  const [template, setTemplate] = useState(keys[0]?.template ?? null), [apiKey, setApiKey] = useState(""), [code, setCode] = useState("");
   const [working, setWorking] = useState(""), [error, setError] = useState("");
   const phase = auth?.phase || "idle", pending = auth?.login, waiting = phase === "waiting";
   const busy = !!working || (phase !== "idle" && !waiting);
@@ -272,6 +307,10 @@ function SignInCard({ signIn, onSkip, onBack }) {
   };
   const chosenKey = keys.find((entry) => entry.template === template) ?? keys[0];
   const shownError = error || (auth?.error ? cleanErrorReason(auth.error) : "");
+  // The pending sign-in's next step, as Settings › Account says it (connecting: no page to reopen; openedByAgent: the
+  // agent's own tab; acceptsCode: a one-time code to paste back).
+  const next = pendingSignIn(pending, core?.name ?? "");
+  const submitCode = () => { if (code.trim() && connected) run("code", async () => { await onAccountAction({ operation: "code", code: code.trim() }); setCode(""); }); };
   return (
     <div className="sob-card sob-signin">
       <div className="sob-signin-head">
@@ -283,9 +322,14 @@ function SignInCard({ signIn, onSkip, onBack }) {
           {pending?.userCode ? <>
             <span className="sob-label">{t("Enter this code on the sign-in page")}</span>
             <code className="sob-signin-code">{pending.userCode}</code>
-          </> : <span className="sob-signin-wait-text"><span className="source-shimmer">{t("Finish signing in in your browser…")}</span></span>}
+          </> : <span className="sob-signin-wait-text"><span className="source-shimmer">{pending?.connecting || pending?.openedByAgent ? next.text : t("Finish signing in in your browser…")}</span></span>}
+          {pending?.acceptsCode && <form className="sob-field" style={{ alignSelf: "stretch" }} onSubmit={(event) => { event.preventDefault(); submitCode(); }}>
+            <input data-cds="TextInput" className="cds-input cds-reset sob-signin-key" aria-label={t("Code from the browser")} placeholder={t("If the page shows a code, paste it here")} value={code} autoComplete="off" spellCheck={false}
+              onChange={(event) => { setCode(event.target.value); setError(""); }} />
+            <SourceSettingsButton type="submit" size="lg" className="sob-wide" busy={working === "code"} disabled={!connected || !code.trim() || !!working} data-signin="paste-code">{t("Submit code")}</SourceSettingsButton>
+          </form>}
           <div className="sob-signin-row">
-            <SourceSettingsButton size="lg" className="sob-wide" disabled={!pending?.url} onClick={() => onAccountAction({ operation: "open" })}>{t("Open browser again")}</SourceSettingsButton>
+            {next.reopen && <SourceSettingsButton size="lg" className="sob-wide" disabled={!pending?.url} onClick={() => onAccountAction({ operation: "open" })}>{pending?.openedByAgent ? next.reopen : t("Open browser again")}</SourceSettingsButton>}
             <SourceSettingsButton variant="ghost" onClick={() => onAccountAction({ operation: "cancel" })}>{t("Cancel")}</SourceSettingsButton>
           </div>
         </div>
@@ -298,7 +342,7 @@ function SignInCard({ signIn, onSkip, onBack }) {
           ))}
           {(login.deviceCode ?? []).map((option, index) => (
             <SourceSettingsButton key={`d${index}`} size="lg" className="sob-wide" busy={working === `d${index}`} disabled={!connected || busy} data-signin="device-code"
-              onClick={() => run(`d${index}`, () => onLogin(option.type || "chatgptDeviceCode"))}>{t(option.label)}</SourceSettingsButton>
+              onClick={() => run(`d${index}`, () => onLogin(option.type || "chatgptDeviceCode", option.provider ? { codeDesktop: { provider: option.provider } } : {}))}>{t(option.label)}</SourceSettingsButton>
           ))}
           {keys.length > 0 && <>
             {((login.browser ?? []).length > 0 || (login.deviceCode ?? []).length > 0) && <div className="sob-or" aria-hidden="true"><span>{t("or")}</span></div>}
@@ -333,7 +377,24 @@ function SignInCard({ signIn, onSkip, onBack }) {
  */
 export function SourceOnboarding({ desktopCall, onDone, onSkip, onCoreChosen, onOpenExternal, signIn = null, startAt = "welcome" }) {
   const [step, setStep] = useState(startAt);
-  const start = useRef(null), shell = useRef(null), heading = useRef(null), layer = useRef(null);
+  const start = useRef(null), shell = useRef(null), heading = useRef(null), layer = useRef(null), anchor = useRef(null);
+  // The takeover is portalled to <body>, like Settings: rendered in place it sits inside main.dframe-content, whose
+  // isolation:isolate traps the layer's z-index under the sibling sidebar (z 20) and titlebar buttons (z 50). The
+  // portal root repeats the cds attributes the in-place spot resolved (density / font / platform / mode), so the
+  // tokens stay the same. It joins <body> in the first layout effect, before the step focus below.
+  const [portal] = useState(() => (typeof document === "undefined" ? null : document.createElement("div")));
+  useLayoutEffect(() => {
+    if (!portal) return undefined;
+    portal.className = "sob-portal cds-root";
+    // As main.epitaxy-root.cds-root (style.css): keep the page ground it sits in, not .cds-root's surface-0.
+    portal.style.setProperty("--cds-page-bg", "inherit");
+    for (const name of PORTAL_ATTRIBUTES) {
+      const value = (anchor.current?.closest(`[${name}]`) ?? document.documentElement).getAttribute(name);
+      if (value != null) portal.setAttribute(name, value);
+    }
+    document.body.appendChild(portal);
+    return () => portal.remove();
+  }, [portal]);
   // Escape does what the step's own Back / Skip does: one step back, or out when this is where the takeover began
   // (Settings › Models › Quick setup… opens at 'connect'). The first-run welcome has no way back, so Escape stays put.
   const back = step === "agent" ? (startAt === "agent" ? onSkip : () => setStep("welcome"))
@@ -356,12 +417,12 @@ export function SourceOnboarding({ desktopCall, onDone, onSkip, onCoreChosen, on
     const node = layer.current;
     if (!node) return undefined;
     const doc = node.ownerDocument;
-    const inerted = [];
+    // Counted holds (modal-inert.mjs), shared with Settings: its closing hold on #root must not lift the takeover's.
+    const releases = [];
     for (let child = node; child?.parentElement && child !== doc.body; child = child.parentElement) {
       for (const sibling of child.parentElement.children) {
-        if (sibling === child || sibling.inert || ["SCRIPT", "STYLE", "LINK"].includes(sibling.tagName)) continue;
-        sibling.inert = true;
-        inerted.push(sibling);
+        if (sibling === child || ["SCRIPT", "STYLE", "LINK"].includes(sibling.tagName)) continue;
+        releases.push(holdModalInert(sibling));
       }
     }
     const outsidePopup = (target) => !target?.closest?.('[data-cds-portal], [role="listbox"], [role="menu"]');
@@ -392,10 +453,14 @@ export function SourceOnboarding({ desktopCall, onDone, onSkip, onCoreChosen, on
       observer.disconnect();
       doc.removeEventListener("focusin", focusIn);
       doc.removeEventListener("keydown", escape);
-      for (const sibling of inerted) sibling.inert = false;
+      for (const release of releases) release();
     };
   }, []);
-  return (
+  // Server rendering (tests) has no document: the layer renders in place there.
+  const place = portal ? (node) => createPortal(node, portal) : (node) => node;
+  return <>
+    <span ref={anchor} hidden />
+    {place(
     // The layer carries the z-index, like the other local modals: popups (SourceSelect) stack above a
     // dialog's parent.
     <div ref={layer} className="sob-layer"><div ref={shell} className="sob-shell" data-step={step} role="dialog" aria-modal="true" aria-label={t("Set up OpenClaude Desktop")}>
@@ -421,6 +486,6 @@ export function SourceOnboarding({ desktopCall, onDone, onSkip, onCoreChosen, on
         <h1 ref={heading} tabIndex={-1} className="sob-heading">{t("Connect a model")}</h1>
         <ConnectCard desktopCall={desktopCall} onDone={onDone} onOpenExternal={onOpenExternal} onBack={() => (startAt === "connect" ? onSkip() : setStep("agent"))} />
       </>}
-    </div></div>
-  );
+    </div></div>)}
+  </>;
 }

@@ -14,8 +14,11 @@ import { SourceChapterToc } from "./source-chapters.jsx";
 import { ResponseImageMenuContext } from "./source-response-image.jsx";
 import { chapterAnchorId } from "./session-chapters-model.mjs";
 import { TranscriptRowsScope } from "./source-transcript-rows.jsx";
+import { COMPOSER_MARLIN_DESIGN } from "./composer-marlin.mjs"; // marlin-chin U-MARLIN
 import { SourceChatDisclaimer, SourceChatMessageMenu, chatMessageMenuAttach, messageSelectionText } from "./source-chat-message-actions.jsx"; // w13-chatui-message-actions
 import { ChatMarkdownSurface } from "./source-chat-markdown.jsx"; // w13-chatui-markdown-code
+// chat-conversation r2-02: the Chat column's msg-* insets (shared-2 vJ's _J), which kw / jw and the toolbar inset read.
+import { CHAT_COLUMN_MESSAGE_INSETS, ChatJumpToLatest } from "./generated/chat-messages-v4/index.mjs";
 import { ChatThinkingSurface } from "./source-chat-thinking.jsx"; // w13-chatui-thinking-search
 import "./source-transcript.css";
 // host-wiring code-b: the jump chip's CaretDown is the 4.16336.0 cds-core CdsIcon (shared-frame-CJdE5Ria Bs → lf, semantic facade).
@@ -295,7 +298,7 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
           ref={scroll.contentRef}
           // W14-code r6 review fix R6T-01: in ooe's inner column (`flex min-h-full flex-col`) the rows grow, as Aat's
           // `f("div", {className: "grow", children: qt.element})`.
-          className={official ? "source-transcript-content grow" : "source-transcript-content"}
+          className={`${official ? "source-transcript-content grow" : "source-transcript-content"}${messageActions?.surface === "chat" ? ` ${CHAT_COLUMN_MESSAGE_INSETS}` : ""}`}
           data-testid="transcript-sizer"
           data-transcript-spacing={sessionKey && ready ? "regular" : undefined}
         >
@@ -309,8 +312,9 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
             {/* w13-chatui-markdown-code: the rows of a Chat conversation answer with c18fe02d2 ChatMarkdown (SourceChatMarkdown). */}
             <ChatMarkdownSurface.Provider value={messageActions?.surface === "chat" ? openChatLink : null}>{children}</ChatMarkdownSurface.Provider></TranscriptRowsScope>
           </ChatThinkingSurface.Provider></TranscriptFeedHostContext.Provider>
-          {/* w13-chatui-message-actions: ca2ef848d U9, the disclaimer where a Chat conversation ends. */}
-          {sessionKey && messageActions?.surface === "chat" && <SourceChatDisclaimer conversationUuid={messageActions.threadId} onOpenLink={messageActions.onOpenLink} incognito={!!messageActions.incognito} />}
+          {/* w13-chatui-message-actions: ca2ef848d U9, the disclaimer where a Chat conversation ends — the classic arm only
+              (`!zo && …`); with marlin (U-MARLIN, src/composer-marlin.mjs) it is the chin's inline H9. */}
+          {sessionKey && messageActions?.surface === "chat" && !COMPOSER_MARLIN_DESIGN && <SourceChatDisclaimer conversationUuid={messageActions.threadId} onOpenLink={messageActions.onOpenLink} incognito={!!messageActions.incognito} />}
           <div
             ref={scroll.endRef}
             className="source-transcript-end"
@@ -362,7 +366,18 @@ export const SourceTranscript = forwardRef(function SourceTranscript(
           sits on the composer dock (-top-[32px]: 8px above the dock's top edge); this chip sits in the transcript frame,
           so it keeps the same spot from the frame's bottom edge (bottom-2, 8px) in place of -top-[32px]. The 'contents'
           wrapper forwards a wheel over the chip to the transcript. */}
-      {sessionKey && (
+      {/* chat-conversation r3-01: a Chat conversation's control is ca2ef848d uL's JO (cf854d0e8 t, generated
+          ChatJumpToLatest): `u(JO, {visible, onClick, isStreaming, workingMark, placementClassName: "bottom-5
+          -translate-y-[var(--composer-banners-h,0px)]"})`, no working mark (Yle: turnStatusOwnsSpark is off). Official
+          holds it in a `relative h-0` div on the composer dock's top edge; here the frame's bottom edge is that edge. */}
+      {sessionKey && messageActions?.surface === "chat" && (
+        <div className="contents" data-transcript-jump-wrap="" onWheel={(event) => scroll.api.forwardWheel(event)}>
+          <ChatJumpToLatest visible={!!scroll.showJump} isStreaming={!!responding}
+            placementClassName="bottom-5 -translate-y-[var(--composer-banners-h,0px)]"
+            onClick={() => scroll.api.jumpToLatest({ behavior: "smooth" })} />
+        </div>
+      )}
+      {sessionKey && messageActions?.surface !== "chat" && (
         <div className="contents" data-transcript-jump-wrap="" onWheel={(event) => scroll.api.forwardWheel(event)}>
           <button
             type="button"

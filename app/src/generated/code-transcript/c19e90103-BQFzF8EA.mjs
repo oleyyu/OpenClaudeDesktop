@@ -41,6 +41,7 @@ import {
   Fv as er,
 } from "../chat-renderer/shared-10-D6FXWZph.mjs";
 import { aM as un } from "../chat-renderer/shared-3-BCEbd8Fv.mjs";
+import { $L as Xt } from "../chat-renderer/shared-5-Bg6ZMqvt.mjs";
 import { KR as Qe } from "../chat-renderer/shared-52-uHFNjl7C.mjs";
 import { e as or } from "../chat-renderer/shared-styles-WTvdnI3p.mjs";
 import {
@@ -148,7 +149,10 @@ import {
   Mw as ht,
   pF as ut,
 } from "../transcript-rows/rows-shared-78-D5Fw2h0a.mjs";
-import { g as en } from "../transcript-rows/rows-vendor-all-0-DXM0MGjZ.mjs";
+import {
+  g as en,
+  m as tn,
+} from "../transcript-rows/rows-vendor-all-0-DXM0MGjZ.mjs";
 import {
   WR as He,
   yz as Je,
@@ -204,6 +208,7 @@ import {
   cdsNodeOwnerWindow as O,
   cdsOpenWindow as R,
   CdsLoadingSkeleton as U,
+  CdsDialog as V,
   CdsIcon as W,
   memoStoreDeps1 as Z1,
   memoStoreDeps2 as Z2,
@@ -4651,6 +4656,15 @@ var jg = { tableLayout: "fixed" };
 var Mg = "[&_td]:min-w-24 [&_th]:min-w-24";
 var Ng = "rounded border [&>table]:rounded-none [&>table]:border-0";
 var Pg = "epitaxy-table-scroll";
+function Fg() {
+  return tn((e) => ({
+    snapshot: null,
+    open: !1,
+    show: (t) => e({ snapshot: t, open: !0 }),
+    setOpen: (t) => e({ open: t }),
+    release: () => e((e) => (e.open ? e : { snapshot: null })),
+  }));
+}
 var Ig = T(null);
 function Lg(e) {
   let $ = J9(21),
@@ -4832,6 +4846,126 @@ function Rg(e) {
       )
     : $[42];
 }
+var zg = w(function (e) {
+  let $ = J9(15),
+    { store: t } = e,
+    n = en(t, Gg),
+    r = en(t, Kg),
+    i = en(t, qg),
+    a = en(t, Jg),
+    s = Xt(r, I()),
+    c = J2($, 0, s, a)
+      ? K2($, 0, s, a, (e) => {
+          (s.onOpenChangeComplete(e), e || a());
+        })
+      : $[2];
+  if (!s.present || !n) return null;
+  let l = J1($, 3, n.heading)
+      ? I1(
+          $,
+          3,
+          o(V.Header, {
+            className: "mb-md in-data-cds-fizzy:mb-1",
+            children: n.heading
+              ? o("span", {
+                  className: "line-clamp-2 text-heading",
+                  children: n.heading,
+                })
+              : o("span", {
+                  className: "sr-only",
+                  children: o(Qt, {
+                    defaultMessage: "Table",
+                    id: "IeBejt65iX",
+                  }),
+                }),
+          }),
+          n.heading,
+        )
+      : $[4],
+    d = J1($, 5, n) ? K1($, 5, n, o(Bg, { snapshot: n })) : $[6],
+    f = J2($, 7, l, d)
+      ? K2(
+          $,
+          7,
+          l,
+          d,
+          u(V.Popup, {
+            size: "3xl",
+            className:
+              "epitaxy-root w-max min-w-[min(720px,calc(100vw-3rem))] max-w-[calc(100vw-3rem)] break-words",
+            children: [l, d],
+          }),
+        )
+      : $[9];
+  return J4($, 10, s.open, c, i, f)
+    ? I4(
+        $,
+        10,
+        o(V.Root, {
+          open: s.open,
+          onOpenChange: i,
+          onOpenChangeComplete: c,
+          children: f,
+        }),
+        s.open,
+        c,
+        i,
+        f,
+      )
+    : $[14];
+});
+function Bg(e) {
+  let $ = J9(29),
+    { snapshot: t } = e,
+    {
+      rows: n,
+      dir: r,
+      prose: s,
+      proseSize: c,
+      transcriptLinks: l,
+      linkPolicy: u,
+      emojiReady: d,
+      rowEnv: f,
+    } = t,
+    p = a(null);
+  Er(p);
+  let m = J1($, 0, s) ? K1($, 0, s, s && i("prose-scroll", Ng)) : $[1],
+    h = J1($, 2, m) ? K1($, 2, m, i(Pg, m)) : $[3],
+    g = J1($, 4, n)
+      ? K1($, 4, n, o("table", { className: Mg, children: n }))
+      : $[5],
+    _ = J3($, 6, r, h, g)
+      ? K3($, 6, r, h, g, o("div", { dir: r, className: h, children: g }))
+      : $[9],
+    v = J2($, 10, f, _)
+      ? K2($, 10, f, _, o(ap.Provider, { value: f, children: _ }))
+      : $[12],
+    y = J2($, 13, d, v)
+      ? K2($, 13, d, v, o(_s.Provider, { value: d, children: v }))
+      : $[15],
+    b = J2($, 16, u, y)
+      ? K2($, 16, u, y, o(Ja.Provider, { value: u, children: y }))
+      : $[18],
+    x = J2($, 19, b, l)
+      ? K2($, 19, b, l, o(Ag.Provider, { value: l, children: b }))
+      : $[21],
+    S = s ? "prose" : "epitaxy",
+    C = J3($, 22, s, c, x)
+      ? K3(
+          $,
+          22,
+          s,
+          c,
+          x,
+          s
+            ? o(rr, { font: "sans", size: c, ref: p, children: x })
+            : o("div", { className: "epitaxy-markdown", ref: p, children: x }),
+        )
+      : $[25];
+  return J2($, 26, S, C)
+    ? K2($, 26, S, C, o(kh.Provider, { value: S, children: C }))
+    : $[28];
+}
 var Vg = "h1, h2, h3, h4, h5, h6";
 var Hg = ".prose, .epitaxy-markdown";
 function Ug(e) {
@@ -4851,6 +4985,18 @@ function Wg(e) {
       if (r) return r;
     }
   return null;
+}
+function Gg(e) {
+  return e.snapshot;
+}
+function Kg(e) {
+  return e.open;
+}
+function qg(e) {
+  return e.setOpen;
+}
+function Jg(e) {
+  return e.release;
 }
 var Xg = T(null);
 var Qg = 1;
@@ -11000,6 +11146,9 @@ function Wx(e) {
   return u;
 }
 export {
+  Fg as createTableExpandStore,
+  Ig as TableExpandStoreContext,
+  zg as TableExpandDialog,
   Ah,
   Au,
   Bl,
@@ -11010,7 +11159,6 @@ export {
   Hl,
   Hy,
   Id,
-  Ig,
   Iu,
   Lf,
   Mf,

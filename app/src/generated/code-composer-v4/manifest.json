@@ -3,9 +3,9 @@
   "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
   "generator": "scripts/extract-code-composer.mjs",
   "sharedGraph": "cds-core",
-  "sharedGraphManifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+  "sharedGraphManifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd",
   "linkedGraphs": {
-    "btw-pane-v4": "8a6f05218864d113af40b522457de2e82ab0c9a4930266419b54b17081a060d2"
+    "btw-pane-v4": "52a74dcfc2172d7e541028d29fe3cef3fd63f0c437c7ead56ed72bf2768bca93"
   },
   "isolatedGraph": {
     "legacyOutput": "src/generated/code-composer",
@@ -2694,6 +2694,7 @@
         "Hn"
       ],
       "heldByCdsCore": [
+        "Zm",
         "Jm",
         "ld",
         "Em",
@@ -2710,6 +2711,7 @@
         "Ss",
         "ws",
         "Ts",
+        "La",
         "Mn",
         "jn",
         "Ad",
@@ -2722,6 +2724,12 @@
         "Tn",
         "En",
         "Rn",
+        "Hm",
+        "Vm",
+        "Um",
+        "Wm",
+        "Gm",
+        "Km",
         "An"
       ],
       "heldByLinked": []
@@ -2731,7 +2739,7 @@
       "source": "shared-3-IQTrO7Gx.js",
       "kind": "semantic",
       "sourceSha256": "8e08befdcac208adfcd30309fcc4e292a698b253f7accc2c79bdf44fa202b919",
-      "sha256": "7fa3065276e192023a141f061058763f6b3217b9e4115e6fb1788338117ad9a8",
+      "sha256": "ddec9f264fbf867e76828c61698f40d0dcf8af9489bdf034e8a285003c55a653",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -2921,10 +2929,6 @@
         {
           "name": "cl",
           "sha256": "6255160f75111e8d460ba375596bcc686311bebc020f9b38b01255450f9c40a4"
-        },
-        {
-          "name": "ll",
-          "sha256": "11a418560da8945625309a1d166bbc1c87979b7bf632f0d4060c5bc6c3a613f7"
         },
         {
           "name": "ul",
@@ -3175,11 +3179,13 @@
           "original": "bm"
         },
         {
-          "local": "T",
-          "from": "react",
-          "name": "createContext",
-          "via": "vendor-frame-BckkO60Y.js:no",
-          "kind": "react"
+          "local": "ll",
+          "from": "../cds-core/shared-3.mjs",
+          "name": "ll",
+          "via": "shared-3-IQTrO7Gx.js#ll",
+          "kind": "shared-graph",
+          "original": "ll",
+          "linkedSha256": "987219397e3b1f80d87497192c7b38d8ffd3b20b236ab8f181dd8bca73c76b84"
         },
         {
           "local": "g",
@@ -3352,11 +3358,12 @@
         },
         {
           "local": "ss",
-          "from": "./chunk-shared-2.mjs",
+          "from": "../cds-core/shared-2.mjs",
           "name": "Bm",
           "via": "shared-2-CsjIBQD8.js:Ty",
-          "kind": "generated",
-          "original": "Bm"
+          "kind": "shared-graph",
+          "original": "Bm",
+          "linkedSha256": "616cfd6916f5a037b15ed18e58147de8f36d59beb956fefdf364f3cd3ae224a5"
         },
         {
           "local": "ts",
@@ -3558,7 +3565,76 @@
         "vl": null,
         "BN": "ct"
       },
-      "heldByCdsCore": [],
+      "heldByCdsCore": [
+        "Al",
+        "kl",
+        "dl",
+        "_c",
+        "Bc",
+        "Vc",
+        "Zc",
+        "gc",
+        "Qc",
+        "$c",
+        "el",
+        "al",
+        "zc",
+        "ol",
+        "kc",
+        "cl",
+        "sl",
+        "ul",
+        "vc",
+        "Oc",
+        "Dc",
+        "wc",
+        "Cc",
+        "xc",
+        "Sc",
+        "Tc",
+        "Ac",
+        "Mc",
+        "Nc",
+        "Pc",
+        "jc",
+        "Fc",
+        "Ic",
+        "Lc",
+        "Rc",
+        "Hc",
+        "tl",
+        "nl",
+        "rl",
+        "yc",
+        "il",
+        "Ec",
+        "Sl",
+        "Uc",
+        "yl",
+        "xl",
+        "Kc",
+        "qc",
+        "Jc",
+        "Yc",
+        "Xc",
+        "Wc",
+        "Gc",
+        "bl",
+        "Ol",
+        "Cl",
+        "wl",
+        "Dl",
+        "Tl",
+        "El",
+        "vl",
+        "pl",
+        "fl",
+        "ml",
+        "hl",
+        "bc",
+        "_l",
+        "gl"
+      ],
       "heldByLinked": []
     },
     {
@@ -3752,7 +3828,12 @@
         "Tm": "xy",
         "Hm": "wy"
       },
-      "heldByCdsCore": [],
+      "heldByCdsCore": [
+        "_m",
+        "dm",
+        "Tm",
+        "Hm"
+      ],
       "heldByLinked": []
     },
     {
@@ -4263,7 +4344,7 @@
       "source": "shared-5-u8kha2eH.js",
       "kind": "semantic",
       "sourceSha256": "7e36ddc101d5b0a8b4427f9b882472b1f01636a60aa22fbb6062f45292f4e7e7",
-      "sha256": "121cedcb5eef0ca781f3d47f0dff4d39dd3db4fdc6fc66138520629459556c73",
+      "sha256": "5dddf5bc81485766b38a9811b88e51793bf1068d104f28fdb9139f4421c904c7",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -4669,6 +4750,10 @@
         {
           "name": "zp",
           "sha256": "770d6dee50d0ba4eb355cf349b9deed3ca3f152f06e6f074e15c812041eb1ab7"
+        },
+        {
+          "name": "Bp",
+          "sha256": "997fec28eaedcb199e43dcafb37530a52e1923195f2726a3c7b4bd2241c134c2"
         },
         {
           "name": "Vp",
@@ -5224,11 +5309,12 @@
         },
         {
           "local": "Cc",
-          "from": "./chunk-shared-2.mjs",
+          "from": "../cds-core/shared-2.mjs",
           "name": "km",
           "via": "shared-2-CsjIBQD8.js:Cy",
-          "kind": "generated",
-          "original": "km"
+          "kind": "shared-graph",
+          "original": "km",
+          "linkedSha256": "71d3a87213accacca2e7c2f7123e49c778918e8111edcf8150fcc8318258f1ad"
         },
         {
           "local": "Vc",
@@ -5626,7 +5712,8 @@
         "mm": "useChatComposerFocusRef",
         "pm": "chatComposerFormPlaceholder",
         "Bm": "useResolvedPlaceholder",
-        "zm": "placeholderGhostLines"
+        "zm": "placeholderGhostLines",
+        "Bp": "markChatComposerChin"
       },
       "roots": {
         "_m": "Nm",
@@ -5634,7 +5721,8 @@
         "mm": "Fm",
         "pm": "Im",
         "Bm": "Am",
-        "zm": "km"
+        "zm": "km",
+        "Bp": "Pm"
       },
       "heldByCdsCore": [],
       "heldByLinked": []
@@ -7073,7 +7161,7 @@
       "source": "shared-2-CsjIBQD8.js",
       "kind": "chunk",
       "sourceSha256": "afd4bee5585cd387fdb8dc97eac37ef14c3a5cf5edc473f52739ca7c7cc9165f",
-      "sha256": "8e436d30e5e2c8317ed303be756a18a38c231c9224b60aae13d2bd28cb137cc2",
+      "sha256": "df5623fd794b450dc7d303967aea88a5693ca5cb75554f9432ccf4221f223837",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -7097,10 +7185,6 @@
           "sha256": "905352fb016a94b291b4664ef3aa59b01f7205c4974fe4375b61462bb359bef4"
         },
         {
-          "name": "km",
-          "sha256": "710ee8f067b17d3a2f956a1bcac1dfc566ca1ff9d1e1ed0a3a0cca9ff3c25a50"
-        },
-        {
           "name": "Am",
           "sha256": "7b0d1d79e37c58af682b23d58379c9e0629a8a5264cf2b2b2d6b855018543cf5"
         },
@@ -7119,14 +7203,6 @@
         {
           "name": "Rm",
           "sha256": "158b1153733ac905f78b6e1d7b2ad81d06ce097d105d25e451f2dd8ae29aa527"
-        },
-        {
-          "name": "zm",
-          "sha256": "6bce9e201888afd3f88675ec301ff79889ad1d326492b54776813fc706b7c364"
-        },
-        {
-          "name": "Bm",
-          "sha256": "424767b58ada71fdb1b73f4c6e9b76b4b6cddac1a9f7286918cbb26df806c678"
         },
         {
           "name": "Vm",
@@ -7211,11 +7287,13 @@
           "kind": "react"
         },
         {
-          "local": "y",
-          "from": "react",
-          "name": "createContext",
-          "via": "vendor-frame-BckkO60Y.js:no",
-          "kind": "react"
+          "local": "km",
+          "from": "../cds-core/shared-2.mjs",
+          "name": "km",
+          "via": "shared-2-CsjIBQD8.js#km",
+          "kind": "shared-graph",
+          "original": "km",
+          "linkedSha256": "71d3a87213accacca2e7c2f7123e49c778918e8111edcf8150fcc8318258f1ad"
         },
         {
           "local": "F",
@@ -7274,6 +7352,15 @@
           "via": "shared-frame-CJdE5Ria.js:Xf",
           "kind": "generated",
           "original": "ma"
+        },
+        {
+          "local": "zm",
+          "from": "../cds-core/shared-2.mjs",
+          "name": "zm",
+          "via": "shared-2-CsjIBQD8.js#zm",
+          "kind": "shared-graph",
+          "original": "zm",
+          "linkedSha256": "56bf6bc496173efefac38dcfabbc87ea002611e38b2cd72ebf5bfa37f0444f05"
         }
       ],
       "exports": {
@@ -7282,13 +7369,22 @@
         "Vm": "Vm",
         "bm": "bm",
         "pm": "pm",
-        "Bm": "Bm",
         "um": "um",
         "ym": "ym",
-        "km": "km",
         "Rm": "Rm"
       },
-      "heldByCdsCore": [],
+      "heldByCdsCore": [
+        "Am",
+        "Vm",
+        "Im",
+        "Fm",
+        "Lm",
+        "bm",
+        "pm",
+        "fm",
+        "um",
+        "ym"
+      ],
       "heldByLinked": []
     },
     {
@@ -7349,7 +7445,9 @@
       "exports": {
         "jl": "jl"
       },
-      "heldByCdsCore": [],
+      "heldByCdsCore": [
+        "jl"
+      ],
       "heldByLinked": []
     },
     {
@@ -7671,7 +7769,11 @@
         "I2",
         "I1",
         "I5",
+        "Lm",
+        "uo",
+        "Im",
         "J8",
+        "Qm",
         "Qa",
         "Bg",
         "Rg",

@@ -42,14 +42,17 @@ test('one sl-* shell at every width: header, then nav beside the pane; no stacke
   assert.match(wide, /<\/nav><div class="ss-pane sl-pane" data-customize="false"><div class="ss-content sl-content" data-page="preferences" data-entry="appearance"><span hidden=""><\/span><h2 class="sl-page-title">Appearance<\/h2>/, 'the pane beside the nav: hidden dedupe mark, then the page title');
   for (const gone of ['ss-stacked-body', 'scroll-fade-y', 'ss-narrow', 'class="sr-only">Settings', 'data-perf-region="settings_nav"'])
     assert.equal(wide.includes(gone), false, gone);
-  // settings-lite.css: below 768px the body stacks, the nav list becomes one horizontally scrolling row and the separators
-  // and the API keys footer hide.
+  // settings-lite.css: below 768px the body stacks and the nav list becomes one horizontally scrolling row; the separators
+  // hide. U-40: the row scrolls without a scrollbar and fades at its clipped ends (the official scroll-fade-x
+  // scroll-fade-size-16 classes on the list), and the API keys footer stays, beside the row (it used to hide too).
   const css = source('src/settings-lite.css');
   const narrowRules = /@media \(max-width:767px\) \{\n([\s\S]*?)\n\}/.exec(css)?.[1] ?? '';
   assert.match(narrowRules, /\.sl-body \{ flex-direction:column; \}/);
-  assert.match(narrowRules, /\.sl-nav \{ width:auto; border-right:0; border-bottom:1px solid var\(--cds-alpha-2\); \}/);
-  assert.match(narrowRules, /\.sl-nav-list \{ flex:none; flex-direction:row; overflow-x:auto; \}/);
-  assert.match(narrowRules, /\.sl-sep, \.sl-nav-footer \{ display:none; \}/);
+  assert.match(narrowRules, /\.sl-nav \{ width:auto; flex-direction:row; flex-wrap:wrap; align-items:center; column-gap:8px; border-right:0; border-bottom:1px solid var\(--cds-alpha-2\); \}/);
+  assert.match(narrowRules, /\.sl-nav-list \{ flex:1 1 0; min-width:0; flex-direction:row; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; \}/);
+  assert.match(narrowRules, /\.sl-sep \{ display:none; \}/);
+  assert.equal(/sl-nav-footer[^{]*\{[^}]*display:none/.test(narrowRules), false, 'API keys stays below 768px');
+  assert.match(wide, /<div class="sl-nav-list scroll-fade-x scroll-fade-size-16">/);
   // The content column is the scroller at every width (no .ss-stacked-body override any more).
   assert.match(source('src/source-settings.css'), /^\.ss-content \{ flex:1; min-width:0; min-height:0; overflow:auto; \}$/m);
 });

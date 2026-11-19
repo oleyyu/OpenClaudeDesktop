@@ -59,6 +59,7 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     try { reminderStore?.set?.(threadId, clean); } catch { /* kept in memory */ }
   };
   const pending = new Map(); // threadId → [message text]
+  const completionFiles = new Map(); // rendered notification → persisted queue entry
   const requests = new Map(); // threadId → the user's last typed message (Claude's provenance relay for workflow agents)
   const budgets = new Map(); // threadId → the token target of that message ("+500k"), a model-started run's budget.total
   // threadId → {base, last}: the session's cumulative output tokens when the budgeted message arrived and now
@@ -135,6 +136,14 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     // active from now: a notification never starts beside a turn that is about to start (turnFailed undoes it).
     turns.set(params.threadId, { params: structuredClone(options), permission: typeof turn.permission === "string" ? turn.permission : previous?.permission, mode: typeof turn.mode === "string" ? turn.mode : previous?.mode, active: true });
     await orphanNotices(params);
+    if (Array.isArray(params.input) && workflowService.completionNotices) {
+      const notices = await workflowService.completionNotices(params.threadId);
+      if (notices.length) {
+        params.input = [...params.input, ...notices.map(({ text }) => ({ type: "text", text, text_elements: [] }))];
+        const entry = turns.get(params.threadId);
+        if (entry) entry.completionFiles = notices.map(({ file }) => file);
+      }
+    }
     const resolved = settings();
     if (!resolved.enabled) return params;
     const { turnReminders, reminderItem } = await load("workflow-reminders.mjs");
@@ -217,8 +226,9 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
       return;
     }
     if (event.method === "turn/started") {
-      const { orphans = [], ...entry } = turns.get(p.threadId) ?? { params: null };
+      const { orphans = [], completionFiles: recovered = [], ...entry } = turns.get(p.threadId) ?? { params: null };
       for (const id of orphans) workflowService.orphanDelivered?.(id);
+      for (const file of recovered) workflowService.completionNoticeDelivered?.(file);
       turns.set(p.threadId, { ...entry, active: true });
     }
     else if (event.method === "turn/completed") { const entry = turns.get(p.threadId); if (entry) turns.set(p.threadId, { ...entry, active: false }); void flush(p.threadId); }
@@ -285,6 +295,7 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
       if (previous.status === "running") throw new Error(`Workflow ${input.resumeFromRunId} is still running. Stop it first with WorkflowStop({task_id: "${previous.taskId ?? input.resumeFromRunId}"}) before resuming.`);
       if (typeof previous.transcriptDir === "string" && !fs.existsSync(path.join(previous.transcriptDir, "journal.jsonl")))
         throw new Error(`No journal found for workflow run ${input.resumeFromRunId}, so there is nothing to resume. To run the workflow from the start, call Workflow again without resumeFromRunId.`);
+      if (input.args === undefined) input.args = previous.args;
     }
     // Permission (Claude: the tool-wide rules, then Workflow(<name>) rules for a name-only call): any deny blocks, any
     // ask asks — even in Bypass —, then Bypass runs it, then an allow (a bare "Workflow" allow covers inline scripts).
@@ -308,11 +319,9 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     // A resume continues the same run: its id, transcript folder and journal.
     const runId = input.resumeFromRunId ?? model.newRunId();
     const taskId = model.newTaskId();
-    if (!scriptFile) {
-      const dir = path.join(dataRoot, sessionId, "workflows", "scripts");
-      fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
-      scriptFile = path.join(dir, `${model.workflowSlug(parsed.meta.name)}-${runId}.js`);
-      fs.writeFileSync(scriptFile, source, { encoding: "utf8", mode: 0o600 });
+    const persistScript = !scriptFile;
+    if (persistScript) {
+      scriptFile = path.join(dataRoot, sessionId, "workflows", "scripts", `${model.workflowSlug(parsed.meta.name)}-${runId}.js`);
     }
     const turnModel = typeof entry?.params?.model === "string" && entry.params.model ? entry.params.model : config.model;
     // Codex's 'ultra' (the ultracode tier on its models) adds Codex's own automatic task delegation: workflow agents
@@ -321,7 +330,7 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     const turnEffort = sessionEffort === "ultra" ? "xhigh" : sessionEffort;
     const budgetPool = turnOutput.has(sessionId) && !automated.has(sessionId) ? await sharedTurnBudget(sessionId) : null;
     const run = await workflowService.start({ threadId: sessionId, file: scriptFile, source, args: input.args, access, cwd, model: turnModel, effort: turnEffort,
-      resumeId: input.resumeFromRunId, runId, origin: "tool", taskId, toolUseId, scriptPath: scriptFile, engine: "codeDesktop", structuredOutput: core()?.structuredOutput,
+      resumeId: input.resumeFromRunId, runId, origin: "tool", taskId, toolUseId, scriptPath: scriptFile, persistScript, engine: "codeDesktop", structuredOutput: core()?.structuredOutput,
       // Claude's provenance relay: the user's request goes with every agent's framed task (only while provenance is on).
       ...(resolved.promptProvenance?.value !== false && requests.has(sessionId) && !automated.has(sessionId) ? { userRequest: requests.get(sessionId) } : {}),
       ...(budgetPool ? { budgetTotal: budgets.get(sessionId), budgetSpent: turnSpent(sessionId), budgetPool } : {}),
@@ -358,7 +367,8 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
       try {
         const text = fs.readFileSync(path.join(run.transcriptDir, "result.json"), "utf8");
         if (text) { const value = JSON.parse(text); if (value && typeof value === "object" && Array.isArray(value.workflowProgress) && Object.hasOwn(value, "summary")) { output = value; result = value.result; } else result = value; hasResult = result !== undefined; }
-      } catch { if (run.result !== undefined) { result = run.result; hasResult = true; } }
+      } catch { /* Fall back to the result recorded in the settlement event. */ }
+      if (!hasResult && run.result !== undefined) { result = run.result; hasResult = true; }
     }
     const progress = Array.isArray(output?.workflowProgress) ? output.workflowProgress : run.workflowProgress || [];
     const agents = progress.filter((row) => row.type === "workflow_agent");
@@ -375,18 +385,20 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     // A run the user stopped (the Tasks pane, /workflows) tells the model nothing (Claude Code: a killed task is marked
     // notified without a message): no new turn that might resume or relaunch what the user just stopped.
     if (run.status === "stopped") return;
+    const file = workflowService.storeCompletionNotice?.(run, text);
+    if (file) completionFiles.set(text, file);
     const list = pending.get(run.threadId) ?? [];
     list.push(text);
     pending.set(run.threadId, list);
     await flush(run.threadId);
   }
 
-  /** Delivers a session's waiting notifications as one turn once it is idle. */
+  /** Delivers a session's waiting notifications as one turn once it is idle; true when that turn started. */
   async function flush(threadId) {
     const list = pending.get(threadId);
-    if (!list?.length || delivering.has(threadId) || turns.get(threadId)?.active) return;
+    if (!list?.length || delivering.has(threadId) || turns.get(threadId)?.active) return false;
     const entry = turns.get(threadId);
-    if (!entry?.params) return; // never a turn here: delivered after the session's next turn
+    if (!entry?.params) return false; // never a turn here: delivered after the session's next turn
     delivering.add(threadId);
     const texts = list.splice(0);
     const delivered = deliveredTexts.get(threadId) ?? new Set();
@@ -396,9 +408,17 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     try {
       // The session's last turn options (already decorated for its core), with the notification as the input.
       await startTurn(threadId, { ...structuredClone(entry.params), threadId, input: texts.map((text) => ({ type: "text", text, text_elements: [] })) });
+      for (const text of texts) {
+        const file = completionFiles.get(text);
+        if (!file) continue;
+        workflowService.completionNoticeDelivered?.(file);
+        completionFiles.delete(text);
+      }
+      return true;
     } catch (error) {
       pending.set(threadId, [...texts, ...(pending.get(threadId) ?? [])]);
       console.warn("Workflow notification not delivered yet:", error?.message ?? error);
+      return false;
     } finally { delivering.delete(threadId); }
   }
 
@@ -406,6 +426,10 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
    * Another background source's message for the session (a Monitor event, a fired scheduled prompt: monitor-service.cjs,
    * schedule-service.cjs), delivered like a workflow's notification: as one turn once the session is idle, with its
    * last turn options. `notification` is a <task-notification> (wrapped as the system notice), `prompt` plain input.
+   * A notification waits here until it is delivered (true). A prompt (a scheduled job's fire) is true only when its turn
+   * started, or rides on the turn that starts when the running one ends; when its turn/start failed (or the session has
+   * had no turn here) it leaves the queue and the scheduler retries it, so a job never counts a fire that didn't run nor
+   * piles copies of its prompt into one later turn.
    */
   async function notice(threadId, { notification, prompt } = {}) {
     if (typeof threadId !== "string" || !threadId) return false;
@@ -416,14 +440,19 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
     list.push(text);
     pending.set(threadId, list);
     automated.add(threadId);
-    await flush(threadId);
-    return true;
+    const busy = !!turns.get(threadId)?.params && (delivering.has(threadId) || !!turns.get(threadId)?.active);
+    const started = await flush(threadId);
+    if (started || busy || !(typeof prompt === "string" && prompt)) return true;
+    const waiting = pending.get(threadId) ?? [];
+    const index = waiting.lastIndexOf(text);
+    if (index >= 0) waiting.splice(index, 1);
+    return false;
   }
   /** Whether the session has no turn running or being delivered (and has had a turn in this run, so one can start). */
   const idle = (threadId) => { const entry = turns.get(threadId); return !!entry?.params && !entry.active && !delivering.has(threadId); };
 
   /** The core refused a turn/start: the session is idle again. */
-  function turnFailed(threadId) { const entry = turns.get(threadId); if (entry) { const { orphans: _kept, ...rest } = entry; turns.set(threadId, { ...rest, active: false }); } }
+  function turnFailed(threadId) { const entry = turns.get(threadId); if (entry) { const { orphans: _kept, completionFiles: _undelivered, ...rest } = entry; turns.set(threadId, { ...rest, active: false }); } }
 
   /** The session's last turn/start options as sent (its sandbox, permissions, model…), or null before its first turn. */
   const turnOptions = (threadId) => { const params = turns.get(threadId)?.params; return params ? structuredClone(params) : null; };

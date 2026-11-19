@@ -5511,4 +5511,4 @@ function compileWorkflowBody(body) {
 }
 
 //#endregion
-export { WORKFLOW_ASYNC_INIT_SOURCE, compileWorkflowBody };
+export { WORKFLOW_ASYNC_INIT_SOURCE, compileWorkflowBody, parse as parseWorkflowJavaScript, full as walkWorkflowJavaScript };

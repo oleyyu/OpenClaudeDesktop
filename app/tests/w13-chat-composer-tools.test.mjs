@@ -22,16 +22,21 @@ const v1 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/i
 const official = name => fs.readFileSync(path.join(v1, 'assets/v1', name), 'utf8');
 const enUS = JSON.parse(fs.readFileSync(path.join(v1, 'i18n/en-US.json'), 'utf8'));
 
-let server, M, C;
+let server, M, C, core;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   M = await server.ssrLoadModule('/src/source-chat-tools-menu.jsx');
   C = await server.ssrLoadModule('/src/source-chat-composer.jsx');
+  core = await server.ssrLoadModule('/src/cds-core.mjs');
 });
 after(() => server?.close());
 
 const noop = () => {};
+// r2 chat-home-r2-01: the rows are c752b32f8 ga / _a ports on CdsDropdown parts (wP's Q.Popup), so a static render needs
+// the Dropdown Root's context; the Popup itself portals and renders nothing server-side.
+const menuItemsHtml = entries => renderToStaticMarkup(React.createElement(core.CdsDropdown.Root, { open: true },
+  React.createElement(M.ChatAddMenuItems, { entries })));
 const attr = (tag, name) => tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1];
 const buttonTag = (html, testId) => {
   const at = html.indexOf(`data-testid="${testId}"`);
@@ -44,13 +49,23 @@ test('the generator is current (--check)', async () => {
   assert.equal(manifest.referenceVersion, '4.16336.0');
   assert.equal(manifest.referenceSnapshot, 'snapshots/claude-4.16336.0-20261104');
   // w13-chatfn-tools (review 补做): Es / Ms, the Add to project popup's literals; regions-chat: + Yj (4.16336.0).
-  assert.deepEqual(Object.keys(manifest.roots).sort(), ['Es', 'Fs', 'Js', 'Ms', 'Tz', 'Ws', 'Yj', 'cN', 'iN', 'ia', 'kF', 'ks', 'lN', 'na', 'oN', 'ra', 'sN', 'yz'].sort());
+  // r2 chat-home-r2-01: + wP / vP / bP (shared-8, the + menu's CDS Dropdown) and the c752b32f8 row renderers ha … ja.
+  assert.deepEqual(Object.keys(manifest.roots).sort(), ['Es', 'Fs', 'Js', 'Ms', 'Tz', 'Ws', 'Yj', 'cN', 'iN', 'ia', 'kF', 'ks', 'lN', 'na', 'oN', 'ra', 'sN', 'yz',
+    'wP', 'vP', 'bP', 'ha', 'ga', '_a', 'ba', 'Sa', 'Aa', 'Da', 'ka', 'ja', 'ma'].sort()); // r3 chat-home-r3-01: + ma (the toggle row's switch)
   assert.deepEqual(Object.fromEntries(Object.entries(manifest.roots).map(([key, root]) => [key, `${root.source}#${root.local}`])), {
     kF: 'shared-8-BqfCbkJd.js#TP', iN: 'shared-8-BqfCbkJd.js#Wj', oN: 'shared-8-BqfCbkJd.js#Kj', sN: 'shared-8-BqfCbkJd.js#qj',
     cN: 'shared-8-BqfCbkJd.js#Jj', Yj: 'shared-8-BqfCbkJd.js#Yj', lN: 'shared-8-BqfCbkJd.js#Xj', na: 'c752b32f8-NSBu06gO.js#Ia',
     ra: 'c752b32f8-NSBu06gO.js#La', ia: 'c752b32f8-NSBu06gO.js#Ra', Js: 'c752b32f8-NSBu06gO.js#Vc', Ws: 'c752b32f8-NSBu06gO.js#Rc',
     Fs: 'c752b32f8-NSBu06gO.js#kc', ks: 'c752b32f8-NSBu06gO.js#wc', Es: 'c752b32f8-NSBu06gO.js#xc', Ms: 'c752b32f8-NSBu06gO.js#Ec',
-    Tz: 'shared-33-DtdykY0y.js#Cq', yz: 'shared-33-DtdykY0y.js#_q' });
+    Tz: 'shared-33-DtdykY0y.js#Cq', yz: 'shared-33-DtdykY0y.js#_q',
+    wP: 'shared-8-BqfCbkJd.js#wP', vP: 'shared-8-BqfCbkJd.js#vP', bP: 'shared-8-BqfCbkJd.js#bP', ha: 'c752b32f8-NSBu06gO.js#ha',
+    ga: 'c752b32f8-NSBu06gO.js#ga', _a: 'c752b32f8-NSBu06gO.js#_a', ba: 'c752b32f8-NSBu06gO.js#ba', Sa: 'c752b32f8-NSBu06gO.js#Sa',
+    Aa: 'c752b32f8-NSBu06gO.js#Aa', Da: 'c752b32f8-NSBu06gO.js#Da', ka: 'c752b32f8-NSBu06gO.js#ka', ja: 'c752b32f8-NSBu06gO.js#ja',
+    ma: 'c752b32f8-NSBu06gO.js#ma' });
+  // r3 chat-home-r3-01: _a's toggle row parts resolve to the cds-core publicNames the host imports.
+  assert.deepEqual(Object.fromEntries(Object.entries(manifest.resolved.toggleRow).map(([k, v]) => [k, `${v.source}#${v.export}=${v.publicName}`])), {
+    classHelper: 'shared-frame-CJdE5Ria.js#tc=cdsMenuItemClass', itemComponent: 'vendor-frame-BckkO60Y.js#on=BaseMenuCheckboxItem',
+    icon: 'shared-frame-CJdE5Ria.js#lf=CdsIcon', switch: 'shared-frame-CJdE5Ria.js#oa=CdsSwitch' });
   for (const root of Object.values(manifest.roots))
     assert.equal(root.sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(v1, 'assets/v1', root.source))).digest('hex'), root.source);
   assert.deepEqual(manifest.resolved.triggerTestId, { source: 'shared-1-D1bGaTaN.js', export: 'Ob', local: '_p', value: 'chat-input-attach' });
@@ -153,12 +168,35 @@ test('the Chat + menu follows Js: base rows, separator-tools, tools, separator-m
     [['separator-modes', undefined, undefined, undefined, undefined, undefined], ['Web search', 'Lock', false, true, false, 'add-menu-web-search']]);
   assert.deepEqual(M.chatAddMenuEntries(M.chatAddMenuSlots({})), [], 'no slots, no rows and no separators');
 
-  const html = renderToStaticMarkup(React.createElement(M.ChatAddMenuItems, { entries }));
+  const html = menuItemsHtml(entries);
   const order = ['Add files or photos', 'Take a screenshot', 'data-fixture="connectors"', 'Research', 'Web search'].map(s => html.indexOf(s));
   assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `row order ${order}`);
   assert.equal(html.split('role="separator"').length - 1, 2);
   assert.match(html, /role="menuitemcheckbox"[^>]*aria-checked="true"[^>]*data-testid="add-menu-web-search"|data-testid="add-menu-web-search"[^>]*role="menuitemcheckbox"[^>]*aria-checked="true"/);
   assert.match(html, /data-testid="add-menu-research"/);
+});
+
+// chat-cowork-1to1 r3 (chat-home-r3-01): a connector "toggle" row is c752b32f8 _a's base-ui Menu.CheckboxItem (cds-core
+// BaseMenuCheckboxItem): role menuitemcheckbox on the item itself, k({variant:"default"}) + "group", the icon span, the
+// label stack, the trailing span with ma's inert CdsSwitch (was a CdsDropdown.Item + CdsSwitch stand-in).
+test('SSR: a connector toggle row is _a\'s CheckboxItem with ma\'s inert switch', () => {
+  const T = chatAddMenu.rows.toggle;
+  assert.deepEqual([T.itemComponent, T.variant, T.groupClass, T.labelStackClass, T.trailingClass, T.switch.frameClass, T.switch.size],
+    ['BaseMenuCheckboxItem', 'default', 'group', 'flex min-w-0 flex-1 flex-col', 'ms-md flex shrink-0 items-center gap-xs', 'pointer-events-none inline-flex items-center', 'sm']);
+  const calls = [];
+  const html = menuItemsHtml([{ type: 'toggle', icon: 'Connectors', label: 'Fixture MCP', subtitle: 'Off', checked: false, onAction: () => calls.push('toggle') }]);
+  const item = html.slice(0, html.indexOf('>') + 1);
+  assert.match(item, /^<div /);
+  assert.equal(attr(item, 'role'), 'menuitemcheckbox');
+  assert.equal(attr(item, 'aria-checked'), 'false');
+  assert.equal(attr(item, 'class'), core.clsx(core.cdsMenuItemClass({ variant: 'default' }), 'group'));
+  assert.ok(html.includes(`<span class="${T.iconClass}">`), 'icon span');
+  assert.ok(html.includes(`<span class="${T.labelStackClass}">`) && html.includes('Fixture MCP') && html.includes('>Off</span>'), 'label stack');
+  assert.match(html, new RegExp(`<span class="${T.trailingClass}"><div aria-hidden="true" class="${T.switch.frameClass}"><span inert="" class="${T.switch.inertClass}">`));
+  assert.doesNotMatch(html, /keepOpen|data-cds-keep-open/);
+  const off = menuItemsHtml([{ type: 'toggle', label: 'Locked', checked: true, toggleDisabled: true, onAction: noop }]);
+  assert.equal(attr(off.slice(0, off.indexOf('>') + 1), 'aria-disabled'), 'true');
+  assert.equal(attr(off.slice(0, off.indexOf('>') + 1), 'aria-checked'), 'true');
 });
 
 // 复核修复 (review issue 1): kF's isMenuOpen reaches the Chat card from SourceComposer's menuKind, and the Chat branch
@@ -200,7 +238,7 @@ test('host rows fill Js\'s addFolder / teach / github / skills / plugins slots i
     ['add-menu-upload-file', 'add-folder', 'add-menu-screenshot', 'github', 'separator-modes', 'add-menu-web-search']);
   assert.deepEqual(M.chatAddMenuEntries(M.chatAddMenuSlots({ attach: noop, plugins: false, skills: null })).map(e => e.testId ?? e.label),
     ['add-menu-upload-file'], 'a falsy host row leaves its slot empty');
-  const html = renderToStaticMarkup(React.createElement(M.ChatAddMenuItems, { entries }));
+  const html = menuItemsHtml(entries);
   const order = ['Add files or photos', 'data-row="add-folder"', 'data-row="teach"', 'Take a screenshot', 'data-row="github"',
     'data-row="skills"', 'data-row="connectors"', 'data-row="plugins"', 'Web search'].map(s => html.indexOf(s));
   assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `row order ${order}`);

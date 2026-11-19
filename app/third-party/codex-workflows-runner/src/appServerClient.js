@@ -43,6 +43,9 @@ export class AppServerClient extends EventEmitter {
     this.#generation += 1;
     const generation = this.#generation;
     this.#state = "connecting";
+    this.#shutdown = false;
+    this.#stdoutBuffer = "";
+    this.#completed = [];
 
     const command = this.options.command ?? "codex";
     const args = this.options.args ?? ["app-server", "--listen", "stdio://"];
@@ -54,13 +57,15 @@ export class AppServerClient extends EventEmitter {
       stdio: "pipe",
     });
 
+    this.#child.stdout.setEncoding("utf8");
+    this.#child.stderr.setEncoding("utf8");
     this.#child.stdout.on("data", (chunk) => {
       if (generation !== this.#generation) return;
-      this.#acceptStdout(chunk.toString("utf8"));
+      this.#acceptStdout(chunk);
     });
     this.#child.stderr.on("data", (chunk) => {
       if (generation !== this.#generation) return;
-      this.#stderrTail = (this.#stderrTail + chunk.toString("utf8")).slice(-12_000);
+      this.#stderrTail = (this.#stderrTail + chunk).slice(-12_000);
     });
     this.#child.on("exit", (code, signal) => {
       if (generation !== this.#generation) return;
@@ -69,6 +74,7 @@ export class AppServerClient extends EventEmitter {
       this.emit("transport", { stage: "exit", code, signal });
     });
     this.#child.on("error", (err) => {
+      if (generation !== this.#generation) return;
       this.#closePending(err);
       this.#state = "disconnected";
       this.emit("transport", { stage: "error", error: err });
@@ -87,19 +93,24 @@ export class AppServerClient extends EventEmitter {
     for (const stream of [child.stdin, child.stdout, child.stderr]) stream.on("error", pipeFailed);
 
     // Local: the initialize result (userAgent …) tells the tool-narrowing seam which core answers (toolNarrowing.js).
-    this.serverInfo = await this.request(
-      "initialize",
-      {
-        clientInfo: this.options.clientInfo ?? {
-          name: "codex-workflows",
-          title: "Codex Workflows Runner",
-          version: "0.2.0",
+    try {
+      this.serverInfo = await this.request(
+        "initialize",
+        {
+          clientInfo: this.options.clientInfo ?? {
+            name: "codex-workflows",
+            title: "Codex Workflows Runner",
+            version: "0.2.0",
+          },
+          capabilities: this.options.capabilities ?? { experimentalApi: true },
         },
-        capabilities: this.options.capabilities ?? { experimentalApi: true },
-      },
-      READY_TIMEOUT_MS,
-    );
-    this.notify("initialized");
+        READY_TIMEOUT_MS,
+      );
+      this.notify("initialized");
+    } catch (error) {
+      if (generation === this.#generation) await this.shutdown();
+      throw error;
+    }
     this.#state = "ready";
     this.emit("transport", { stage: "ready" });
   }
@@ -115,7 +126,7 @@ export class AppServerClient extends EventEmitter {
       this.#child?.stdin.end();
     } catch {}
     const child=this.#child;this.#child=undefined;
-    if(child&&child.exitCode===null&&child.signalCode===null){
+    if(child?.pid&&child.exitCode===null&&child.signalCode===null){
       await new Promise(resolve=>{const timer=setTimeout(()=>{child.kill("SIGKILL");},1000);child.once("exit",()=>{clearTimeout(timer);resolve();});child.kill("SIGTERM");});
     }
   }

@@ -1,5 +1,10 @@
 export default {
   'No scheduled tasks yet.': '还没有定时任务。',
+  // U-21: run errors stored by electron/routine-runner.mjs and local-routines.mjs (shown on the task's detail page).
+  'The saved model is unavailable. Restore it before running this task.': '保存的模型已不可用。请先恢复该模型，再运行此任务。',
+  'Switch to {core} to run this scheduled task.': '请切换到 {core}，再运行此定时任务。',
+  'The app restarted before this run was confirmed complete.': '此次运行确认完成前，App 已重启。',
+  'The core disconnected before this run was confirmed complete.': '此次运行确认完成前，内核已断开连接。',
   'Calendar and email connections are not available yet. Edit these instructions to use files in your selected folder.': '暂不支持日历和邮件连接。请修改指令，使用所选文件夹中的文件。',
   'Daily briefing': '每日简报', 'Inbox triage': '收件箱整理', 'Meeting prep': '会议准备',
   'Weekly review': '每周回顾', 'Content ideas': '内容灵感', 'Monitor a topic': '跟踪主题',
@@ -57,7 +62,7 @@ export default {
   'Cowork tasks': '协作任务', 'Pinned or active': '置顶或进行中', 'Active tasks': '进行中的任务',
   'Clear active': '清除活动记录', 'Permissions needed': '需要授权',
 
-  'Chat': '聊天', 'Cowork': '协作', 'You’re here!': '很高兴见到你！', 'Let’s get to work': '一起把事情做好',
+  'Chat': '聊天', 'Cowork': 'Cowork', 'You’re here!': '很高兴见到你！', 'Let’s get to work': '一起把事情做好',
   'Write': '写作', 'Learn': '学习', 'Brainstorm': '头脑风暴', 'Analyze': '分析',
   'Organize files': '整理文件', 'Create a document': '创建文档', 'Analyze data': '分析数据', 'Plan my work': '制定工作计划',
   'Work in a folder': '工作文件夹', 'Working folder': '工作文件夹', 'Workspace': '工作区',
@@ -1630,6 +1635,8 @@ export default {
   // V3-w13-chatui-composer-shell (R9/E29): the 3.6556.2 Chat / Cowork card copy (src/generated/chat-composer: shared-8 XI
   // replyToClaude, $H select-model label). The other model-selector strings are already keyed (sidebar / common / session).
   "Reply to Claude…": "回复 Claude…",
+  // r3 integration: shared-9 BD editor aria-label uxkiTeN6WU (chat-home-r3-05); the host shows the DeepSeek sentence (persona.mjs).
+  "Write your prompt to Claude": "给 Claude 写下你的提示",
   "Select model": "选择模型",
   // V3-w13-chatui-composer-shell end.
   // V3-w13-close-chat-composer (R9/E29): shared-9 lD's second placeholder, shared-8 KH's legacy-model header and shared-28

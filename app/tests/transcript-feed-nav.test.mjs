@@ -188,3 +188,28 @@ test("SSR: the prompt's sr-only h2 opens the user message group, outside find", 
     content: [{ type: "image", url: "data:image/png;base64,AA==" }] } }));
   assert.doesNotMatch(empty, /<h2/);
 });
+
+// chat-conversation r2-01: a Chat reply's response rows sit in `div[data-chat-reply-row].group/message-row`
+// (source-chat-message-row.jsx); they stay the feed's rows (c4a9ee384: every reply is `[role="article"][aria-posinset]`).
+test("describeRows walks a Chat reply row's wrapper: its rows are responses, not one boundary", async () => {
+  const { describeRows } = await server.ssrLoadModule("/src/use-transcript-feed-nav.js");
+  const el = (attrs, children = [], classes = []) => ({
+    children, hidden: false, classList: { contains: (name) => classes.includes(name) },
+    getAttribute: (name) => attrs[name] ?? null, hasAttribute: (name) => name in attrs, getClientRects: () => [1],
+    matches: (selector) => selector.split(",").map((s) => s.trim()).some((s) => {
+      const m = /^\[([\w-]+)(?:="([^"]*)")?\]$/.exec(s);
+      return m ? m[1] in attrs && (m[2] === undefined || attrs[m[1]] === m[2]) : false;
+    }),
+  });
+  const msg = (id, extra = {}) => el({ "data-transcript-item-id": id, ...extra }, [], ["source-message"]);
+  const content = el({}, [
+    msg("u1", { "data-cds": "UserMessage", "data-turn-start": "" }),
+    el({ "data-chat-reply-row": "" }, [msg("r1"), msg("m1")], ["group"]),
+    msg("u2", { "data-cds": "UserMessage", "data-turn-start": "" }),
+    el({ "data-chat-reply-row": "last" }, [msg("m2"), el({}, [], ["stf-footer"])], ["group"]),
+  ]);
+  const rows = describeRows(content);
+  assert.deepEqual(rows.map((r) => [r.key ?? null, r.kind]), [["u1", "user"], ["r1", "response"], ["m1", "response"], ["u2", "user"], ["m2", "response"], [null, "boundary"]]);
+  const articles = feedArticles(rows);
+  assert.deepEqual(articles.map((a) => [a.key, a.kind, a.rows]), [["u1", "user", ["u1"]], ["r1", "response", ["r1", "m1"]], ["u2", "user", ["u2"]], ["m2", "response", ["m2"]]]);
+});

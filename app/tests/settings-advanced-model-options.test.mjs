@@ -140,9 +140,10 @@ test('Advanced: the host’s developer pages form the last nav group; official p
   assert.equal(hasAdvancedRows({}), false);
   assert.equal(hasAdvancedRows({ harnessSettings: { settings: [{ ns: 'a', key: 'b' }] } }), true);
   assert.equal(hasAdvancedRows({ codexPermissions: { profiles: [] } }), true);
-  // The palette lists them under Settings → …, not Customize → Hooks.
-  assert.deepEqual(PALETTE_SETTINGS_SECTIONS.slice(-4).map(([id]) => id), ['advanced', 'harness', 'customize-hooks', 'profiles']);
-  assert.equal(PALETTE_CUSTOMIZE_SECTIONS.some(([id]) => id === 'customize-hooks'), false);
+  // fix-r2 U-28: the palette rows are the hand-written nav's pages; Core options / Harness / Profiles fold into Desktop app
+  // (its hints) and Hooks is a Customize tab (Customize → Hooks).
+  assert.deepEqual(PALETTE_SETTINGS_SECTIONS.at(-1), ['general', 'Desktop app', 'Computer', ['System', 'Developer', 'Core options', 'Harness', 'Profiles']]);
+  assert.equal(PALETTE_CUSTOMIZE_SECTIONS.some(([id]) => id === 'customize-hooks'), true);
 });
 
 test('Advanced: search finds the moved rows and lands on Core options; zh-CN reads 高级', () => {

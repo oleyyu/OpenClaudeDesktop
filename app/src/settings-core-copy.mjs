@@ -91,6 +91,13 @@ function writesCopy(core, descriptor, name, config, mcpConfig) {
   return config ? t("Settings here do not rewrite its own configuration in {config}.", { config }) : t("Settings here do not rewrite its own configuration.");
 }
 
+/** The running core's major version (boot.core.engineVersion "2.2.5" → 2), or null when it reported none. */
+export function engineMajor(core) {
+  const version = core && typeof core === "object" && typeof core.engineVersion === "string" ? core.engineVersion.trim() : "";
+  const match = /^v?(\d+)(?:\.|$)/.exec(version);
+  return match ? Number(match[1]) : null;
+}
+
 /**
  * The sign-out confirmation for a core with its own sign-in: signing out reaches every tool on this Mac that shares
  * the core's credentials (the Codex CLI's ~/.codex, the ZCode app, OpenCode's auth store), not only OpenClaude Desktop.
@@ -101,6 +108,12 @@ export function signOutConfirmText(core) {
   // ~/.local/share/<agent>, not their config folder), else the config file's folder; under a moved home (corePath).
   const configFile = corePath(core, descriptor.configFile ?? null);
   const config = corePath(core, descriptor.login?.store ?? null) || (configFile ? configFile.replace(/\/[^/]+$/, "") : null);
+  // From login.privateStoreFrom on (OpenCode 2.x: the bridge's own database), signing out removes only the sign-ins and
+  // keys kept there: the agent's own sign-in folder is left as it is, and its keys aren't copied in again.
+  const from = descriptor.login?.privateStoreFrom, major = engineMajor(core);
+  if (Number.isFinite(from) && major !== null && major >= from) return config
+    ? t("Sign out of {core}? This removes the sign-ins and API keys {core} uses in OpenClaude Desktop. Your own {core} sign-in in {where} stays, and its keys aren’t copied in again.", { core: name, where: config })
+    : t("Sign out of {core}? This removes the sign-ins and API keys {core} uses in OpenClaude Desktop. Your own {core} sign-in on this Mac stays.", { core: name });
   return config
     ? t("Sign out of {core}? {core} on this Mac signs out too, including other tools that share its sign-in in {where}.", { core: name, where: config })
     : t("Sign out of {core}? {core} on this Mac signs out too, including other tools that share its sign-in.", { core: name });

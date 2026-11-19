@@ -143,7 +143,12 @@ test('comparison: sections become cb61be3a2 files; a complete-context hunk becom
     assert.equal(D.pierreCompleteFile(section, false), null, 'without complete context the patch is used as is');
     // Two separate changes keep two hunks.
     const two = parse('diff --git a/t b/t\n--- a/t\n+++ b/t\n@@ -1,12 +1,12 @@\n-1\n+one\n 2\n 3\n 4\n 5\n 6\n 7\n 8\n 9\n 10\n 11\n-12\n+twelve\n').sections[0];
-    assert.equal(D.pierreCompleteFile(two, true).patch, 'diff --git a/t b/t\n--- a/t\n+++ b/t\n@@ -1,4 +1,4 @@\n-1\n+one\n 2\n 3\n 4\n@@ -9,4 +9,4 @@\n 9\n 10\n 11\n-12\n+twelve\n');
+    // Added / deleted files: the empty side starts at 0, never -1 (user-bugs-20261113 #9, "Too large to show").
+    const added = parse('diff --git a/n.ts b/n.ts\nnew file mode 100644\n--- /dev/null\n+++ b/n.ts\n@@ -0,0 +1,2 @@\n+x\n+y\n').sections[0];
+    assert.match(D.pierreCompleteFile(added, true).patch, /\n@@ -0,0 \+1,2 @@\n\+x\n\+y\n$/);
+    const deleted = parse('diff --git a/g.txt b/g.txt\ndeleted file mode 100644\n--- a/g.txt\n+++ /dev/null\n@@ -1,2 +0,0 @@\n-a\n-b\n').sections[0];
+    assert.match(D.pierreCompleteFile(deleted, true).patch, /\n@@ -1,2 \+0,0 @@\n-a\n-b\n$/);
+    assert.equal(D.pierreCompleteFile(two, true).patch,'diff --git a/t b/t\n--- a/t\n+++ b/t\n@@ -1,4 +1,4 @@\n-1\n+one\n 2\n 3\n 4\n@@ -9,4 +9,4 @@\n 9\n 10\n 11\n-12\n+twelve\n');
   });
 });
 

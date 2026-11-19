@@ -12,6 +12,7 @@
 // Framework boundaries and i18n are the reviewed cds-core ones (one React / JSX runtime / ReactDOM, host catalog).
 import * as React from 'react';
 import { useHostIntl, HostFormattedMessage } from './cds-core-adapter.mjs';
+import { t, tId } from '../electron/i18n/index.mjs';
 import { HOST_APP_FEATURES } from './host-app-features.mjs';
 import { keepAwakeStore } from './keep-awake-model.mjs';
 import { HOST_GROWTHBOOK, growthBookFlagKey } from './host-growthbook.mjs';
@@ -74,8 +75,21 @@ export function SettingsDesktopHostProvider({ value, children }) {
 }
 
 // ---- i18n (react-intl surface the official code uses: formatMessage / messages / FormattedMessage) -------------------
-export const useIntl = useHostIntl;
-export const FormattedMessage = HostFormattedMessage;
+// U-16: one English word names two things here — 'System' is the theme choice (跟随系统) and this page's first group
+// heading (I2acb3TGcT, 系统). A '#<id>' catalog entry (electron/i18n tId) becomes the descriptor's text before the host
+// catalog looks it up; every other descriptor goes through the cds-core host intl unchanged.
+const byId = message => {
+  const shown = message && tId(message.id, message.defaultMessage);
+  return shown && shown !== t(message.defaultMessage) ? { ...message, defaultMessage: shown } : message;
+};
+export function useIntl() {
+  const intl = useHostIntl();
+  return React.useMemo(() => ({ ...intl, formatMessage: (message, values) => intl.formatMessage(byId(message), values) }), [intl]);
+}
+export function FormattedMessage(props) {
+  const { values, ...message } = props;
+  return HostFormattedMessage({ ...byId(message), values });
+}
 
 // ---- shared-25 Pi (export K_) = globalThis["claude.settings"]?.Startup ----------------------------------------------
 // xs: on mount `de.isStartupOnLoginEnabled().then(t)`, `de.isMenuBarEnabled().then(s)`; the switches call

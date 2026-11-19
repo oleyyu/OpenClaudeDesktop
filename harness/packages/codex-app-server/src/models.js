@@ -2,9 +2,10 @@
  * The DeepSeek Harness model catalog as Codex `model/list` entries.
  *
  * Codex identifies a model by one string; Harness by (provider, model). The
- * wire id is the bare model id when it is unique across providers, otherwise
- * `provider/model`. Reasoning efforts pass through verbatim (Harness ids such
- * as off/low/high/max); OpenClaude Desktop labels them by capitalizing the id.
+ * wire id is the bare model id, except on a second provider serving the same
+ * id: `provider/model`, its name followed by the provider's. Reasoning
+ * efforts pass through verbatim (Harness ids such as off/low/high/max);
+ * OpenClaude Desktop labels them by capitalizing the id.
  * A description comes from the catalog only: a model without one has none
  * (the menu hides the empty line).
  */
@@ -54,12 +55,22 @@ export class ModelCatalog {
           entries.push({ provider, model, info })
         }
       }
+      // A model id two providers serve keeps its bare wire id on one of them (the configured default's provider, else
+      // the first listed: the built-in one), so what is saved under it (the default model, a rename, image input, the
+      // effort) stays with that model; the others are `provider/model`, named with their provider in the menu.
+      const owners = new Map()
+      const preferred = this.fallback?.provider
+      for (const entry of entries) {
+        const owner = owners.get(entry.model.id)
+        if (!owner || (entry.provider.id === preferred && owner.provider.id !== preferred)) owners.set(entry.model.id, entry)
+      }
       const counts = new Map()
       for (const entry of entries) counts.set(entry.model.id, (counts.get(entry.model.id) ?? 0) + 1)
       this.byWireId = new Map()
       this.entries = entries.map((entry) => {
-        const wireId = counts.get(entry.model.id) > 1 ? `${entry.provider.id}/${entry.model.id}` : entry.model.id
-        const value = { ...entry, wireId }
+        const shared = counts.get(entry.model.id) > 1
+        const wireId = owners.get(entry.model.id) === entry ? entry.model.id : `${entry.provider.id}/${entry.model.id}`
+        const value = { ...entry, wireId, ...(shared && wireId !== entry.model.id ? { providerLabel: entry.provider.name || entry.provider.id } : {}) }
         this.byWireId.set(wireId, value)
         this.byWireId.set(`${entry.provider.id}/${entry.model.id}`, value)
         return value
@@ -129,7 +140,7 @@ export class ModelCatalog {
         upgrade: null,
         upgradeInfo: null,
         availabilityNux: null,
-        displayName: DISPLAY_NAMES[entry.model.id] ?? entry.model.name ?? entry.model.id,
+        displayName: `${DISPLAY_NAMES[entry.model.id] ?? entry.model.name ?? entry.model.id}${entry.providerLabel ? ` (${entry.providerLabel})` : ''}`,
         // Claude's model menu shows names only (no description, no 'Default' badge).
         description: '',
         modelSpecialty: null,

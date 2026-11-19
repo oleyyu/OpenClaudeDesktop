@@ -29,7 +29,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs } from '../catalog.js'
+import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs, removeProjectMcpServer } from '../catalog.js'
 import { createOverlay } from '../overlay.js'
 import { withoutBrowser } from '../no-browser.js'
 import { RpcError, SERVER_ERROR, INVALID_PARAMS } from '../transport.js'
@@ -2126,6 +2126,12 @@ export default {
       if (finished) return
       finished = true
       void host.stop().finally(() => fs.rmSync(dir, { recursive: true, force: true }))
+      // A key saved in OpenClaude Desktop runs every thread ahead of any sign-in (account, launch): signing in with Google
+      // is the switch away from it, so the key goes, else the sign-in would report success and change nothing.
+      if (success) {
+        const saved = savedKeyFile(ctx)
+        try { if (saved) fs.rmSync(saved, { force: true }) } catch (removeError) { ctx.log?.(`saved key: ${removeError?.message ?? removeError}`) }
+      }
       onDone(success, error)
     }
     host.call('authenticate', { methodId: 'oauth-personal' }, 0).then(() => finish(true), (error) => finish(false, error?.message ?? String(error)))
@@ -2277,15 +2283,15 @@ export default {
   /** How to sign in to a remote server that asks for it: Gemini's own /mcp auth. */
   mcpSignInHint: (server) => `Sign in to ${server.name} in Gemini CLI: run /mcp auth ${server.name} in a gemini terminal, then check again.`,
 
-  /** config/batchWrite mcp_servers.<name>: the user settings.json mcpServers table. */
-  writeMcpServer(ctx, name, value) {
+  /** config/batchWrite mcp_servers.<name>: the user settings.json mcpServers table (a project's own: its file, on removal). */
+  writeMcpServer(ctx, name, value, { cwd = null } = {}) {
     const file = userSettingsFile(ctx.env)
     const settings = readJsonFile(file, {}) ?? {}
     settings.mcpServers = { ...settings.mcpServers }
     if (value === null) {
-      // Only the user's own settings are written: a connector from a project's .gemini/settings.json or an extension
-      // would come straight back, so removing it is refused with where it lives instead of reporting success.
-      if (!Object.hasOwn(settings.mcpServers, name)) throw new Error(`${name} isn’t in your Gemini CLI settings. It comes from a project’s .gemini/settings.json or an extension; remove it there.`)
+      // A connector from the session's project .gemini/settings.json goes from that file; one from an extension (or a
+      // project the request didn't name) would come straight back, so removing it is refused with where it lives.
+      if (!Object.hasOwn(settings.mcpServers, name)) return removeProjectMcpServer(cwd ? path.join(cwd, '.gemini', 'settings.json') : null, name, `${name} isn’t in your Gemini CLI settings. It comes from a project’s .gemini/settings.json or an extension; remove it there.`)
       delete settings.mcpServers[name]
     }
     // A bare `url` (Gemini 0.62 mcp-client.ts: streamable HTTP, then the SSE fallback); `httpUrl` is deprecated and

@@ -895,7 +895,7 @@ test('official MCP services: identity headers from the browser sign-in, only for
   assert.match(catalog.officialAuthHint({ status: 'failed', failureKind: 'official_auth_plan_required' }), /active GLM Coding Plan/)
   assert.equal(catalog.officialAuthHint({ status: 'failed', error: 'spawn ENOENT' }), null)
   const rows = catalog.mcpStatusRows({}, { 'plugin:tianyancha': { status: 'failed', error: 'official_auth_unavailable' } }, {})
-  assert.match(rows[0].toolsError, /Settings › Preferences › Account/)
+  assert.match(rows[0].toolsError, /Settings › Account › Sign in/)
 })
 
 test('API-key sign-in: the personal provider file is put back exactly when a key is rejected', () => {

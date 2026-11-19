@@ -89,7 +89,7 @@ test('main.cjs wires the decorator before client.request and the desktop:call ca
   // The request now goes through `requester` (the client captured for this call) with the expected-connection guard;
   // default timeout spelled out (codex.cjs request(method, params, timeout = 120000, connection)). Same ordering.
   assert.ok(at('nativeCollaborationMode(params,') < at('result = await requester.request(p.method, params, 120000, expectedConnection ?? undefined);'));
-  assert.match(main, /case "model-settings": return modelSettings\.run\(p\);/);
+  assert.match(main, /case "model-settings": \{ const owner = client, result = await modelSettings\.run\(p\); if \(p\.op === "codex-provider-save" && result\?\.pending\) coreRestart\.mark\(owner\); return result; \}/);
 });
 
 test('Settings › Models server-renders per-model rows and the price table on DeepSeek; Codex gets its endpoint and model list', async (t) => {
@@ -251,7 +251,7 @@ test('custom providers: definitions on disk, keys encrypted, one managed overlay
   const rows = new Map(), env = new Map();
   const profile = { setManagedRow: async (id, row) => { rows.set(id, row); }, removeManagedRow: async id => { rows.delete(id); }, setCoreEnv: (key, value) => { if (value == null) env.delete(key); else env.set(key, value); } };
   const settings = createModelSettings({ getConfig: () => ({}), getClient: () => deepseek(), getHarnessProfile: () => profile, safeStorage, dir });
-  assert.deepEqual(await settings.run({ op: 'providers-read' }), { available: true, protocols: ['openai-completions', 'openai-responses', 'anthropic-messages'], providers: [] });
+  assert.deepEqual(await settings.run({ op: 'providers-read' }), { available: true, protocols: ['openai-completions', 'openai-responses', 'anthropic-messages'], providers: [], changed: false });
   const saved = await settings.run({ op: 'provider-save', provider: { route: 'gw', baseURL: 'https://gw.example.com/v1', models: ['m1'] }, apiKey: 'sk-secret' });
   assert.deepEqual(saved.providers, [{ route: 'gw', api: 'openai-completions', baseURL: 'https://gw.example.com/v1', models: ['m1'], keyEnv: 'CODE_DESKTOP_PROVIDER_KEY_GW', hasKey: true }]);
   assert.equal(JSON.stringify(saved).includes('sk-secret'), false, 'the key never goes back to the renderer');
@@ -274,6 +274,31 @@ test('custom providers: definitions on disk, keys encrypted, one managed overlay
   const bare = createModelSettings({ getConfig: () => ({}), getClient: () => deepseek(), safeStorage, dir });
   assert.equal((await bare.run({ op: 'providers-read' })).available, false);
   await assert.rejects(bare.run({ op: 'provider-save', provider: { route: 'gw', baseURL: 'https://gw.example.com/v1', models: ['m1'] }, apiKey: 'k' }), /Harness/);
+});
+
+test('a providers.json saved without model facts gets them before the core starts (OpenCode reasoning efforts)', async (t) => {
+  const fs = await import('node:fs'), os = await import('node:os'), path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'model-info-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const safeStorage = { isEncryptionAvailable: () => true, encryptString: text => Buffer.from(`enc:${Buffer.from(text).toString('base64')}`), decryptString: buffer => Buffer.from(String(buffer).slice(4), 'base64').toString() };
+  const profile = { setManagedRow: async () => {}, removeManagedRow: async () => {}, setCoreEnv: () => {} };
+  const file = path.join(dir, 'providers.json');
+  // As 0.3.1 saved a relay: no modelInfo, so the OpenCode bridge declared its models non-reasoning (no efforts).
+  const relay = { route: 'refuseless', api: 'openai-completions', baseURL: 'https://api.refuseless.com/v1', models: ['deepseek-v4.1-flash-abliterated', 'my-plain-model'] };
+  fs.writeFileSync(file, JSON.stringify({ version: 1, providers: [relay] }));
+  const settings = createModelSettings({ getConfig: () => ({}), getClient: () => deepseek(), getHarnessProfile: () => profile, safeStorage, dir, app: { whenReady: async () => {} } });
+  await settings.ready();
+  const saved = JSON.parse(fs.readFileSync(file, 'utf8')).providers[0];
+  assert.equal(saved.modelInfo['deepseek-v4.1-flash-abliterated'].reasoning, true);
+  assert.equal(saved.modelInfo['my-plain-model'].reasoning, false);
+  const { providerOverlayV2 } = await import('../../harness/packages/opencode-bridge/src/v2/config.js');
+  const models = providerOverlayV2([saved], {}).refuseless.models;
+  assert.equal(models['deepseek-v4.1-flash-abliterated'].capabilities.reasoning, undefined, 'OpenCode builds its efforts');
+  assert.deepEqual(models['my-plain-model'].capabilities.reasoning, { supported: false });
+  // Up to date: not rewritten.
+  const mtime = fs.statSync(file).mtimeMs;
+  await createModelSettings({ getConfig: () => ({}), getClient: () => deepseek(), getHarnessProfile: () => profile, safeStorage, dir, app: { whenReady: async () => {} } }).ready();
+  assert.equal(fs.statSync(file).mtimeMs, mtime);
 });
 
 test('API connection: official or relay, keys encrypted, exported as DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL', async (t) => {
@@ -422,7 +447,8 @@ test('Codex endpoint: key encrypted under @codex, launch env scoped to Codex, ca
   await assert.rejects(settings.run({ op: 'codex-provider-save', provider: { mode: 'custom', baseURL: 'https://relay.test/v1' }, apiKey: 'sk-codex' }), /model id/);
   await assert.rejects(settings.run({ op: 'codex-provider-save', provider: { mode: 'custom', baseURL: 'https://relay.test/v1', models: ['relay-a'], wireApi: 'chat' }, apiKey: 'sk-codex' }), /Responses API/);
   const view = await settings.run({ op: 'codex-provider-save', provider: { mode: 'custom', baseURL: 'https://relay.test/v1/', models: ['relay-a', 'relay-b'] }, apiKey: 'sk-codex' });
-  assert.deepEqual(view, { available: true, mode: 'custom', baseURL: 'https://relay.test/v1', models: ['relay-a', 'relay-b'], webSearch: false, hasKey: true, pending: true });
+  // No Codex child runs (codex() has none): the next spawn reads the saved endpoint, so nothing waits for a restart.
+  assert.deepEqual(view, { available: true, mode: 'custom', baseURL: 'https://relay.test/v1', models: ['relay-a', 'relay-b'], webSearch: false, hasKey: true, pending: false });
   assert.equal(JSON.stringify(view).includes('sk-codex'), false, 'the key never goes back');
   assert.equal(fs.readFileSync(path.join(dir, 'codex/provider.json'), 'utf8').includes('sk-codex'), false);
   assert.equal(fs.readFileSync(path.join(dir, 'provider-keys.bin'), 'utf8').includes('sk-codex'), false);

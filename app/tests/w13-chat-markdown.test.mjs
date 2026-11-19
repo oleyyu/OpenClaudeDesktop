@@ -178,7 +178,11 @@ test('wiring: the transcript marks Chat rows for ChatMarkdown; Code rows keep th
   // (c06cf64bb has no review row), hence `item.text ?? item.review`.
   assert.match(session, /const answerText = isStreaming \? \(item\.text \?\? item\.review\) \|\| "" : localizeBridgeNote\(\(item\.text \?\? item\.review\) \|\| ""\);/);
   assert.match(session, /<ChatSurfaceAnswer text=\{answerText\} fallback=\{<SourceMarkdown text=\{answerText\} isStreaming=\{isStreaming\} paceReveal=\{item\.type === "agentMessage"\}/);
-  assert.equal(session.match(/<SourceMarkdown text=\{[^}]*\}/g)?.filter(m => /item\.text|answerText/.test(m)).length, 1);
+  // r2 chat-conversation-r2-02: the Chat answer returns early inside SourceChatAssistantMessage (cc1aae219 JY), the
+  // non-Chat row keeps the article; each draws the same ChatSurfaceAnswer / SourceMarkdown fallback (was: 1).
+  // r3 chat-conversation-r3-03: a Chat answer inside a reply row (SourceChatReplyAnswer) is a third branch with the same
+  // fallback (was: 2).
+  assert.equal(session.match(/<SourceMarkdown text=\{[^}]*\}/g)?.filter(m => /item\.text|answerText/.test(m)).length, 3);
   // E41: the chat-graph host file takes concrete generated files, never the view-tabs facade.
   assert.doesNotMatch(local('src/source-chat-markdown.jsx'), /view-tabs\/index\.js/);
   assert.doesNotMatch(local('src/source-chat-markdown-adapters.jsx'), /from '\.\/generated\//);

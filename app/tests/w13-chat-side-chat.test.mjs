@@ -191,7 +191,7 @@ test('SSR: the closed panel is the original aside (inert, header, ⌘;, empty st
   assert.ok(words.includes('Side chat'));
   assert.ok(words.includes('Sees 3 messages from main chat'));
   assert.ok(words.includes('read-only'));
-  assert.ok(words.includes('Ask on the side without touching the main chat. Claude sees the full context, and nothing here is added to it.'));
+  assert.ok(words.includes('Ask on the side without touching the main chat. DeepSeek sees the full context, and nothing here is added to it.')); // fix-r2 U-14 (E83), was Claude
   assert.match(html, /aria-label="Close side chat"/);
   assert.doesNotMatch(html, /Clear side chat/);
   assert.match(html, /<textarea[^>]*placeholder="Ask a quick question…"/);
@@ -201,7 +201,7 @@ test('SSR: the closed panel is the original aside (inert, header, ⌘;, empty st
   try {
     const zhWords = text(render({ enabled: true, inheritedMessageCount: 1 }));
     assert.ok(zhWords.includes('可看到主会话中的 1 条消息'), zhWords);
-    assert.ok(zhWords.includes('Claude 能看到完整上下文'));
+    assert.ok(zhWords.includes('DeepSeek 能看到完整上下文')) /* fix-r2 U-14 (E83), was Claude */;
   } finally { i18n.setLocale('en-US'); }
 });
 

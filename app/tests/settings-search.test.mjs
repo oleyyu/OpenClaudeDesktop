@@ -56,13 +56,13 @@ test('nav-hidden sections leave the nav but stay searchable; Usage is listed',as
  assert.match(text,/\{id:'usage',label:'Usage',icon:'UsageGaugeMiddle',hosts:\['usage'\]\},/,'Usage is a nav entry');
  assert.match(text,/const hostAvailable=id=>navTabs\.some\(entry=>entry\.id===id\)&&/,'nav entries keep only the hosts navTabs lists');
  assert.match(text,/const navItems=SETTINGS_NAV\.map\(entry=>entry\.sep\?entry:\{\.\.\.entry,hosts:entry\.hosts\.filter\(hostAvailable\),advanced:\(entry\.advanced\|\|\[\]\)\.filter\(hostAvailable\)\}\)\s*\.filter\(entry=>entry\.sep\|\|entry\.hosts\.length\|\|entry\.advanced\.length\)/,'an entry with no host page left drops out');
- assert.match(text,/\{!usagePage&&<nav className="sl-nav" aria-label=\{t\('Settings'\)\}>\s*\{searchField\}\s*<div className="sl-nav-list">\{navItems\.map\(/,'the nav draws navItems');
+ assert.match(text,/\{!usagePage&&<nav className="sl-nav" aria-label=\{t\('Settings'\)\}>\s*\{searchField\}\s*<div className="sl-nav-list scroll-fade-x scroll-fade-size-16">\{navItems\.map\(/,'the nav draws navItems');
  for(const gone of ['<SettingsNavStacked','<SettingsRailWithLocalGroups','<CdsTabs.'])assert.equal(text.includes(gone),false,gone);
  assert.match(text,/settingsSearch\(searchTabs,/,'search receives the unfiltered sections');
  assert.match(text,/const searchTabs=[^\n]*\?tabs:tabs\.map\(/,'every section, only the Models keywords narrowed per core');
  const main=fs.readFileSync(path.resolve(import.meta.dirname,'../src/main.jsx'),'utf8');
  const settingsItem=main.indexOf('data-testid="user-menu-settings"'),usageItem=main.indexOf('data-testid="user-menu-usage"');
- assert.ok(settingsItem>0&&usageItem>settingsItem&&main.slice(settingsItem,usageItem).split('<SourceMenu.Item').length===2,'Usage follows Settings in the account menu');
+ assert.ok(settingsItem>0&&usageItem>settingsItem&&main.slice(settingsItem,usageItem).split('<CdsDropdown.Item').length===2,'Usage follows Settings in the account menu');
  assert.match(main.slice(usageItem-80,usageItem+120),/icon="UsageGaugeMiddle" data-testid="user-menu-usage" onClick=\{\(\) => setSettings\("usage"\)\}>\{t\("Usage"\)\}</);
 });
 // Fidelity F14: c71860c77-B72Ova_w It — General lists version, Run on startup, Menu bar and Storage; keep-awake is a Code row only.

@@ -33,7 +33,7 @@ import fs from 'node:fs'
 import net from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
-import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs } from '../catalog.js'
+import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs, removeProjectMcpServer } from '../catalog.js'
 import { createOverlay, settleOverlay, tomlWithDisabledTools, tomlToolsLists, tomlWithToolsList } from '../overlay.js'
 import { appToolsServer } from '../app-tools.js'
 import { realPath as realPathOf } from '../permissions.js'
@@ -2396,10 +2396,12 @@ export default {
     return writeKimiWorkspaceTrust(ctx.env, cwd)
   },
 
-  writeMcpServer(ctx, name, value) {
+  writeMcpServer(ctx, name, value, { cwd = null } = {}) {
     const file = path.join(homeOf(ctx.env), 'mcp.json')
     const config = readJsonFile(file, {}) ?? {}
     config.mcpServers = { ...config.mcpServers }
+    // A project's own connector goes from the file it came from (removeProjectMcpServer), else it would come right back.
+    if (value === null && !Object.hasOwn(config.mcpServers, name)) return removeProjectMcpServer(cwd ? path.join(cwd, '.kimi-code', 'mcp.json') : null, name, `${name} isn’t in your Kimi Code connectors. It comes from a project’s .kimi-code/mcp.json or a plugin; remove it there.`)
     if (value === null) delete config.mcpServers[name]
     else config.mcpServers[name] = value.url ? { url: value.url, ...(value.http_headers ? { headers: value.http_headers } : {}) } : { command: value.command, ...(value.args ? { args: value.args } : {}), ...(value.env ? { env: value.env } : {}) }
     writeJsonFile(file, config)

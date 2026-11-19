@@ -88,12 +88,23 @@ test('official shell text: the aria-label, section order and conditions, wi, gt,
 
 test('SSR, an ordinary session: Progress, Outputs (the working folder), Context — card layout, docked chrome', () => {
   const html = render({ plan, items: [fileItem] });
-  assert.match(html, /^<aside data-activity-peek-zone="" class="cds-root h-full flex-shrink-0 relative z-20" data-density="comfortable" style="width:20rem" aria-label="Session activity panel">/);
+  // chat-cowork-1to1 r1 (cowork-r1-08): 4.16336.0 xE puts no cds-root on the aside (gs = f(ps, ms, "relative z-20", …)).
+  // chat-cowork-1to1 r2 (cowork-r2-04): docked and shown, xE spreads `fs` = { "data-gives-way-to-viewer": "" } first.
+  assert.match(html, /^<aside data-gives-way-to-viewer="" data-activity-peek-zone="" class="h-full flex-shrink-0 relative z-20" style="width:20rem" aria-label="Session activity panel">/);
+  // Closed, xE still renders the aside: width 0, inert, aria-hidden and overflow-hidden (`(!qe || !cn) && !ht && !Qt`).
+  assert.match(render({ plan, items: [fileItem], shown: false }),
+    /^<aside data-activity-peek-zone="" class="h-full flex-shrink-0 relative z-20 overflow-hidden" style="width:0" inert="" aria-hidden="true" aria-label="Session activity panel">/);
+  // The narrow overlay arm: the backdrop `as` has no attribute of its own; closed, no backdrop and no shadow / border.
+  const narrow = render({ plan, items: [fileItem], overlay: true });
+  assert.match(narrow, /^<div class="absolute inset-0 z-10 bg-neutral-50\/20" aria-hidden="true"><\/div><aside data-activity-peek-zone="" class="h-full flex-shrink-0 absolute end-\[var\(--df-ceded-gutter,0px\)\] top-0 z-20 bg-surface-3 stacks:bg-surface-2 shadow-xl border-s border-strong" style="width:20rem"/);
+  assert.match(render({ plan, items: [fileItem], overlay: true, shown: false }),
+    /^<aside data-activity-peek-zone="" class="h-full flex-shrink-0 absolute end-\[var\(--df-ceded-gutter,0px\)\] top-0 z-20 bg-surface-3 stacks:bg-surface-2 overflow-hidden" style="width:0" inert=""/);
   assert.ok(html.includes('<div class="flex flex-col pe-[var(--df-pane-trailing-gutter,8px)] h-full ps-2 pt-0 pb-2" style="width:20rem">'));
   assert.ok(html.includes('class="overflow-y-auto flex-1 min-h-0 -ms-8 -me-2 ps-8 pe-2 pointer-events-none"'));
   assert.ok(html.includes('class="flex flex-col gap-3 pt-2 pb-4 pointer-events-auto"'));
   // $h with chrome Qp, not shrinking (ht false), the card layout's dividers.
-  assert.ok(html.includes('divide-y divide-alpha-1 overflow-hidden shrink-0 dframe-card rounded-lg bg-[var(--df-sidebar-bg,var(--cds-surface-1))] [box-shadow:var(--df-shadow-card,none)]'), html.slice(0, 900));
+  // chat-cowork-1to1 r2 (cowork-r2-03): 4.16336.0 xE's Tm is shared-120 Xn, Nc plus the shared-frame Sm forced-colors border.
+  assert.ok(html.includes('divide-y divide-alpha-1 overflow-hidden shrink-0 dframe-card rounded-lg bg-[var(--df-sidebar-bg,var(--cds-surface-1))] [box-shadow:var(--df-shadow-card,none)] forced-colors:border forced-colors:border-solid forced-colors:border-[color:CanvasText]"'), html.slice(0, 900));
   assert.deepEqual(sectionTitles(html), ['Progress', 'Receipts', 'Context']);
   // The card layout (cc5a62f6f S, flat false): "p-3" headers with "text-sm" titles, not the flat "px-4 pt-4 pb-3".
   assert.ok(html.includes('font-medium text-primary text-sm'));

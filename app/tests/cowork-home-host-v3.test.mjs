@@ -60,7 +60,8 @@ const renderHome = (sessions = [], metadata = {}, state = {}) => renderToStaticM
 test('the host files no longer import the 2.31226.0 current-chat slice', () => {
   for (const file of hostFiles) assert.doesNotMatch(local(file), /generated\/current-chat\//, file);
   assert.match(local('src/source-cowork-home.jsx'), /from '\.\/generated\/cowork-home\/index\.mjs'/);
-  assert.match(local('src/source-surfaces.jsx'), /from '\.\/generated\/cowork-progress\/index\.mjs'/);
+  // chat-cowork-1to1 r1 (cowork-r1-01): the panel reads the 4.16336.0 graph.
+  assert.match(local('src/source-surfaces.jsx'), /from '\.\/generated\/cowork-progress-v4\/index\.mjs'/);
   // w10-cleanup-final: the 2.31226.0 home / Ideas adapters (source-home-adapters.jsx, source-ideas-adapters.jsx) had no
   // source importer after w10-curchat-retire and were deleted, with their status-glyph and catalog-loader tests.
   for (const file of ['src/source-home-adapters.jsx', 'src/source-ideas-adapters.jsx']) assert.equal(fs.existsSync(path.join(app, file)), false, file);
@@ -68,12 +69,17 @@ test('the host files no longer import the 2.31226.0 current-chat slice', () => {
 
 test('no Cowork sessions: the 3.6556.2 FS home shows the standalone Ideas (control arm) in the below-composer slot', () => {
   const html = renderHome();
-  assert.match(html, /^<div class="surface-cowork-home mx-auto w-full max-w-2xl dock:order-2 dock:flex dock:flex-col" role="region" aria-label="Cowork tasks" aria-busy="false">/);
-  // shared-19 Ne (voyage_composer_marlin off: max-w-2xl) and shared-5 oC("top") = QS, the official slot classes; the home
+  // U-MARLIN (2026-11-18, src/composer-marlin.mjs): the marlin arm, max-w-[40rem] (was the non-marlin max-w-2xl).
+  assert.match(html, /^<div class="surface-cowork-home mx-auto w-full max-w-\[40rem\] dock:order-2 dock:flex dock:flex-col" role="region" aria-label="Cowork tasks" aria-busy="false">/);
+  // shared-19 Ne (voyage_composer_marlin on: max-w-[40rem]) and shared-5 oC("top") = QS, the official slot classes; the home
   // composer card (Ti = p("isolate", Ne, …)) takes the same width.
   assert.ok(official('shared-19-DIKJVT7c.js').includes('Ne=z??(ke?"mx-auto w-full max-w-[40rem]":"mx-auto w-full max-w-2xl")'));
   assert.ok(official('shared-19-DIKJVT7c.js').includes('p("isolate",Ne,W,wi)'));
+  // U-MARLIN: the card takes the marlin arm's 40rem; marlin-chin fix2: from the zone's data-composer-marlin (the one host
+  // answer, src/composer-marlin.mjs), with max-w-2xl (42rem) as the off arm.
   assert.match(local('src/source-surfaces.css'), /:not\(\[data-surface="code"\]\) \.composer-zone \{\n  width: 100%; max-width: 42rem;/);
+  assert.match(local('src/source-surfaces.css'), /:not\(\[data-surface="code"\]\) \.composer-zone\[data-composer-marlin\] \{ max-width: 40rem; \}/);
+  assert.ok(local('src/source-composer.jsx').includes('data-composer-marlin={COMPOSER_MARLIN_DESIGN || undefined}'));
   assert.ok(official('shared-5-Bg6ZMqvt.js').includes('function oC(e){return e==="center"?"":QS}'));
   assert.ok(official('shared-5-Bg6ZMqvt.js').includes('QS="dock:order-2 dock:flex dock:flex-col"'));
   assert.match(text(html), /Ideas for you/);
@@ -156,7 +162,8 @@ test('home column and greeting take the new-page classes of the new_page_home ru
   assert.equal(renderToStaticMarkup(h(surfaces.SourceSurfaceHome, { active: false }, h('i'))), '<i></i>');
   const greeting = renderToStaticMarkup(h(surfaces.SourceSurfaceGreeting, { name: 'Ada' }));
   // fS.home: greetingSlotClass "mt-3 w-full", seat "top" (no dock seat class), lockup "compact".
-  assert.match(greeting, /^<header class="surface-greeting mt-3 w-full ">/);
+  // chat-home r1-07: shared-19 SD's slot is a div with aC (was a host header.surface-greeting).
+  assert.match(greeting, /^<div data-surface-greeting="" class="mt-3 w-full md:mt-\[calc\(0\.75rem_-_min\(var\(--chorus-composer-lift,0px\)_\+_var\(--band-slot-lift,0px\),5rem\)\)\]">/);
   assert.match(greeting, /data-new-page-greeting-spark=""/);
   assert.match(greeting, /data-new-page-greeting-text=""/);
   // The compact lockup (4.16336.0 shared-19 uS("compact")): the ui serif at 360, not the display face.
@@ -184,7 +191,9 @@ const renderProgress = props => renderToStaticMarkup(h(surfaces.SourceCoworkProg
 // AT order. tests/w13-cowork-panel.test.mjs covers the order, conditions and official text.
 test('progress panel: 3.6556.2 Progress, Outputs and Context sections in the docked card panel, official row classes', () => {
   const html = renderProgress({ plan, items: [{ type: 'fileChange', status: 'completed', changes: [{ path: '/w/out/total.csv', kind: { type: 'add' } }] }], cwd: '/w/out' });
-  assert.match(html, /^<aside data-activity-peek-zone="" class="cds-root h-full flex-shrink-0 relative z-20" data-density="comfortable" style="width:20rem" aria-label="Session activity panel">/);
+  // chat-cowork-1to1 r1 (cowork-r1-08): 4.16336.0 xE puts no cds-root on the aside; r2 (cowork-r2-04): docked and shown it
+  // spreads `fs` = { "data-gives-way-to-viewer": "" } first.
+  assert.match(html, /^<aside data-gives-way-to-viewer="" data-activity-peek-zone="" class="h-full flex-shrink-0 relative z-20" style="width:20rem" aria-label="Session activity panel">/);
   assert.doesNotMatch(html, /aria-label="Task details"/);
   assert.match(text(html), /Progress/);
   assert.match(text(html), /Read the receipts/);
@@ -203,8 +212,10 @@ test('progress panel without todos or outputs: the 3.6556.2 empty states and ill
   const html = renderProgress({ plan: [], items: [] });
   assert.match(text(html), /Working folder/);
   assert.match(text(html), /Track tools and referenced files used in this task\./);
-  assert.match(html, /url\(\.\/images\/illustrations\/session-context/);
-  assert.match(html, /text-muted-as-secondary font-small/);
+  // chat-cowork-1to1 r1 (cowork-r1-01 / -04): the 4.16336.0 gE art URL is root-relative and its caption is
+  // text-caption-regular font-sans (3.6556.2 TT: ./images/…, font-small).
+  assert.match(html, /url\(&quot;\/images\/illustrations\/session-context|url\(\/images\/illustrations\/session-context/);
+  assert.match(html, /text-muted-as-secondary text-caption-regular font-sans/);
 });
 
 test('the generated Ideas catalog is the 3.6556.2 one', async () => {

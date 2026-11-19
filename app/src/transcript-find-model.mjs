@@ -95,6 +95,8 @@ function hasIncludedDescendant(element) {
     if (child.nodeType === ELEMENT_NODE && (child.hasAttribute(FIND_INCLUDED) || hasIncludedDescendant(child))) return true;
   return false;
 }
+// 4.16336.0 shared-100 Fc: a <slot> (its assigned nodes stand in for its fallback children).
+const isSlot = (element) => String(element.localName ?? element.tagName).toLowerCase() === "slot" && typeof element.assignedNodes === "function";
 
 // shared-18 vo (text half): walk the tree in document order, keeping the text
 // nodes that are searchable and a NUL wherever a block, an omitted subtree or
@@ -125,9 +127,25 @@ export function collectFindText(root, { exclude } = {}) {
       // Spec F10 (local): other hidden subtrees still end the run.
       if (hiddenFromFind(node)) { gap = true; return; }
       if (next !== included) gap = true;
+      // U-11, 4.16336.0 shared-100 zc: an open shadow root is walked instead of the light children (a code block's
+      // diffs-container draws its text there; light children show through its slots), as a run of its own.
+      if (node.shadowRoot) {
+        gap = true;
+        children(node.shadowRoot, next);
+        gap = true;
+        return;
+      }
       if (BLOCK_TAGS.has(String(node.tagName).toUpperCase())) {
         gap = true;
         children(node, next);
+        gap = true;
+        return;
+      }
+      if (isSlot(node)) {
+        const assigned = node.assignedNodes({ flatten: true });
+        gap = true;
+        if (assigned.length > 0) for (const one of assigned) visit(one, next);
+        else children(node, next);
         gap = true;
         return;
       }

@@ -491,6 +491,15 @@ export function providerModelEntry(provider, id) {
   };
 }
 
+/** What the app knows about each of a provider's models (family name, reasoning, image input), id → {name?, reasoning, attachment?},
+ * saved next to the provider in providers.json for the OpenCode bridge (config.js providerModelInfo), which has no family table. */
+export function providerModelInfo(provider) {
+  return Object.fromEntries((provider?.models ?? []).map(id => {
+    const entry = providerModelEntry(provider, id);
+    return [id, { ...(entry.name ? { name: entry.name } : {}), reasoning: !!entry.reasoningEfforts, ...(entry.input ? { attachment: true } : {}) }];
+  }));
+}
+
 /** The managed `llm-pi-ai` overlay row for the providers, or null to remove it. */
 export function providerOverlayRow(providers) {
   const list = normalizeProviders(providers);

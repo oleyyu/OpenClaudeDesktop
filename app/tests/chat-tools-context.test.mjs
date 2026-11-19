@@ -23,7 +23,7 @@ const research = { chatTools: { defaults: {}, threads: { 'chat-1': { compass_mod
 const config = (extra = {}) => ({ threadIds: ['chat-1', 'chat-2', 'code-1'], archivedThreadIds: ['chat-old'],
   sessionMetadata: { 'chat-1': { surface: 'chat' }, 'chat-2': { surface: 'chat' }, 'code-1': { surface: 'code' }, 'chat-old': { surface: 'chat' } }, ...extra });
 
-let server, M, P, A, MM, PP, MW;
+let server, M, P, A, MM, PP, MW, core;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -33,7 +33,12 @@ before(async () => {
   MM = await server.ssrLoadModule('/src/source-model-menu.jsx');
   PP = await server.ssrLoadModule('/src/source-chat-project-popup.jsx');
   MW = await server.ssrLoadModule('/src/generated/chat-messages/message-warning.mjs');
+  core = await server.ssrLoadModule('/src/cds-core.mjs');
 });
+// r2 chat-home-r2-01: the + menu rows are c752b32f8 ga / _a ports on CdsDropdown parts, so a static render needs the
+// Dropdown Root's context (the Popup portals and renders nothing server-side).
+const menuItemsHtml = entries => renderToStaticMarkup(React.createElement(core.CdsDropdown.Root, { open: true },
+  React.createElement(M.ChatAddMenuItems, { entries })));
 after(() => server?.close());
 
 test('the contributor: Research adds its instructions to a Chat conversation only', async () => {
@@ -118,7 +123,7 @@ test('main.cjs: the Codex decoration asks the conversation first; "chat-tools" s
   assert.match(main, /case "chat-tools": \{ const store = \(await import\('\.\/chat-context\/tools\.mjs'\)\)\.chatToolsAction\(config, p\); if \(p\.op !== "read"\) \{ save\(\); emitConfig\(\); \} return store; \}/);
 });
 
-test('main.jsx: Chat’s + menu is Js with the conversation’s switches, a gated-off Plugins row and Memory', () => {
+test('main.jsx: Chat’s + menu is Js with the conversation’s switches, xN’s Plugins slot and Memory', () => {
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   const add = main.indexOf('case "add": {');
   const start = main.indexOf('if (mode === "chat") {', add), end = main.indexOf('return <ChatAddMenuItems entries={chatAddMenuEntries(slots)} />;', add);
@@ -127,8 +132,13 @@ test('main.jsx: Chat’s + menu is Js with the conversation’s switches, a gate
   for (const piece of ['searchSupport({ codexNative, toolSelection, catalog: toolsCatalog })', 'chatSettingsFor(boot?.config?.chatTools, current || null)',
     'selection: sessionTools', 'call("chat-tools", { op: "set", threadId: current || null, settings: result.settings })', 'setSessionTools(result.selection)',
     'toggleWebSearch({ ...toolsInput, on: !toolSlots.webSearch.checked })', 'toggleResearch({ ...toolsInput, on: !toolSlots.research.checked })',
-    't(chatToolsMessages.webSearchAutoEnabled.defaultMessage)', 'teach: addTeachRow, skills: addSkillsRow', 'connectors: addConnectorsRow',
-    'plugins: { type: "button", label: t(chatToolsMessages.plugins.defaultMessage), icon: "Plugin", disabled: true, tooltip: t(chatToolsMessages.pluginsUnavailableInChat.defaultMessage) }',
+    't(chatToolsMessages.webSearchAutoEnabled.defaultMessage)',
+    // r2 chat-home-r2-01 / r2-02 (was: the Code menu's SourceMenu rows `teach: addTeachRow, skills: addSkillsRow`,
+    // `connectors: addConnectorsRow` and an always-disabled Plugins row): the rows are c752b32f8 descriptors on the CDS
+    // popup, and Plugins follows shared-8 xN — claude_ai_plugins_in_chat on gives gs's normal branch, off the disabled row.
+    'teach: chatTeachSlot({', 'skills: chatSkillsSlot({', 'connectors: boot?.connected ? chatConnectorsSlot(addConnectorsEntry({',
+    'plugins: hostGrowthBookFlag("claude_ai_plugins_in_chat")\n                ? chatPluginsSlot(addPluginsEntry({',
+    ': { type: "button", label: t(chatToolsMessages.plugins.defaultMessage), icon: "Plugin", disabled: true, tooltip: t(chatToolsMessages.pluginsUnavailableInChat.defaultMessage) }',
     'memory: { type: "checkbox", label: t("Memory"), icon: "Memory", checked: memoryOn, closeOnClick: true']) assert.ok(chat.includes(piece), piece);
   assert.doesNotMatch(chat, /addFolder|github|Slash commands|add-tools/, 'no Add folder / GitHub / Slash commands / Tools in Chat');
   // The Code menu still renders the same host rows.
@@ -158,7 +168,7 @@ test('the Chat menu as main.jsx composes it: Js order, testids, the Plugins reas
   assert.deepEqual([byId('add-menu-research').checked, byId('add-menu-web-search').checked, byId('Memory').checked], [true, true, true]);
   byId('add-menu-web-search').onAction(); byId('add-menu-research').onAction(); byId('Memory').onAction();
   assert.deepEqual(calls, ['web', 'research', 'memory']);
-  const html = renderToStaticMarkup(React.createElement(M.ChatAddMenuItems, { entries }));
+  const html = menuItemsHtml(entries);
   const order = ['Add files or photos', 'data-row="teach"', 'Take a screenshot', 'data-row="skills"', 'data-row="connectors"', 'data-testid="add-menu-plugins"',
     'data-testid="add-menu-research"', 'data-testid="add-menu-web-search"', '>Memory<'].map(s => html.indexOf(s));
   assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `row order ${order}`);
@@ -363,13 +373,29 @@ test('Add to project: Es’s literals (generated), the local projects as its row
   // The Chat branch passes the slot (not on the projects page) and Ns goes to local-projects / the draft.
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   const chat = main.slice(main.indexOf('if (mode === "chat") {', main.indexOf('case "add": {')), main.indexOf('return <ChatAddMenuItems entries={chatAddMenuEntries(slots)} />;'));
-  for (const piece of ['const projectSlot = section !== "projects" ? { popup: <ChatProjectPopup projects={boot?.config?.localProjects ?? []} currentProjectId={currentProjectId} onPick={pickChatProject}',
-    'onCreate={(name) => setNewProjectFor(current ? { sessionId: current, name } : { draft: true, name })} /> } : undefined;',
+  // r2 chat-home-r2-01 (was `{ popup: <ChatProjectPopup … /> }` on the host SearchablePopup): ks's renderPopup over the CDS rows.
+  for (const piece of ['const projectSlot = section !== "projects" ? chatProjectSlot({ projects: boot?.config?.localProjects ?? [], currentProjectId, onPick: pickChatProject,',
+    'onCreate: (name) => setNewProjectFor(current ? { sessionId: current, name } : { draft: true, name }) }) : undefined;',
     'sessionAction(action === "remove" ? "remove-from-project" : "move-to-project", { id: current }, { projectId })', 'setProjectDraftId(next);', 'project: projectSlot,'])
     assert.ok(chat.includes(piece), piece);
   const entries = M.chatAddMenuEntries(M.chatAddMenuSlots({ attach() {}, project: { popup: h('i', { 'data-popup': '' }) } }));
   assert.deepEqual(entries.map(entry => entry.testId), ['add-menu-upload-file', 'add-menu-project']);
-  assert.match(renderToStaticMarkup(h(M.ChatAddMenuItems, { entries })), /data-testid="add-menu-project"[^>]*>[\s\S]*Add to project/);
+  // r2 chat-home-r2-01: a CDS SubmenuTrigger needs its parent Popup's positioner (portalled, nothing server-side), so the
+  // row is checked as the ks descriptor ba renders (was: the host SourceMenu submenu's static markup).
+  assert.deepEqual([entries[1].type, entries[1].icon, entries[1].label], ['submenu', 'Projects', 'Add to project']);
+  // r2 chat-home-r2-01: chatProjectSlot hands Es's { search, items, leadingRows, rows, maxVisibleItems } to ba's popup.
+  let given; const slotPicks = [];
+  renderToStaticMarkup(PP.chatProjectSlot({ projects, currentProjectId: 'a', onPick: pick => slotPicks.push(pick), onCreate() {} })
+    .renderPopup(arg => { given = arg; return null; }));
+  assert.equal(given.search.label, 'Search or create a project');
+  assert.equal(given.maxVisibleItems, 8.5);
+  assert.deepEqual(given.items.map(item => [item.type, item.icon, item.label, item.checked, item.closeOnClick]),
+    [['checkbox', 'Projects', 'Design', false, true], ['checkbox', 'Projects', 'Billing', true, true]]);
+  assert.ok(given.leadingRows, 'New project row while not searching');
+  given.items[1].onAction(); given.items[0].onAction();
+  assert.deepEqual(slotPicks, [{ action: 'remove', projectId: 'a' }, { action: 'move', projectId: 'b' }]);
+  const noCreate = []; renderToStaticMarkup(PP.chatProjectSlot({ projects: [] }).renderPopup(arg => { noCreate.push(arg); return null; }));
+  assert.deepEqual([noCreate[0].search.label, noCreate[0].items.map(item => [item.label, item.disabled])], ['Search projects', [['No projects yet', true]]]);
 });
 
 // ── C9 (the review's 补做): the web search nudge under a Chat reply (cc1aae219 fP → rP → tP → eP) ───────────────────────

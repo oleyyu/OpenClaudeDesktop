@@ -1249,13 +1249,17 @@ const CONTRACT4_MODULES = [
     } },
   { target: 'chat-composer-shell.mjs', source: 'shared-5-u8kha2eH.js',
     exports: { _m: 'ChatComposerShell', xm: 'ChatComposerParts', mm: 'useChatComposerFocusRef', pm: 'chatComposerFormPlaceholder', Bm: 'useResolvedPlaceholder',
-      zm: 'placeholderGhostLines' },
-    aliases: { _m: 'Nm', xm: 'Mm', mm: 'Fm', pm: 'Im', Bm: 'Am', zm: 'km' },
+      zm: 'placeholderGhostLines',
+      // marlin-chin (U-MARLIN): Bp (exported Pm) marks a wrapper component as the shell's Chin part — shared-8 `Df(GQ)` — so
+      // the Chat conversation's GQ-equivalent chin lands in the chin slot (Vp: `e.type[zp] === "Chin"`).
+      Bp: 'markChatComposerChin' },
+    aliases: { _m: 'Nm', xm: 'Mm', mm: 'Fm', pm: 'Im', Bm: 'Am', zm: 'km', Bp: 'Pm' },
     features: {
       _m: ['"data-cds": "ChatComposer"', 'r.style.setProperty("--cmp-wrap-h", e)', '"data-end-column":', '"data-composer-size":', '[&:dir(rtl)_.ProseMirror]:before:float-left', '"ps-[var(--cmp-lead-w)]"'],
       xm: [L('Header:'), L('Attachments:'), L('Actions:'), L('PrimaryAction:'), L('Chin:'), L('Overlay:'), L('Tray:')],
       mm: ['handle:', '.current?.focus()'], pm: ['"replyPlaceholder"'],
       Bm: ['n?.intervalMs ?? 5e3', 'rotating: !1,'], zm: ['if (typeof e == "string") return e === "" ? [] : [e];'],
+      Bp: ['(e[zp] = "Chin")'],
     },
     chunkFeatures: [L('handoffCard:'), L('storeCaret:'), 'hasDraftText:', 'e.commands.setTextSelection(e.view.posAtDOM(t, n)), e.view.focus());'] },
   // shared-28 -> shared-5 (placeholder timing).

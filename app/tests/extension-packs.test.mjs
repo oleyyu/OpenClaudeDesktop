@@ -289,3 +289,21 @@ test("a bundled pack added from an older OpenClaude Desktop is replaced by the a
   assert.deepEqual(await packs.upgradeBundled(), ["codex"]);
   assert.equal(coreById("codex").pack.version, "0.162.1");
 });
+
+test("U-18: the Add-pack dialog's Supports row names features, never the raw implies keys", async () => {
+  const { packCapabilityLabels } = await import("../src/extension-pack-capabilities.mjs");
+  const { t, setLocale } = await import("../electron/i18n/index.mjs");
+  const manifest = JSON.parse(fs.readFileSync(new URL("../extensions/codex/manifest.json", import.meta.url), "utf8"));
+  const flags = Object.keys(manifest.core.implies).filter((key) => manifest.core.implies[key] === true);
+  const labels = packCapabilityLabels(flags);
+  assert.ok(labels.length > 0);
+  for (const label of labels) assert.ok(!flags.includes(label), `${label} is a raw key`);
+  assert.deepEqual(packCapabilityLabels(["customization", "toolSelection", "madeUpFlag"]), [], "protocol-only and unknown flags are left out");
+  assert.deepEqual(packCapabilityLabels(["sideQuestion", "btwChildSessions"]), ["Side chat"], "two flags for one feature show it once");
+  try {
+    setLocale("zh-CN");
+    for (const label of labels) assert.notEqual(t(label), label, `${label} has a zh-CN entry`);
+  } finally { setLocale("en-US"); }
+  const source = fs.readFileSync(new URL("../src/source-extension-import.jsx", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /pack\.capabilities\.map/, "the dialog no longer renders the keys themselves");
+});

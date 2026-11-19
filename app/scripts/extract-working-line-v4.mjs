@@ -160,7 +160,10 @@ const linkExportsV4 = {
   // round-4 addendum B (W8B-X2): the matchMedia subscription helpers transcript-rows-v4's ToolRow (wz) reaches through m7's
   // siblings (n5 hook, $8 per-window cache over the WeakMap Q8, e5 / t5 the no-window subscribe / snapshot), exported so it
   // links this graph's one Q8 (module state) instead of stopping on an unexported link.
-  'shared-2-CsjIBQD8.js': ['X5', 'm7', 'n5', '$8', 'Q8', 'e5', 't5'],
+  // D1 (cds-integrate wave cc2, chat-cowork-1to1-20261117 r2 Core step): cds-core now holds and publishes X5 (ctx_shared2_X5) and
+  // Q8 (state_shared2_Q8) with the UserMessage closure, so v4 consumers link them from cds-core and this graph no longer exports
+  // them (m7's `x(X5)` and $8's Q8 resolve to cds-core); the list was ['X5', 'm7', 'n5', '$8', 'Q8', 'e5', 't5'] through wave 8d.
+  'shared-2-CsjIBQD8.js': ['m7', 'n5', '$8', 'e5', 't5'],
   'shared-1-D1bGaTaN.js': ['J$'],
   'vendor-intl-BJgYK7RA.js': ['tn'],
   [C96]: ['pP'],

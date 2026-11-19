@@ -118,6 +118,7 @@ function Separator({ direction, isActive, isDropTarget, isDisabled, size, line =
   );
 }
 
+const TILE_SLOT_CONTAINER = { containerType: "inline-size", containerName: "tile-slot" };
 function TileWrap({ node, flex, config, minWidthSize, edgeHandles, atEdge = ROOT_AT_EDGE, engine, tileById, hosts, isTop, gutters }) {
   const tile = tileById(node.tileId);
   const overflowMin = tile?.overflowMin ?? null;
@@ -129,8 +130,10 @@ function TileWrap({ node, flex, config, minWidthSize, edgeHandles, atEdge = ROOT
   // The part of an overflowing shell (2.2553.1 overflowMin) that its neighbour covers: the shell keeps its minimum
   // width. Its content is inset by the covered part (--tile-covered-content-end / -start, the side away from the
   // anchor) only while the transcript and composer keep a usable width (chatContentInset); below that they stay that
-  // wide under the pane, as the official shell does, and only the titlebar takes the rest (--tile-covered-extra-*)
-  // so its title and actions stay in the visible part.
+  // wide under the pane, as the official shell does, and only the titlebar takes the rest so its title and actions
+  // stay in the visible part: the titlebar's own official margin (titlebar-classes wn,
+  // `mr-[max(0px,var(--tile-overflow-min)-100cqw)]`) measures 100cqw on the wrap (c9543da06 _s tile-slot below), and
+  // --tile-overflow-min is the minimum less the content inset already taken, so the two add up to the covered part.
   const [covered, setCovered] = useState(0);
   const wrapEl = useRef(null);
   const register = engine.registerNodeEl(node.tileId);
@@ -148,8 +151,8 @@ function TileWrap({ node, flex, config, minWidthSize, edgeHandles, atEdge = ROOT
   const inset = chatContentInset(covered, minimum);
   const coveredSide = overflowMin?.anchor === "right" ? "start" : "end";
   const shellStyle = overflowMin
-    ? { position: "absolute", top: 0, bottom: 0, [overflowMin.anchor]: 0, width: "100%", minWidth: overflowMin.width, "--tile-overflow-min": `${overflowMin.width}px`,
-      [`--tile-covered-content-${coveredSide}`]: `${inset.content}px`, [`--tile-covered-extra-${coveredSide}`]: `${inset.extra}px` }
+    ? { position: "absolute", top: 0, bottom: 0, [overflowMin.anchor]: 0, width: "100%", minWidth: overflowMin.width,
+      "--tile-overflow-min": `${overflowMin.width - inset.content}px`, [`--tile-covered-content-${coveredSide}`]: `${inset.content}px` }
     : undefined;
   const adopt = useCallback((element) => {
     if (element) hosts.adopt(node.tileId, element);
@@ -176,7 +179,10 @@ function TileWrap({ node, flex, config, minWidthSize, edgeHandles, atEdge = ROOT
       data-focus-region-order={node.tileId === "chat" ? undefined : "pane"}
       data-tile-active={isDragged || undefined}
       data-tile-top={isTop || undefined}
-      style={{ zIndex: overflowMin ? 0 : 1, flexGrow: flex, flexShrink: 1, flexBasis: 0, minWidth: minWidthSize, minHeight: config.minTileBasePx }}
+      // c9543da06 Is: an overflowMin wrap is the tile-slot container (`...(overflowMin && _s)`), so container queries and
+      // 100cqw inside the chat follow its visible width, not the shell's minimum.
+      style={{ zIndex: overflowMin ? 0 : 1, flexGrow: flex, flexShrink: 1, flexBasis: 0, minWidth: minWidthSize, minHeight: config.minTileBasePx,
+        ...(overflowMin ? TILE_SLOT_CONTAINER : null) }}
     >
       <div ref={adopt} className={shellClass} data-tile-overflow-anchor={overflowMin?.anchor} {...lined?.attrs} style={lineShellStyle} />
       {lined?.afterX && edgeHandles.left !== null && (

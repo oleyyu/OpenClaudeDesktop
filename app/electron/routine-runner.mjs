@@ -7,7 +7,13 @@ import { routineFolders } from './local-routines.mjs';
 
 export function captureRoutineOptions({ config, coreId, models, execution, previous }) {
   if (execution !== undefined && (!execution || typeof execution !== 'object' || Array.isArray(execution))) throw new Error('Choose valid execution settings.');
-  if (previous && previous.coreId !== coreId) throw new Error(`Switch to ${previous.coreId} before changing this task’s execution settings.`);
+  if (previous && previous.coreId !== coreId) {
+    // The edit pages always send `execution`: the saved values sent back unchanged (a rename, a new schedule or prompt)
+    // keep the task's own options; only a real change of model or permission needs its core.
+    const unchanged = (execution?.model ?? previous.model) === previous.model && (execution?.permission ?? previous.permission) === previous.permission;
+    if (unchanged) return previous;
+    throw new Error(`Switch to ${previous.coreId} before changing this task’s execution settings.`);
+  }
   const chosenModel = execution?.model ?? previous?.model ?? config.model;
   const permission = execution?.permission ?? previous?.permission ?? config.permission ?? 'auto';
   if (!['auto', 'ask', 'acceptEdits', 'plan', 'bypass'].includes(permission)) throw new Error('Choose a valid permission mode.');
@@ -22,7 +28,7 @@ export function captureRoutineOptions({ config, coreId, models, execution, previ
 // R4g-routines RT3 (research/r4-code-routines.md §5, §7, §10 WI-3): a Code task (kind 'code') runs as a Code session:
 // mode/surface 'code' and the Code start's instructions (main.jsx sendMessage: none on a core with customization, else
 // this line, the same as source-proposal-host.jsx CODE_DEVELOPER_INSTRUCTIONS).
-export const CODE_ROUTINE_INSTRUCTIONS = 'You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. Do not claim to be Claude.';
+export const CODE_ROUTINE_INSTRUCTIONS = 'You are the assistant in OpenClaude Desktop, a local desktop client. Follow the user language. When asked for a plan, use the plan tool. For Dynamic Workflow requests, look up and call mcp__code_desktop__Workflow when available. Do not claim to be Claude.';
 export const routineKind = task => task?.kind === 'code' ? 'code' : 'cowork';
 
 /**

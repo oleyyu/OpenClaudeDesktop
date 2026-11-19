@@ -329,6 +329,14 @@
       "head": "function Xn() {",
       "sourceSha256": "2667959abe40092ed520c34cfb3e66e4633df852ef0aec88850c88bd1a7a3d7b"
     },
+    "shared-100-BBQR7Gmd.js#Zn": {
+      "name": "useOptionalCommandPaletteToggle",
+      "kind": "hook",
+      "export": "Qt",
+      "declarationSha256": "b3028b99dc210c68ec273714e34a25f5c07b3b1a98d0710fd56f5ee6044cfdcd",
+      "head": "function Zn() {",
+      "sourceSha256": "2667959abe40092ed520c34cfb3e66e4633df852ef0aec88850c88bd1a7a3d7b"
+    },
     "shared-33-DtdykY0y.js#EA": {
       "name": "useNux",
       "kind": "hook",
@@ -531,7 +539,7 @@
     },
     "shared-0-CnnWnVrT.js#kO": {
       "name": "LocalAgentModeSessions",
-      "kind": "absent",
+      "kind": "bridge",
       "export": "Hh",
       "declarationSha256": "41558d66b16d4d1780b17591cd0be3fb956cf7321ecb3b21753b5818d6925fbd",
       "head": "var kO = globalThis[\"claude.web\"]?.LocalAgentModeSessions;",
@@ -907,10 +915,10 @@
     }
   },
   "cdsCore": {
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd",
     "adapterSha256": "7d63624afd6a3e7eaa2c42803aacdcf1a74ca479ffbed4d9c1f40c60e233ff1e"
   },
-  "adapterSha256": "cb3c0e1b2e2d33b7c99cb0f4c23fd989881734c61a915c3a5ef98ba1d5fa9963",
+  "adapterSha256": "325230efb41d6b859feffaaba9a47da69d29ea69b0d08c5b77f691156d7f3128",
   "sharedGraphImports": [
     "$5 <- shared-0-CnnWnVrT.js#$5",
     "$L <- shared-92-BOgyxePb.js#$L",
@@ -1865,7 +1873,7 @@
     "zz <- shared-123-1Hc1RTKl.js#zz"
   ],
   "heldByCdsCore": {
-    "shared-frame.mjs": 41,
+    "shared-frame.mjs": 46,
     "preload-helper.mjs": 1,
     "rolldown-runtime.mjs": 2,
     "vendor-frame.mjs": 42,
@@ -1880,7 +1888,7 @@
     "shared-123.mjs": 19,
     "shared-153.mjs": 3,
     "shared-183.mjs": 9,
-    "shared-1.mjs": 68,
+    "shared-1.mjs": 70,
     "shared-2.mjs": 4,
     "shared-5.mjs": 3,
     "shared-7.mjs": 2,
