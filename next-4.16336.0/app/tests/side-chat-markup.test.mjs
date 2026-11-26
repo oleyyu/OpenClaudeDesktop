@@ -23,6 +23,8 @@ const EMPTY_OUTER = `flex-1 min-h-0 ${FF}`;
 const EMPTY_NOTICE = 'bg-alpha-1 rounded p-lg text-footnote leading-normal text-muted-as-secondary text-pretty select-text';
 const LIST = `flex-1 min-h-0 overflow-y-auto flex flex-col gap-[var(--chat-turn-gap)] ${FF}`;
 const ERROR = 'px-lg pb-1.25 text-footnote text-danger select-text shrink-0';
+// B10: a failed question's error in the turn list, where its answer would be (no idle spark, not against the composer).
+const LIST_ERROR = 'text-footnote text-danger select-text';
 const BOUNDS = 'epitaxy-root text-body text-primary break-words pointer-events-none fixed inset-0';
 const ASIDE = 'epitaxy-side-chat rounded-card absolute max-w-full flex flex-col draggable-none pointer-events-auto';
 const FRAME = 'flex flex-1 min-h-0 flex-col outline-none';
@@ -126,7 +128,7 @@ test('every qF/UF/HF/r8/N_ utility is in the loaded design stylesheets', async (
   for (const name of designEntryStylesheets.filter(name => linked.includes(name))) postcss.parse(await fs.readFile(new URL(name, latest), 'utf8')).walkRules(rule => selectorClasses(rule.selector).forEach(c => loaded.add(c)));
   // epitaxy-side-chat / epitaxy-user-attachments carry no rule in any 3.6556.2 stylesheet (selector hooks only).
   const hooks = new Set(['epitaxy-side-chat', 'epitaxy-user-attachments']);
-  for (const token of [EMPTY_OUTER, EMPTY_NOTICE, LIST, ERROR, BOUNDS, ASIDE, 'invisible', FRAME, WINDOW_FRAME, UF_BODY, COMPOSER_ROW, USER_TURN, USER_ROW, BUBBLE,
+  for (const token of [EMPTY_OUTER, EMPTY_NOTICE, LIST, ERROR, LIST_ERROR, BOUNDS, ASIDE, 'invisible', FRAME, WINDOW_FRAME, UF_BODY, COMPOSER_ROW, USER_TURN, USER_ROW, BUBBLE,
     SEGMENTS, 'cds-user-message-body', 'epitaxy-user-attachments flex flex-wrap max-w-full [.epitaxy-user-turn_&]:justify-end gap-1', 'grid place-items-center w-10 h-10 rounded-sm focus-visible:outline-hidden border-0 p-0 hide-focus-ring focus-visible:shadow-focus bg-alpha-2 text-muted-as-secondary', 'epitaxy-root break-words !p-0 !min-w-0', 'flex flex-col gap-1 max-w-full min-w-0 max-h-[280px] overflow-y-auto p-md text-body select-text text-start rounded-[inherit] focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus', 'text-body text-primary whitespace-pre-wrap [overflow-wrap:anywhere] [unicode-bidi:plaintext]', HEADER, TITLE, TRAILING, PANE_BODY, PANE_ROOT, chrome.paneFlushRootClass, 'draggable absolute inset-0 -z-[1]', 'sr-only'].flatMap(cls => cls.split(/\s+/)))
     if (!hooks.has(token)) assert.ok(loaded.has(token), `${token} is in the current design stylesheets`);
 });
@@ -152,15 +154,20 @@ test('SSR: the floating panel is qF > UF > N_, with the empty notice; the window
   assert.doesNotMatch(windowed, /epitaxy-root|<aside/);
 });
 
-test('SSR: HF user turns, VF answers straight in div.select-text, _F status and the bare error p', () => {
+test('SSR: HF user turns, VF answers straight in div.select-text, _F status, and the error where the answer would be', () => {
   assert.equal(store.importThread('markup-turns', { messages: [{ role: 'user', text: 'what?' }, { role: 'assistant', text: 'ANSWER_TEXT' }, { role: 'user', text: 'again?' }], error: 'Side question failed.', retry: 'again?' }), true);
   const html = render({ threadId: 'markup-turns', onPopOut() {} });
   assert.match(html, new RegExp(`<div class="${esc(LIST)}"><div class="${esc(USER_TURN)}"><div data-cds="UserMessage" data-text-size="md" class="${esc(USER_ROW)}"><div class="${esc(BUBBLE)}"><div id="[^"]+" class=""><div class="cds-user-message-body"><div class="${esc(SEGMENTS)}"><p class="[^"]*">what\\?</p></div></div></div></div></div></div>`));
   assert.match(html, /<div class="select-text"><div class="source-markdown"><p>ANSWER_TEXT<\/p><\/div><\/div>/);
+  // B10: the error closes the turn list in the status line's place; the composer-side p is only for a thread with no turns.
+  assert.ok(html.includes(`<p class="${LIST_ERROR}" data-side-error="">Side question failed.</p></div>`));
+  assert.doesNotMatch(html, new RegExp(esc(ERROR)));
+  assert.doesNotMatch(html, /class="ssc-status"/);
   // W14-code r8 css8-side-chat-status-handrow: _F's aria-hidden div holds Go (c96d752d0 U6, the generated WorkingLine) directly.
-  assert.match(html, /<div class="ssc-status" data-side-status="idle"><span role="status" class="sr-only"><\/span><div aria-hidden="true"><div class="flex flex-col"( data-turn-working="[^"]*")?>/);
-  assert.doesNotMatch(html, /source-transcript-status|sts-row/);
-  assert.equal(html.split(`<p class="${ERROR}">Side question failed.</p>`).length - 1, 1);
+  assert.equal(store.importThread('markup-turns-ok', { messages: [{ role: 'user', text: 'what?' }, { role: 'assistant', text: 'ANSWER_TEXT' }] }), true);
+  const answered = render({ threadId: 'markup-turns-ok' });
+  assert.match(answered, /<div class="ssc-status" data-side-status="idle"><span role="status" class="sr-only"><\/span><div aria-hidden="true"><div class="flex flex-col"( data-turn-working="[^"]*")?>/);
+  assert.doesNotMatch(answered, /source-transcript-status|sts-row|data-side-error/);
   assert.match(html, /aria-label="Clear side chat"/);
   assert.match(html, /aria-label="Open in new window" data-side-chat-popout=""/);
   assert.doesNotMatch(html, /role="alert"|>Retry<|ArrowClockwise|ssc-error|ssc-answer-text|overflow-wrap:anywhere\]"><div class="source-markdown/);

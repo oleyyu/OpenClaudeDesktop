@@ -36,7 +36,7 @@
  * are applied over the reloaded state.
  */
 import { RpcError, invalidParams } from '../transport.js'
-import { errorInfoOfV2, isDefaultTitle, planOf, tokenBreakdown, addBreakdown } from '../projection.js'
+import { CLAUDE_AGENT, errorInfoOfV2, isDefaultTitle, markClaudeSignIn, planOf, tokenBreakdown, addBreakdown } from '../projection.js'
 import { isReadOnlyMode } from '../policy.js'
 import { splitModel } from '../models.js'
 import { LiveAdapterV2, messageIdOfEvent, newMessageId, promptBodyV2, promptInputV2, retryNoticeV2 } from './live.js'
@@ -581,21 +581,40 @@ export const THREAD_V2 = {
     }
     const id = typeof event.id === 'string' && event.id.startsWith('evt_') ? messageIdOfEvent(event.id) : null
     if (id && live.raw.has(id)) return
+    const ran = this.executionModelV2()
     live.apply(event)
     this.wakingV2 = null
     if (event.type === 'session.execution.failed') {
-      const error = errorInfoOfV2(event.data?.error)
+      // Claude Code needing a new sign-in says so (codeDesktop.signInProvider), and the bridge's account/read too.
+      const error = markClaudeSignIn(errorInfoOfV2(event.data?.error), ran.providerID)
       if (error) {
         if (this.activeTurn) this.turnError = error
         this.emit('error', { error, willRetry: false, threadId: this.id, turnId: this.activeTurn?.id ?? '' })
+        if (error.codeDesktop?.signInProvider === CLAUDE_AGENT) this.bridge.claudeSignInFailedV2?.(error.message)
       }
     }
+    if (event.type === 'session.execution.succeeded' && ran.stepped && ran.providerID === CLAUDE_AGENT) this.bridge.claudeTurnSucceededV2?.()
     if (event.type === 'session.execution.interrupted' && this.activeTurn) this.interrupted = true
     // Plan mode's plan (v2/asks.js): its item in the turn, its card after turn/completed (the card does not hold the turn).
     const plan = this.planOfTurnV2?.(event) ?? null
     if (plan) this.emitItem(plan.turnId, { type: 'plan', id: plan.itemId, text: plan.text }, { done: true })
     this.finishTurn({ recoverHistory: true })
     if (plan) void this.planReviewV2(plan).catch((error) => this.bridge.log(`plan card ${this.id}: ${error?.message ?? error}`))
+  },
+
+  /**
+   * The model the execution ending now ran: its last step's (a step after the previous execution's idle message),
+   * else the session's own ({providerID, stepped: false}; null when unknown). Read before the idle message is added.
+   */
+  executionModelV2() {
+    const list = [...this.liveV2().raw.values()]
+    for (let index = list.length - 1; index >= 0; index--) {
+      const message = list[index]
+      if (message?.type === 'idle') break
+      if (message?.type === 'assistant' && isRecord(message.model) && typeof message.model.providerID === 'string') return { providerID: message.model.providerID, stepped: true }
+    }
+    const own = isRecord(this.info?.model) && typeof this.info.model.providerID === 'string' ? this.info.model.providerID : null
+    return { providerID: own, stepped: false }
   },
 
   /** Changed parts → their items, in the turn their message belongs to. */

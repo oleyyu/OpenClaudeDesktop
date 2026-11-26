@@ -87,6 +87,12 @@ export const roots = [
   // its children. The host mounts it around the nav body (src/frame-sidebar-nav-body.jsx) in place of the direct Pu mount.
   { semantic: 'HubSidebarFirstLook', file: 'shared-20-DUEo90UF.js', local: 'EC', export: 'to',
     features: ['n === null ? v(DC, null, t) : t'] },
+  // Group by › Model (OpenCode; host src/frame-sidebar-nav-groups.jsx): the session list's renderer table (shared-22 Sk: groupBy →
+  // the list component per kind; officially read only by Ck, a boundary below) and its bucket (shared-22 ET: heading, rows, Show
+  // more, and the heading's "New session in {group}" button when given onNewSession). The host's Ck answer dispatches through
+  // Sk exactly as Ck does, and draws the "model" grouping as ET buckets, one per model provider.
+  { semantic: 'SessionListRenderers', file: S22, local: 'Sk', export: null, features: ['custom: { cowork: bk, code: bk },', 'none: xk,'] },
+  { semantic: 'SessionBucket', file: S22, local: 'ET', export: null, features: ['groupLabel: n,', 'newSessionTarget: E,'] },
 ];
 
 // ---- round-4 navfix (real-tree defect, round4/real-b/integration/compare.json defects.sidebarOverlayBoundary) ----------------
@@ -366,6 +372,19 @@ export const boundaries = [
   { key: 'shared-57-grpFrBWt.js#mO', name: 'LazySidebarNewMenuRowsEntry', kind: 'lazyEntry', entry: {"id": "sidebar_new_menu_rows", "tier": "T2"}, reads: ['load'], host: 'lazy entry of c3ca931fa-Caaf-isS.js (not shipped): official static fields, load answered by the host (rejects)' },
   { key: 'shared-8-BqfCbkJd.js#Cj', name: 'LazyProjectTags', kind: 'hook', reads: [], host: 'loads ccecd5bde-DBK1PGru.js (not shipped): the host answer rejects / reports unavailable' },
   { key: 'shared-8-BqfCbkJd.js#NJ', name: 'LazyEpitaxyCreateProjectDialog', kind: 'component', reads: [], host: 'lazy component of cf0b6cdd1-CRYUSqLn.js (not shipped): the host draws nothing (official no-ui / fail-open state)' },
+  // ---- Group by › Model (OpenCode; src/frame-sidebar-nav-groups.jsx). The Sessions section stores only the official groupings
+  // (shared-92 by(): anything else becomes "date"), so Model is a host flag (frame store `hostModelGroups`, mirrored from main's
+  // sidebarPreferences.modelGroups) laid over the stored grouping:
+  //   shared-39 Tm   the Sessions section's group-by (Em / Om read it): "model" while the flag is on, else the official value;
+  //   shared-39 Mm   the Group by writer: Model sets the flag, any other grouping clears it and writes officially;
+  //   shared-39 Nm   Reset to defaults: clears the flag, then the official reset;
+  //   shared-57 a_   the Group by options: the official list, with Model while the core offers it (two or more providers);
+  //   shared-22 Ck   the list renderer dispatch: "model" draws provider buckets (SessionBucket), the rest is Sk as officially.
+  { key: 'shared-39-ZCs0lAwB.js#Tm', name: 'sessionsSectionGroupBy', kind: 'hook', reads: ['state'], host: 'Group by › Model: "model" while the host flag is on, else the official Sessions section group-by' },
+  { key: 'shared-39-ZCs0lAwB.js#Mm', name: 'writeListGroupBy', kind: 'hook', reads: ['mode', 'groupBy'], host: 'Group by › Model: Model sets the host flag; other groupings clear it, then the official writer' },
+  { key: 'shared-39-ZCs0lAwB.js#Nm', name: 'clearListGroupBy', kind: 'hook', reads: ['mode'], host: 'Group by › Model: clears the host flag, then the official reset' },
+  { key: 'shared-57-grpFrBWt.js#a_', name: 'useGroupByOptions', kind: 'hook', reads: [], host: 'Group by › Model: the official options, Model added while offered' },
+  { key: `${S22}#Ck`, name: 'renderSessionGroups', kind: 'hook', reads: ['groupBy', 'ctx'], host: 'Group by › Model: provider buckets for "model", else the official Sk dispatch' },
 ];
 
 export function localAdapters(pins) {

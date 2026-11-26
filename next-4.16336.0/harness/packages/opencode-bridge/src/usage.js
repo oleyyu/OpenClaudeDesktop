@@ -26,7 +26,7 @@ export function foldSession(messages, { subagent = false } = {}) {
   for (const { info, parts } of messages ?? []) {
     const created = info?.time?.created
     if (!Number.isFinite(created)) continue
-    const day = days[localDayKey(created)] ??= { tokens: 0, messages: 0, sessions: 0, toolCalls: 0, hours: {}, models: {}, modelUsage: {}, costUsd: 0 }
+    const day = days[localDayKey(created)] ??= { tokens: 0, messages: 0, sessions: 0, toolCalls: 0, hours: {}, models: {}, modelUsage: {}, modelCostUsd: {}, costUsd: 0 }
     day.messages++
     const hour = new Date(created).getHours()
     day.hours[hour] = (day.hours[hour] ?? 0) + 1
@@ -37,8 +37,10 @@ export function foldSession(messages, { subagent = false } = {}) {
     const input = (tokens.input ?? 0), output = (tokens.output ?? 0) + (tokens.reasoning ?? 0), read = tokens.cache?.read ?? 0, write = tokens.cache?.write ?? 0
     const total = input + output + read + write
     day.tokens += total
-    day.costUsd += Number.isFinite(info.cost) ? info.cost : 0
+    const cost = Number.isFinite(info.cost) ? info.cost : 0
+    day.costUsd += cost
     const model = info.modelID ? `${info.providerID}/${info.modelID}` : 'unknown'
+    day.modelCostUsd[model] = (day.modelCostUsd[model] ?? 0) + cost
     day.models[model] = (day.models[model] ?? 0) + total
     const usage = day.modelUsage[model] ??= { inputTokens: 0, outputTokens: 0, cacheReadInputTokens: 0, cacheCreationInputTokens: 0 }
     usage.inputTokens += input
@@ -53,14 +55,28 @@ export function foldSession(messages, { subagent = false } = {}) {
   return { days, longestTurnSec: Math.floor(longestTurnMs / 1000), subagent }
 }
 
-/** account/usage/read. */
+/**
+ * account/usage/read, with `breakdown` (the core-neutral extension acp-bridge usage.js also sends): tokens by
+ * category, model and day, and OpenCode's USD cost; Settings › Usage draws it as tiles, panels and per-day bars.
+ * OpenCode prices every step (models.dev); a history whose steps all cost 0 (free models) is tokens only.
+ */
 export function accountUsage(folds, todayKey = localDayKey(Date.now())) {
-  const daily = new Map()
+  const daily = new Map(), parts = new Map(), models = new Map()
   let longest = 0, costUsd = 0
   for (const fold of folds) {
     for (const [key, day] of Object.entries(fold.days)) {
       if (day.tokens) daily.set(key, (daily.get(key) ?? 0) + day.tokens)
       costUsd += day.costUsd
+      const part = parts.get(key) ?? { input: 0, cacheRead: 0, cacheWrite: 0, output: 0, costUsd: 0 }
+      part.costUsd += day.costUsd ?? 0
+      for (const [model, usage] of Object.entries(day.modelUsage ?? {})) {
+        part.input += usage.inputTokens; part.cacheRead += usage.cacheReadInputTokens; part.cacheWrite += usage.cacheCreationInputTokens; part.output += usage.outputTokens
+        const entry = models.get(model) ?? { tokens: 0, costUsd: 0 }
+        entry.tokens += usage.inputTokens + usage.cacheReadInputTokens + usage.cacheCreationInputTokens + usage.outputTokens
+        entry.costUsd += day.modelCostUsd?.[model] ?? 0
+        models.set(model, entry)
+      }
+      parts.set(key, part)
     }
     longest = Math.max(longest, fold.longestTurnSec)
   }
@@ -75,11 +91,36 @@ export function accountUsage(folds, todayKey = localDayKey(Date.now())) {
   let currentStreakDays = 0
   const cursor = parseDay(todayKey)
   while (daily.has(localDayKey(cursor.getTime()))) { currentStreakDays++; cursor.setDate(cursor.getDate() - 1) }
+  const priced = costUsd > 0
+  const money = (value) => Math.round(value * 1e6) / 1e6
+  const cost = (value) => (priced ? { costUsd: money(value ?? 0) } : { costCny: null })
+  const sum = (filter) => {
+    const out = { tokens: 0, inputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0, outputTokens: 0, unpricedTokens: 0 }
+    let spent = 0
+    for (const key of keys.filter(filter)) {
+      const part = parts.get(key)
+      out.tokens += daily.get(key)
+      out.inputTokens += part.input; out.cacheReadTokens += part.cacheRead; out.cacheWriteTokens += part.cacheWrite; out.outputTokens += part.output
+      spent += part.costUsd
+    }
+    return { ...out, ...cost(spent) }
+  }
+  const cutoff = (() => { const date = parseDay(todayKey); date.setDate(date.getDate() - 29); return localDayKey(date.getTime()) })()
   return {
     summary: { lifetimeTokens, peakDailyTokens, longestRunningTurnSec: longest, currentStreakDays, longestStreakDays },
     dailyUsageBuckets: keys.map((startDate) => ({ startDate, tokens: daily.get(startDate) })),
     threadUsage: null,
     opencode: { costUsd: Math.round(costUsd * 10000) / 10000 },
+    breakdown: {
+      allTime: sum(() => true),
+      last30Days: sum((key) => key >= cutoff && key <= todayKey),
+      today: sum((key) => key === todayKey),
+      // "provider/model": the model's own id names the row (the full key stays the row's key and tooltip).
+      models: [...models].filter(([, entry]) => entry.tokens > 0)
+        .map(([model, entry]) => ({ model, displayName: model.includes('/') ? model.slice(model.indexOf('/') + 1) : model, tokens: entry.tokens, ...cost(entry.costUsd) })),
+      daily: keys.map((date) => ({ date, tokens: daily.get(date), ...cost(parts.get(date).costUsd) })),
+      priced,
+    },
   }
 }
 

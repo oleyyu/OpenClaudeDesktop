@@ -4,6 +4,7 @@ import {
   useHubSwitcherInTitlebar as $_,
   useAnalytics as Ai,
   LazyCoworkSessionMachinery as Cc,
+  renderSessionGroups as Ck,
   sidebarStateForTelemetry as Dd,
   useFeatureIsOn as Fe,
   useDialogPreloadProps as Fr,
@@ -29,6 +30,7 @@ import {
   subscribePathname as gt,
   useToast as hc,
   useHubSwitcherPinned as l_,
+  useGroupByOptions as qx,
   LazyEpitaxyProjectConfigDialog as ul,
   useNavigateToMode as um,
   useApiFetcher as ve,
@@ -835,7 +837,6 @@ import {
   Rb as px,
   gS as qS,
   Qm as qb,
-  a_ as qx,
   LA as rC,
   bj as rS,
   sx as rx,
@@ -11388,11 +11389,6 @@ var Sk = {
   custom: { cowork: bk, code: bk },
   none: xk,
 };
-function Ck(e, t) {
-  let n = Sk[e],
-    r = typeof n == "function" ? n : (n?.[t.kind] ?? gk);
-  return o(f, { children: r(t) }, e);
-}
 function wk({ groupBy: e, ctx: t }) {
   return Ck(e, t);
 }
@@ -21580,4 +21576,9 @@ var WI = o(UI, {});
 function bB() {
   (fd(), ai(), Bt());
 }
-export { PI as SidebarNavBody, bB as frameMountResets };
+export {
+  PI as SidebarNavBody,
+  bB as frameMountResets,
+  Sk as SessionListRenderers,
+  ET as SessionBucket,
+};

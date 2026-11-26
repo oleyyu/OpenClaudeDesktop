@@ -20,6 +20,7 @@ const CODEX_SERVER_NAME = "chrome_devtools";
 const VERSION = "1.13.0";
 const ENV_KEY = "CODE_DESKTOP_DEVTOOLS_MCP_SERVER";
 const BIN = path.join("node_modules", "chrome-devtools-mcp", "out", "Default", "gen", "src", "bin", "chrome-devtools-mcp.js");
+const LAUNCHER = path.join(__dirname, "launch.mjs");
 const SERVER_ENV = Object.freeze({
   CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1",
   CHROME_DEVTOOLS_MCP_NO_CONFIG_DISCOVERY: "1",
@@ -73,7 +74,8 @@ function createDevtoolsMcp({ previewService, enabled = () => true, logger = cons
     return {
       name: SERVER_NAME,
       command,
-      args: [serverScript, "--wsEndpoint", endpoint.wsEndpoint, "--no-usage-statistics", "--no-performance-crux"],
+      // Under the app's binary the server goes through launch.mjs, which keeps it out of the Dock (process.title).
+      args: [...(runAsNode ? [LAUNCHER] : []), serverScript, "--wsEndpoint", endpoint.wsEndpoint, "--no-usage-statistics", "--no-performance-crux"],
       env: { ...(runAsNode ? { ELECTRON_RUN_AS_NODE: "1" } : {}), ...SERVER_ENV },
     };
   }

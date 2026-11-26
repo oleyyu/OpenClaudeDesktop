@@ -12,6 +12,7 @@ export default Object.freeze({
   'Auto-open files DeepSeek writes': '自动打开 DeepSeek 写入的文件',
   'Tell DeepSeek what to change': '告诉 DeepSeek 要改什么',
   'Write your prompt to DeepSeek': '给 DeepSeek 写下你的提示',
+  'DeepSeek couldn’t process that message': 'DeepSeek 无法处理这条消息',
   'DeepSeek keeps its existing memory but won’t use memory or make new memories.': 'DeepSeek 会保留现有记忆，但不会使用记忆，也不会生成新的记忆。',
   'Add instructions for DeepSeek to follow in all Cowork sessions...': '添加 DeepSeek 在所有协作会话中都要遵循的指令...',
   'DeepSeek is waiting in {count, plural, one {# session} other {# sessions}}': '{count, plural, other {DeepSeek 正在 # 个会话中等待}}',

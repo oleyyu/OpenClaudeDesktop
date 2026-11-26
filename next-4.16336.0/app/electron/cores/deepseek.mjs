@@ -5,7 +5,7 @@ export default Object.freeze({
   assistant: "DeepSeek",
   // Logo key (src/brand-logos.mjs) and the one plain sentence setup shows under the name.
   brand: "deepseek",
-  tagline: "Fast and affordable. Also runs GLM, Kimi, Qwen and other models you add.",
+  tagline: "Fast and affordable. Also runs GLM, Kimi, Qwen and more.",
   name: "DeepSeek Harness",
   vendor: "DeepSeek",
   engine: "deepseek-harness",

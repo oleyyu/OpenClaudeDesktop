@@ -5,6 +5,7 @@ import {
   CoworkArtifacts as Ne,
   LocalAgentModeSessions as R,
   useApiFetcher as Te,
+  sessionsSectionGroupBy as Tm,
   LocalSessions as U,
   useErrors as _r,
   useGrowthBookFlagWhen as at,
@@ -310,7 +311,6 @@ import {
   oC as bi,
   rI as ci,
   YF as co,
-  xy as ea,
   cA as fa,
   cy as ga,
   yF as ha,
@@ -322,7 +322,6 @@ import {
   II as ji,
   jI as ka,
   yD as ki,
-  by as li,
   eM as ma,
   ik as mi,
   DU as na,
@@ -1614,10 +1613,6 @@ function Cm() {
 function wm(e) {
   X.getState().setSectionView(ga, { show: { slack: e } });
 }
-function Tm(e) {
-  let { groupBy: t } = lm(e, ga);
-  return t === void 0 ? void 0 : ea(t);
-}
 function Em(e) {
   let $ = J9(3),
     t = um(),
@@ -1650,23 +1645,6 @@ function Am(e) {
         )
       : $[2];
   return X(n);
-}
-function Mm(e, t) {
-  let n = X.getState();
-  if (e !== "code") {
-    n.setGroupBy(e, t);
-    return;
-  }
-  (!dm() && t !== "environment" && n.setGroupBy(e, t),
-    n.setSectionView(ga, { groupBy: li(t) ?? "none" }));
-}
-function Nm(e) {
-  let t = X.getState();
-  if (e !== "code") {
-    t.clearGroupBy(e);
-    return;
-  }
-  (dm() || t.clearGroupBy(e), t.setSectionView(ga, { groupBy: null }));
 }
 function Pm(e, t) {
   let n = X.getState();
@@ -8224,10 +8202,8 @@ export {
   Lf,
   MC,
   Mf,
-  Mm,
   NC,
   Nf,
-  Nm,
   Np,
   OS,
   Ol,

@@ -125,6 +125,9 @@ html[data-reduce-motion="true"] .msx-image-chip { transition:none; }
 .msx-model-head { display:flex;flex-direction:column;gap:4px;min-width:0;flex:1; }
 .msx-model-ids { display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:var(--cds-gap-sm,8px);color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px); }
 .msx-model-rows { padding:0 0 var(--cds-pad-sm,6px) 24px; }
+/* An open model's fields (display name, numbers) take the settings selects' 224px (source-select.css), so the effort
+   select and the inputs under it share one left edge (200 / 220 / 160 left three). */
+.msx-model-rows .ss-control :is(.msx-text,.msx-number) { width:224px; }
 .msx-name-control { display:inline-flex; align-items:center; gap:6px; }
 .msx-name-id { font-family:var(--cds-font-mono, ui-monospace, monospace); font-size:12px; color:var(--cds-text-secondary); }
 
@@ -132,7 +135,7 @@ html[data-reduce-motion="true"] .msx-image-chip { transition:none; }
    a model is one line (name, id, chips, caret at the end) and opens to its options. Tokens only, light and dark. */
 .sl-content[data-entry=models] { --msx-card-fill:color-mix(in srgb, var(--cds-text-primary) 2.5%, transparent); --msx-chip-fill:color-mix(in srgb, var(--cds-text-primary) 6%, transparent); }
 .sl-content[data-entry=models] .ss-group { margin-bottom:26px; }
-.sl-content[data-entry=models] .ss-group > h3 { margin:0 0 8px 4px; font-size:13px; line-height:18px; font-weight:500; color:var(--cds-text-secondary); }
+.sl-content[data-entry=models] .ss-group > h3 { margin:0 0 8px; /* flush with the page copy and the cards' edge (4px in left it on neither) */ font-size:13px; line-height:18px; font-weight:500; color:var(--cds-text-secondary); }
 .sl-content[data-entry=models] .ss-group > .settings-group-dividers { padding:0 18px; border:1px solid var(--cds-alpha-2); border-radius:14px; background:var(--msx-card-fill); }
 .sl-content[data-entry=models] .ss-group > .settings-group-dividers > .ss-row { padding:14px 0; }
 .sl-content[data-entry=models] .ss-row-copy [data-settings-desc] { font-size:13px; line-height:18px; }
@@ -160,7 +163,7 @@ html[data-reduce-motion="true"] .msx-image-chip { transition:none; }
 .sl-content[data-entry=models] [data-setting-id=cores-intro] + [data-settings-row] { border-top:0; }
 .sl-content[data-entry=models] .cores-page .ccmd-path { display:none; }
 .sl-content[data-entry=models] .cores-desc { font-size:13px; line-height:18px; color:var(--cds-text-muted); }
-.sl-content[data-entry=models] .cores-note { margin:-14px 0 0 4px; font-size:12px; }
+.sl-content[data-entry=models] .cores-note { margin:-14px 0 0; /* flush with the cards and section labels (4px in) */ font-size:12px; }
 .sl-content[data-entry=models] .cores-desc { flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:0 6px; }
 .sl-content[data-entry=models] .cores-desc > .cores-status { color:var(--cds-text-muted); font-size:13px; line-height:18px; }
 .sl-content[data-entry=models] .cores-desc > .cores-status:not(:empty)::before { content:"·"; margin-right:6px; }

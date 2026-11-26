@@ -342,7 +342,7 @@ export default {
   "Searching files": "正在搜索文件",
   "Filter files": "筛选文件",
   "Filter files…": "筛选文件…",
-  "Filter, or ? to search in files": "筛选文件，或输入 ? 搜索文件内容",
+  "Filter, or ? to search in files": "筛选，或输入 ? 搜索内容",
   "Type after ? to search in files": "在 ? 后输入文字以搜索文件内容",
   "No matches in file contents": "文件内容中没有匹配项",
   "More matches in this file.": "此文件中还有更多匹配项。",

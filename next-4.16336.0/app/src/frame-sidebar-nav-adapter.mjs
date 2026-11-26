@@ -120,3 +120,8 @@ export function LazySidebarPopover(props) { return React.createElement(cap("Lazy
 export const LazySidebarNewMenuRowsEntry = Object.freeze({ ...{"id":"sidebar_new_menu_rows","tier":"T2"}, load: (...a) => cap("LazySidebarNewMenuRowsEntry")(...a) }); // shared-57-grpFrBWt.js#mO (lazyEntry): official static fields, the host loads
 export function LazyProjectTags(...args) { return cap("LazyProjectTags")(...args); } // shared-8-BqfCbkJd.js#Cj (hook)
 export function LazyEpitaxyCreateProjectDialog(props) { return React.createElement(cap("LazyEpitaxyCreateProjectDialog"), props); } // shared-8-BqfCbkJd.js#NJ (component)
+export function sessionsSectionGroupBy(...args) { return cap("sessionsSectionGroupBy")(...args); } // shared-39-ZCs0lAwB.js#Tm (hook)
+export function writeListGroupBy(...args) { return cap("writeListGroupBy")(...args); } // shared-39-ZCs0lAwB.js#Mm (hook)
+export function clearListGroupBy(...args) { return cap("clearListGroupBy")(...args); } // shared-39-ZCs0lAwB.js#Nm (hook)
+export function useGroupByOptions(...args) { return cap("useGroupByOptions")(...args); } // shared-57-grpFrBWt.js#a_ (hook)
+export function renderSessionGroups(...args) { return cap("renderSessionGroups")(...args); } // shared-22-BACJUrcb.js#Ck (hook)

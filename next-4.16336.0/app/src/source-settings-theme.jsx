@@ -1,8 +1,8 @@
 // Settings › Theme (C4): preset, accent, a custom interface font, font size, density and corner radius on top of
 // light/dark. Values are applied by theme-custom-model's root-level overrides of the existing CDS custom properties;
-// this page only edits preferences (customTheme). Every setting has one home: light/dark lives on Preferences, code
-// theme, code font and the Interface font choice on Code (the official pages); this page links to them instead of
-// repeating their controls. A theme file still carries the code font and code themes (export/import).
+// this page only edits preferences (customTheme). Every setting has one home: light/dark, the Interface font choice,
+// code themes and code font are the official rows drawn above this page on Settings › Appearance; this page does not
+// repeat them. A theme file still carries the code font and code themes (export/import).
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { appearancePreferences } from '../electron/preferences.mjs';
 import { normalizeTheme, isDefaultTheme, isFontFamily } from '../electron/prefs/theme.mjs';
@@ -19,7 +19,7 @@ import './theme-settings.css';
 // The CDS blue the accent replaces (c6a992d55 --cds-blue-450), shown in the picker while unset.
 const DEFAULT_ACCENT = '#2a78d6';
 
-export function SourceThemeSettings({ config = {}, desktopCall, onSave, onOpenSetting = null }) {
+export function SourceThemeSettings({ config = {}, desktopCall, onSave }) {
   const prefs = appearancePreferences(config);
   const saved = normalizeTheme(config.customTheme);
   const [optimistic, setOptimistic] = useState({}), [rowErrors, setRowErrors] = useState({}), [notice, setNotice] = useState(null);
@@ -101,7 +101,7 @@ export function SourceThemeSettings({ config = {}, desktopCall, onSave, onOpenSe
 
   const accent = liveAccent ?? theme.accent;
   const presetRow = settingRow('themePreset', t('Theme preset'), t('Start from a built-in theme, or import one from a file.'),
-    <SourceSelect label={t('Theme preset')} value={presetId} items={presetItems} align="end" className="sselect-width-160" onChange={choosePreset}/>,
+    <SourceSelect label={t('Theme preset')} value={presetId} items={presetItems} align="end" onChange={choosePreset}/>,
     { below: <div className="ss-theme-custom-actions">
       <SourceSettingsButton variant="secondary" size="sm" busy={fileBusy === 'import'} onClick={importFile}>{t('Import…')}</SourceSettingsButton>
       <SourceSettingsButton variant="secondary" size="sm" busy={fileBusy === 'export'} onClick={exportFile}>{t('Export…')}</SourceSettingsButton>
@@ -111,37 +111,32 @@ export function SourceThemeSettings({ config = {}, desktopCall, onSave, onOpenSe
   const accentRow = settingRow('themeAccent', t('Accent color'), t('Used for primary buttons, links, focus rings and selection.'),
     <AccentControl value={accent}
       onCommit={value => { clearTimeout(accentTimer.current); accentTimer.current = null; pendingAccent.current = null; setLiveAccent(null); return saveTheme('themeAccent', { accent: value }); }}/>);
-  // A link to a setting's home page (the row highlighted there); without a navigator the description names the page.
-  const openButton = (label, section, rowId) => onOpenSetting
-    ? <SourceSettingsButton variant="secondary" size="sm" onClick={() => onOpenSetting(section, rowId)}>{label}</SourceSettingsButton> : null;
-  const modeRow = settingRow('themeMode', t('Light or dark'), t('Choose System, Light or Dark under Theme on the General page.'),
-    openButton(t('Open General settings'), 'preferences', 'theme'));
-  // The one free-text font override in the theme (customTheme.uiFont); the Interface font choice itself is on Code.
+  // The one free-text font override in the theme (customTheme.uiFont); the Interface font choice itself is the official
+  // Appearance row at the top of this page (its concise copy says so: electron/i18n/concise.mjs).
   const uiFontRow = settingRow('themeUiFont', t('Custom interface font'), t('Any installed font, saved with this theme. Leave empty to use the Interface font chosen on the Code page.'),
-    <UiFontControl value={theme.uiFont} onCommit={value => saveTheme('themeUiFont', { uiFont: value })}/>,
-    onOpenSetting ? { below: <div className="ss-theme-custom-actions">{openButton(t('Interface font settings'), 'preferences', 'interfaceFont')}</div> } : undefined);
-  // Claude keeps segmented controls to 2–3 choices; longer lists are a 160px Select in the control slot.
+    <UiFontControl value={theme.uiFont} onCommit={value => saveTheme('themeUiFont', { uiFont: value })}/>);
+  // Claude keeps segmented controls to 2–3 choices; longer lists are a Select in the control slot (224px, source-select.css).
   const fontSizeRow = settingRow('themeFontScale', t('Font size'), t('Scales most interface text and controls.'),
-    <SourceSelect label={t('Font size')} align="end" className="sselect-width-160" value={theme.fontScale}
+    <SourceSelect label={t('Font size')} align="end" value={theme.fontScale}
       items={FONT_SCALE_OPTIONS.map(value => ({ value, label: `${Math.round(value * 100)}%` }))} onChange={value => saveTheme('themeFontScale', { fontScale: Number(value) })}/>);
   const densityRow = settingRow('themeDensity', t('Density'), t('Comfortable gives controls more room.'),
     <SourceSegments label={t('Density')} value={theme.density} options={[{ value: 'compact', label: t('Compact') }, { value: 'comfortable', label: t('Comfortable') }]}
       onChange={value => saveTheme('themeDensity', { density: value })}/>);
   const radiusRow = settingRow('themeRadius', t('Corner radius'), t('Roundness of buttons, menus, cards and the composer.'),
-    <SourceSelect label={t('Corner radius')} align="end" className="sselect-width-160" value={theme.radiusScale} items={RADIUS_OPTIONS.map(option => ({ ...option, label: t(option.label) }))}
+    <SourceSelect label={t('Corner radius')} align="end" value={theme.radiusScale} items={RADIUS_OPTIONS.map(option => ({ ...option, label: t(option.label) }))}
       onChange={value => saveTheme('themeRadius', { radiusScale: Number(value) })}/>);
-  const codeLinkRow = settingRow('themeCodeAppearance', t('Code theme and code font'), t('Set on the Code page, under Code appearance.'),
-    openButton(t('Open Code settings'), 'code', 'codeTheme'));
 
+  // Settings › Appearance draws this page under the official Appearance and Code appearance groups (SETTINGS_NAV hosts
+  // preferences + theme), so light / dark (Theme), Interface font, code themes and code font are on the same page: no
+  // rows or buttons link to them any more.
   return <div className="ss-theme-custom">
-    <SettingsGroup title={t('Theme')} rows={[presetRow, modeRow]} rowErrors={rowErrors}/>
+    <SettingsGroup title={t('Theme')} rows={[presetRow]} rowErrors={rowErrors}/>
     <SettingsGroup title={t('Colors')} rows={[accentRow]} rowErrors={rowErrors}/>
     <SettingsGroup title={t('Typography')} rows={[uiFontRow, fontSizeRow, densityRow]} rowErrors={rowErrors}/>
     <SettingsGroup title={t('Shape')} rows={[radiusRow]} rowErrors={rowErrors}/>
-    <SettingsGroup title={t('Code')} rows={[codeLinkRow]} rowErrors={rowErrors}/>
     <SettingsGroup title={t('Preview')}>
       <ThemePreviewCard/>
-      <p className="ss-theme-custom-note">{t('Light and dark mode follow the Theme setting on the General page. Pop-out windows keep the default theme.')}</p>
+      <p className="ss-theme-custom-note">{t('Light or dark follows Theme at the top of this page.')}</p>
     </SettingsGroup>
   </div>;
 }

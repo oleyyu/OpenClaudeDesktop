@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
-import { RELEASE_NOTES } from '../src/release-notes.mjs';
+import { RELEASE_NOTES, RELEASE_NOTE_KINDS, RELEASE_NOTE_KIND_LABELS } from '../src/release-notes.mjs';
 
 // c360a9e1c-GPs-MV9u.js yp (6347-6360), mm (7387-7420) and Fp (6760-6810): the
 // origin glyph, title button and folder pill use CDS tooltips (Zt), so the SSR
@@ -133,7 +133,9 @@ test('LocalReleaseNotes is the md SourceDialog (standard Header) with versioned 
   assert.ok(html.includes('<div class="-mx-pad-xl -mb-pad-xl flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto px-xl pb-xl pt-md in-data-cds-fizzy:flex-none in-data-cds-fizzy:overflow-visible in-data-cds-fizzy:pt-0"><section class="flex flex-col gap-md border-b pb-lg last:border-0 last:pb-0">'));
   assert.match(html, /<div class="flex items-center justify-between gap-sm"><h4 class="text-heading font-semibold text-primary">October 1, 2026<\/h4><span data-cds="Badge"[^>]*>(<[^>]*>)*0\.2\.130(<\/[a-z]+>)*<\/div>/);
   assert.match(html, /<span data-cds="Badge" class="[^"]* font-mono[^"]*"[^>]*>(<[^>]*>)*0\.2\.130</);
-  assert.deepEqual([...html.matchAll(/<h5 class="text-caption font-medium uppercase tracking-wide text-muted-as-secondary">([^<]+)<\/h5>/g)].map((match) => match[1]), RELEASE_NOTES.flatMap(() => ['New', 'Improved']));
+  assert.deepEqual([...html.matchAll(/<h5 class="text-caption font-medium uppercase tracking-wide text-muted-as-secondary">([^<]+)<\/h5>/g)].map((match) => match[1]),
+    // Each entry's groups in F's order (New / Improved / Fixed), only the kinds it has.
+    RELEASE_NOTES.flatMap((entry) => RELEASE_NOTE_KINDS.filter((kind) => entry.items.some((item) => item.kind === kind)).map((kind) => RELEASE_NOTE_KIND_LABELS[kind])));
   assert.match(html, /<div class="flex flex-col gap-xs"><h5 [^>]*>New<\/h5><ul class="flex list-disc flex-col gap-xs ps-lg text-body text-secondary"><li>/);
   assert.match(html, /<code class="rounded bg-alpha-1 px-1 py-0\.5 text-code text-primary">~\/\.dsh<\/code>/);
   assert.doesNotMatch(html, /st-release-limits|Known limits/);

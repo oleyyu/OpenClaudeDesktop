@@ -13,6 +13,10 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
 }
+/* A notice enters with cds-reveal-in (translateY(4px) → none): the moved banner counted as scrollable overflow, so the
+   stack grew a scrollbar for the reveal (sh 108 / 105 over ch 104) and the banners lost its 11px. Clipping the list's
+   block axis keeps transforms out of the scroll size; a real overflow (taller than max-height) still scrolls. */
+[data-code-column-notices] > [data-cds=ChatComposerNotices] { overflow-y: clip; }
 .ssn-summary, .ssn-details { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .ssn-details { color: var(--cds-text-secondary); }
 /* A code span in a notice (Codex's `model` / `config.key` / `path`): the reply's inline code chip. */

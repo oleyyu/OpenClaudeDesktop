@@ -667,6 +667,40 @@ const V2_STOPS = new Set(['aborted', 'compaction.interrupted'])
 /** Whether an OpenCode 2.x SessionError is an interruption (no turn error). */
 export const v2Interrupted = (error) => V2_STOPS.has(error?.type)
 
+/** OpenCode 2.x's provider for the user's own Claude Code (v2/account.js CLAUDE_ID). */
+export const CLAUDE_AGENT = 'claude-agent'
+// Claude Code 2.1.322's failures a new sign-in fixes, interactive and -p (the Agent SDK's) wordings: "OAuth token revoked
+// · Please run /login", "Login reached its time limit · …", "Failed to authenticate: this login reached its time limit
+// and cannot be renewed. Run `claude auth login` …", "Failed to authenticate: OAuth session expired and could not be
+// refreshed", "Authentication required · Sign in again to continue", "Anthropic profile login expired · …", "Your
+// organization has disabled API key authentication · …", and older ones ("Invalid API key · Please run /login", "OAuth
+// token has expired", "Not logged in · Please run /login"). OpenCode's claude-agent rewrites "Please run /login" to "Run
+// `claude auth login` in a terminal" and turns each into a plain error (type provider.unknown, no status).
+const CLAUDE_SIGN_IN = /Please run \/login|Run `claude auth login`|Run \/login to sign in|login reached its time limit|Login expired|OAuth token (?:revoked|has expired|has been revoked)|OAuth session expired and could not be refreshed|Anthropic profile login expired|Re-authenticate your Anthropic profile|Sign in again (?:to continue|with your claude\.ai account)|organization has disabled API key authentication|Not logged in ·|Failed to authenticate\. API Error: 401\b/i
+// Auth failures a new sign-in doesn't fix: another process refreshing the login, a full disk under ~/.claude, the
+// network, a gateway (their texts may still mention /login: these win).
+const CLAUDE_AUTH_TEMPORARY = /another Claude Code process is refreshing|Could not refresh your login: the disk|Failed to refresh OAuth token: the disk|This may be a temporary network issue|gateway could not authenticate with its upstream|signing in again won['’]t/i
+// Texts only Claude Code writes, for a failure whose model is unknown (no step ran).
+const CLAUDE_CODE_TEXT = /claude auth login|\/login\b|Claude Code|claude\.ai account|Anthropic profile|claude setup-token|CLAUDE_CODE_OAUTH_TOKEN|login reached its time limit/i
+
+/** A failure's text → 'signIn' (Claude Code needs a new sign-in), 'temporary' (an auth hiccup: try again) or null. */
+export function claudeAuthFailure(message) {
+  const text = String(message ?? '')
+  if (CLAUDE_AUTH_TEMPORARY.test(text)) return 'temporary'
+  return CLAUDE_SIGN_IN.test(text) ? 'signIn' : null
+}
+
+/**
+ * A TurnError of a Claude Code sign-in failure, marked for the app (codeDesktop.signInProvider 'claude-agent'): when the
+ * failing turn ran a claude-agent model, or (no model known) its text is unmistakably Claude Code's. Others unchanged.
+ */
+export function markClaudeSignIn(error, providerID = null) {
+  if (!error || error.codexErrorInfo !== 'unauthorized' || claudeAuthFailure(error.message) !== 'signIn') return error
+  if (providerID ? providerID !== CLAUDE_AGENT : !CLAUDE_CODE_TEXT.test(error.message)) return error
+  const own = error.codeDesktop && typeof error.codeDesktop === 'object' ? error.codeDesktop : {}
+  return { ...error, codeDesktop: { ...own, signInProvider: CLAUDE_AGENT } }
+}
+
 /**
  * An OpenCode 2.x SessionError {type, message, status?, retryAfterMs?} → Codex TurnError, by its type first (null for
  * an interruption). additionalDetails is the type.
@@ -677,7 +711,11 @@ export function errorInfoOfV2(error) {
   const message = error.message || type || 'The turn failed.'
   const status = Number.isInteger(error.status) ? error.status : null
   let codexErrorInfo = 'other'
-  if (type === 'provider.auth' || status === 401 || status === 403) codexErrorInfo = 'unauthorized'
+  // Claude Code's own sign-in failures come as plain errors (provider.unknown): their text says it. Its temporary auth
+  // failures stay retryable whatever their type.
+  const claude = claudeAuthFailure(message)
+  if (claude === 'signIn' || (claude !== 'temporary' && (type === 'provider.auth' || status === 401 || status === 403))) codexErrorInfo = 'unauthorized'
+  else if (claude === 'temporary') codexErrorInfo = 'other'
   else if (V2_USAGE_LIMITS.has(type)) codexErrorInfo = 'usageLimitExceeded'
   else if (type === 'provider.rate-limit' || status === 429) codexErrorInfo = 'rateLimitExceeded'
   // 2.x compacts on an overflow itself: one that still fails says so only in its message.
@@ -1061,6 +1099,8 @@ export class Projector {
         turn.incomplete = false
         if (Number.isFinite(idle.time?.created)) turn.completedMs = Math.max(turn.completedMs ?? 0, idle.time.created)
       }
+      // A Claude Code sign-in failure says so (the model its last step ran, else the text alone).
+      if (turn.error) turn.error = markClaudeSignIn(turn.error, group.members.findLast((member) => member.role === 'step')?.entry.info.providerID ?? null)
       return turn
     })
     const last = turns.at(-1)

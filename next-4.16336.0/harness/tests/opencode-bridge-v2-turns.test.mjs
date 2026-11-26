@@ -13,6 +13,7 @@ import { PassThrough } from 'node:stream'
 import { FLAVORS, withApi } from '../packages/opencode-bridge/src/flavor.js'
 import { Bridge } from '../packages/opencode-bridge/src/index.js'
 import { REVIEW_PROMPT_V2 } from '../packages/opencode-bridge/src/v2/review.js'
+import { claudeAuthFailure, errorInfoOfV2, markClaudeSignIn } from '../packages/opencode-bridge/src/projection.js'
 import { createV2Fake, noClaude } from './fixtures/v2-fake.mjs'
 import { assistant, idle, text, tool, user } from './fixtures/v2-history.mjs'
 
@@ -723,5 +724,137 @@ test('turn/interrupt of a thread not loaded answers {} even when the server can\
   try {
     bridge.v2Api = async () => { throw new Error('OpenCode keeps exiting') }
     assert.deepEqual(await bridge.handle('turn/interrupt', { threadId: 'ses_cold', turnId: 'msg_x' }), {})
+  } finally { await bridge.stop() }
+})
+
+// ---------------------------------------------------------------- Claude Code sign-in failures
+
+// What Claude Code 2.1.322 printed when the user's stored claude.ai sign-in reached its time limit (claude-agent's
+// plain Error: provider.unknown).
+const CLAUDE_TIME_LIMIT = 'Failed to authenticate: this login reached its time limit and cannot be renewed. Run `claude auth login` to sign in again, or use `claude setup-token` and set CLAUDE_CODE_OAUTH_TOKEN for unattended jobs'
+const HAIKU = { id: 'haiku', providerID: 'claude-agent' }
+
+test('Claude Code\'s texts: a sign-in failure is unauthorized whatever its type, a temporary one stays retryable, others unchanged', () => {
+  const signIn = [
+    CLAUDE_TIME_LIMIT,
+    'OAuth token revoked · Run `claude auth login` in a terminal', 'Login expired · Run `claude auth login` in a terminal',
+    'Login reached its time limit · Run `claude auth login` in a terminal', 'Failed to authenticate: this login reached its time limit · Sign in again to continue',
+    'Login expired · Run /login to sign in again, or re-authenticate your Anthropic profile', 'Anthropic profile login expired · Re-authenticate your Anthropic profile',
+    'Your organization has disabled API key authentication · Run /login to sign in with your claude.ai account', 'Invalid API key · Please run /login',
+    'OAuth token has expired', 'Not logged in · Please run /login', 'Failed to authenticate: OAuth session expired and could not be refreshed',
+    'Authentication required · Sign in again to continue', 'Failed to authenticate. API Error: 401 {"type":"error","error":{"type":"authentication_error"}}',
+  ]
+  for (const message of signIn) {
+    assert.equal(claudeAuthFailure(message), 'signIn', message)
+    assert.equal(errorInfoOfV2({ type: 'provider.unknown', message }).codexErrorInfo, 'unauthorized', message)
+    assert.equal(errorInfoOfV2({ type: 'unknown', message }).codexErrorInfo, 'unauthorized', message)
+  }
+  const temporary = [
+    'Could not refresh your login because another Claude Code process is refreshing it (or exited mid-refresh) · Try again in a minute; if it keeps happening, close other Claude Code windows or sign in again with /login',
+    'Failed to refresh OAuth token: another Claude Code process is refreshing it or exited mid-refresh. This is usually transient; retry in a minute, and if it persists close other Claude Code processes or sign in again',
+    'Authentication error · This may be a temporary network issue, please try again',
+    'Authentication error · The gateway could not authenticate with its upstream provider — contact your gateway administrator',
+    'Could not refresh your login: the disk that holds the Claude Code config directory (~/.claude by default), or your disk quota on it, is full · Delete files you no longer need on that disk, then try again · Signing in again won\'t help',
+  ]
+  for (const message of temporary) {
+    assert.equal(claudeAuthFailure(message), 'temporary', message)
+    assert.equal(errorInfoOfV2({ type: 'provider.unknown', message }).codexErrorInfo, 'other', message)
+    assert.equal(errorInfoOfV2({ type: 'provider.auth', message, status: 401 }).codexErrorInfo, 'other', `${message} (even typed as auth)`)
+    assert.equal(markClaudeSignIn(errorInfoOfV2({ type: 'provider.unknown', message }), 'claude-agent').codeDesktop, undefined)
+  }
+  // Unrelated failures keep their classification.
+  assert.equal(errorInfoOfV2({ type: 'provider.unknown', message: 'Claude Code could not finish its reply' }).codexErrorInfo, 'other')
+  assert.equal(errorInfoOfV2({ type: 'provider.unknown', message: 'Anthropic is overloaded (529). Claude Code exhausted its retries. Try again shortly.' }).codexErrorInfo, 'other')
+  assert.equal(errorInfoOfV2({ type: 'provider.auth', message: 'Bad key', status: 401 }).codexErrorInfo, 'unauthorized')
+  assert.equal(errorInfoOfV2({ type: 'provider.rate-limit', message: 'Slow down', status: 429 }).codexErrorInfo, 'rateLimitExceeded')
+  assert.equal(errorInfoOfV2({ type: 'provider.unknown', message: 'prompt is too long for the context window' }).codexErrorInfo, 'contextWindowExceeded')
+  assert.equal(claudeAuthFailure('Login failed: wrong password'), null)
+
+  // The mark: a claude-agent model, else (no model known) a text only Claude Code writes; another provider's turn none.
+  const error = errorInfoOfV2({ type: 'provider.unknown', message: CLAUDE_TIME_LIMIT })
+  assert.deepEqual(markClaudeSignIn(error, 'claude-agent'), { ...error, codeDesktop: { signInProvider: 'claude-agent' } })
+  assert.deepEqual(markClaudeSignIn(error, null).codeDesktop, { signInProvider: 'claude-agent' })
+  assert.equal(markClaudeSignIn(error, 'anthropic').codeDesktop, undefined)
+  const generic = errorInfoOfV2({ type: 'provider.unknown', message: 'OAuth token has expired' })
+  assert.equal(generic.codexErrorInfo, 'unauthorized')
+  assert.equal(markClaudeSignIn(generic, null).codeDesktop, undefined, 'not unmistakably Claude Code\'s without its model')
+  assert.deepEqual(markClaudeSignIn(generic, 'claude-agent').codeDesktop, { signInProvider: 'claude-agent' })
+  assert.equal(markClaudeSignIn(errorInfoOfV2({ type: 'provider.auth', message: 'Bad key', status: 401 }), 'claude-agent').codeDesktop, undefined)
+  assert.equal(markClaudeSignIn(null, 'claude-agent'), null)
+})
+
+test('a claude-agent turn failing for a sign-in: the error and the stored turn say signInProvider, the bridge remembers it and tells the app; a Claude turn that goes through clears it', async () => {
+  const { bridge, fake, notes } = await v2Bridge()
+  try {
+    bridge.v2.accountTiming = { debounceMs: 5 }
+    let forgotten = 0
+    bridge.v2.claude.forget = () => { forgotten++ }
+    const live = await startThread(bridge)
+    const sid = live.id
+    const e = (type, data = {}) => fake.emit(type, { sessionID: sid, ...data })
+    let from = notes.length
+    const { turn } = await bridge.handle('turn/start', { threadId: sid, input: [{ type: 'text', text: 'hi' }] })
+    e('session.execution.started')
+    fake.deliver(sid, turn.id)
+    e('session.step.started', { assistantMessageID: 'msg_h1', agent: 'build', model: HAIKU, started: 1 })
+    e('session.step.failed', { assistantMessageID: 'msg_h1', error: { type: 'provider.unknown', message: CLAUDE_TIME_LIMIT } })
+    e('session.execution.failed', { error: { type: 'provider.unknown', message: CLAUDE_TIME_LIMIT } })
+    await until(() => notes.slice(from).some((note) => note.method === 'turn/completed'), 'turn/completed')
+    const error = notes.slice(from).find((note) => note.method === 'error').params.error
+    assert.deepEqual(error, { message: CLAUDE_TIME_LIMIT, codexErrorInfo: 'unauthorized', additionalDetails: 'provider.unknown', misalignment: null, codeDesktop: { signInProvider: 'claude-agent' } })
+    const completed = notes.slice(from).find((note) => note.method === 'turn/completed').params.turn
+    assert.equal(completed.status, 'failed')
+    assert.deepEqual(completed.error, error)
+    // Stored: thread/read builds the same error from the step's model.
+    const read = await bridge.handle('thread/read', { threadId: sid, includeTurns: true })
+    assert.deepEqual(read.thread.turns.find((entry) => entry.id === turn.id).error, error)
+    assert.deepEqual(live.turns().find((entry) => entry.id === turn.id).error.codeDesktop, { signInProvider: 'claude-agent' })
+    // The bridge: its cached claude status dropped, the failure remembered, account/updated sent.
+    assert.equal(forgotten, 1)
+    assert.equal(bridge.v2.claudeFailure.message, CLAUDE_TIME_LIMIT)
+    assert.ok(Number.isFinite(bridge.v2.claudeFailure.at))
+    await until(() => notes.slice(from).some((note) => note.method === 'account/updated'), 'account/updated')
+
+    // The same text from another provider's model: unauthorized, but no Claude sign-in and nothing remembered.
+    bridge.v2.claudeFailure = null
+    from = notes.length
+    const second = await bridge.handle('turn/start', { threadId: sid, input: [{ type: 'text', text: 'again' }] })
+    e('session.execution.started')
+    fake.deliver(sid, second.turn.id)
+    e('session.step.started', { assistantMessageID: 'msg_h2', agent: 'build', model: MODEL, started: 2 })
+    e('session.step.failed', { assistantMessageID: 'msg_h2', error: { type: 'provider.unknown', message: CLAUDE_TIME_LIMIT } })
+    e('session.execution.failed', { error: { type: 'provider.unknown', message: CLAUDE_TIME_LIMIT } })
+    await until(() => notes.slice(from).some((note) => note.method === 'turn/completed'), 'second turn/completed')
+    const other = notes.slice(from).find((note) => note.method === 'error').params.error
+    assert.equal(other.codexErrorInfo, 'unauthorized')
+    assert.equal(other.codeDesktop, undefined)
+    assert.equal(bridge.v2.claudeFailure, null)
+    assert.equal(forgotten, 1)
+
+    // A failure before any step ran: the session's model decides (claude-agent here).
+    from = notes.length
+    const third = await bridge.handle('turn/start', { threadId: sid, input: [{ type: 'text', text: 'once more' }] })
+    live.info = { ...live.info, model: HAIKU }
+    e('session.execution.started')
+    fake.deliver(sid, third.turn.id)
+    e('session.execution.failed', { error: { type: 'provider.unknown', message: 'Login expired · Run `claude auth login` in a terminal' } })
+    await until(() => notes.slice(from).some((note) => note.method === 'turn/completed'), 'third turn/completed')
+    assert.deepEqual(notes.slice(from).find((note) => note.method === 'error').params.error.codeDesktop, { signInProvider: 'claude-agent' })
+    assert.match(bridge.v2.claudeFailure.message, /Login expired/)
+
+    // A claude-agent turn that goes through: the failure is over (account/updated again).
+    from = notes.length
+    const fourth = await bridge.handle('turn/start', { threadId: sid, input: [{ type: 'text', text: 'signed in again' }] })
+    e('session.execution.started')
+    fake.deliver(sid, fourth.turn.id)
+    e('session.step.started', { assistantMessageID: 'msg_h4', agent: 'build', model: HAIKU, started: 4 })
+    e('session.text.started', { assistantMessageID: 'msg_h4', ordinal: 0 })
+    e('session.text.ended', { assistantMessageID: 'msg_h4', ordinal: 0, text: 'Hello.' })
+    e('session.step.ended', { assistantMessageID: 'msg_h4', finish: 'stop', cost: 0, tokens: TOKENS })
+    e('session.execution.succeeded')
+    await until(() => notes.slice(from).some((note) => note.method === 'turn/completed'), 'fourth turn/completed')
+    assert.equal(bridge.v2.claudeFailure, null)
+    await until(() => notes.slice(from).some((note) => note.method === 'account/updated'), 'account/updated after the success')
+    assert.deepEqual(fake.state.violations, [])
   } finally { await bridge.stop() }
 })

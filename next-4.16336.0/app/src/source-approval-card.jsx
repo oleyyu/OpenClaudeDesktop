@@ -228,6 +228,13 @@ const DETAIL_VALUE = "bg-alpha-1 rounded-[5px] py-md px-lg text-code text-second
 const SCROLL_CLAMP = "epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus";
 const BODY_CLAMPED = "text-body text-secondary select-text break-words max-h-[calc(3*var(--cds-leading-body))] overflow-y-auto [unicode-bidi:plaintext]";
 const BODY_WHOLE = "text-body text-secondary select-text break-words [unicode-bidi:plaintext]";
+// A context line naming a path ("Working directory: /var/…"): the label never splits (CJK may break between any two
+// characters, and "：/" is unbreakable, so "工作目" was left alone on line 1); the path breaks anywhere, so it fills line 1.
+function contextText(part) {
+  const at = part.value ? part.text.lastIndexOf(part.value) : -1;
+  if (at < 0) return part.text;
+  return <>{at > 0 ? <span className="whitespace-nowrap">{part.text.slice(0, at)}</span> : null}<span className="break-all">{part.value}</span>{part.text.slice(at + part.value.length)}</>;
+}
 // A launch.json environment block: eight code lines, then it scrolls.
 const ENV_STYLE = { maxHeight: "calc(8 * var(--cds-leading-code) + 2 * var(--cds-pad-md))" };
 
@@ -687,7 +694,7 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
             <span className="text-body min-w-0 [overflow-wrap:anywhere] [unicode-bidi:plaintext] text-secondary">{Y(model.elicitation.url)}</span>
           </CdsCard> : null}
           {message ? <p className="text-body min-w-0 [overflow-wrap:anywhere] [unicode-bidi:plaintext] text-secondary whitespace-pre-wrap">{message}</p> : null}
-          {model.context.map(part => <p key={part.key} className={BODY_WHOLE} data-context={part.key}>{part.text}</p>)}
+          {model.context.map(part => <p key={part.key} className={BODY_WHOLE} data-context={part.key}>{contextText(part)}</p>)}
         </> : <>
           <ApprovalTitle subtitle={message ? <span className="whitespace-pre-wrap [overflow-wrap:anywhere] [unicode-bidi:plaintext]">{message}</span> : undefined}>{model.title}</ApprovalTitle>
           <ElicitationForm id={formId} size="sm" submitOnModEnter={false} disabled={busy || off}
@@ -754,7 +761,7 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
       ? <div key={part.key} data-context={part.key} className={`${DETAIL_VALUE} overflow-y-auto`} style={ENV_STYLE}>{part.text}</div>
       // Z_ ke: the too-large sentence is `p.text-body.text-secondary.select-text.break-words`.
       : <p key={part.key} data-context={part.key} className={part.key === "env-warning" ? "text-body text-danger select-text break-words [unicode-bidi:plaintext]"
-          : part.key === "too-large" ? "text-body text-secondary select-text break-words" : BODY_WHOLE}>{part.text}</p>),
+          : part.key === "too-large" ? "text-body text-secondary select-text break-words" : BODY_WHOLE}>{contextText(part)}</p>),
     !footnoteAfterDetails && model.footnote?.length && looseFootnote ? <React.Fragment key="footnote">{looseFootnote}</React.Fragment> : null,
     // Z_ I (readable :11989-12010): a workflow's token warning box; its "tasks pane" link opens the Tasks pane where the
     // card has one to open (Te: plain text otherwise, as the original without side panes).

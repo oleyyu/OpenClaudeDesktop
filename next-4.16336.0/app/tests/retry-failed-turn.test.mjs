@@ -485,7 +485,9 @@ test('main.jsx: retryFailedTurn only wires retryFailedTurnFlow; both cards drop 
   // (cowork-session-actions.mjs coworkSessionHost retryTurn).
   // W14-code r2 R2T-12: the Code renderer's turn_error card Try again (c227f4d5e PZ onRetry → pg onRetryLastTurn) retries the
   // latest failed turn the renderer draws.
-  assert.deepEqual(retries, ['retryFailedTurn(turnId, { thread: true })', 'retryFailedTurn(failed[0])', 'retryFailedTurn(item.turnId)', 'retryFailedTurn(lastTurnId, { thread: true })']);
+  // 'Sign in to Claude again' (source-claude-signin-dialog.jsx): its Try again resends the Claude turn that failed to sign in.
+  assert.deepEqual(retries, ['retryFailedTurn(turnId, { thread: true })', 'retryFailedTurn(failed[0])', 'retryFailedTurn(item.turnId)', 'retryFailedTurn(lastTurnId, { thread: true })',
+    'retryFailedTurn(shownClaudeSignIn.value.turnId)']);
 });
 
 test('main.jsx: the autoResume timer keeps its arming and clock and fires runAutoResumeAfterLimit (never retryFailedTurn)', () => {

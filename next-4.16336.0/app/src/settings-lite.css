@@ -22,7 +22,9 @@
 .sl-nav-footer:hover { background:var(--cds-fill-ghost-hover); color:var(--cds-text-primary); }
 
 .ss-pane.sl-pane { background:var(--cds-surface-1); }
-.ss-content.sl-content { padding:24px 32px 40px; background:var(--cds-surface-1); }
+.ss-content.sl-content { padding:24px 32px 40px; background:var(--cds-surface-1); scrollbar-gutter:stable; }
+/* scrollbar-gutter: with classic (always shown) scrollbars a short page (Notifications) was 11px wider than a long one
+   (Code); the gutter keeps every page's right edge in one place. Overlay scrollbars take no room either way. */
 /* U-39: the sticky fade (source-settings.css .ss-content:before, sized for 8px top padding) follows this box's 24px
    top padding: it sticks to the scroller's top edge (top = -padding-top), and the 16px bottom margin keeps the first
    line where the padding puts it. U-38: source-usage.css restates the inline margins for the standalone Usage box. */
@@ -38,9 +40,26 @@
   .sl-content:has(> .cz-page) > * { flex-shrink:0; }
   .sl-content:has(> .cz-page) > .cz-page { flex:1 1 0; height:auto; min-height:0; }
 }
+/* That page scrolls inside itself, so the content box keeps no scrollbar gutter there. */
+@media (min-height:561px) { .ss-content.sl-content:has(> .cz-page) { scrollbar-gutter:auto; } }
 @media (max-height:560px) {
   .sl-content > .cz-page { height:auto; }
   .sl-content > .cz-page :is(.cz-page-body,.cz-drill,.cz-drill-scroll,.skf-card,.skf-scroll) { flex:none; height:auto; min-height:0; }
+}
+/* A Customize list page's header and list share the page title's and the other subtabs' edges (Commands, every other
+   page: 403…1118 at 1324 wide), instead of the standalone page's px-lg inset and its header's right inset for a close
+   button the Settings shell draws elsewhere. The page reaches into the content box's 32px side padding and pads back by
+   as much, so the table's bleed (.cz-scroller) and focus rings keep their room. In a tall window the page scrolls inside
+   itself and the content box keeps no gutter (above), so the header and the list reserve the gutter themselves: their
+   right edge stays the other pages' one with classic scrollbars, and the list's scrollbar sits where the content box's
+   would. A detail (data-detail) keeps its drill layout. The header's title repeats the selected subtab and is hidden
+   (SlDedupeHeadings), so its controls keep to the end on their own. */
+.sl-content > .cz-page:not([data-detail]) { margin-inline:-32px; }
+.sl-content > .cz-page:not([data-detail]) > :is(.cz-header,.cz-page-body) { padding-inline:32px; }
+.sl-content > .cz-page:not([data-detail]) > .cz-header > .cz-header-controls { margin-inline-start:auto; }
+@media (min-height:561px) {
+  .sl-content > .cz-page:not([data-detail]) > :is(.cz-header,.cz-page-body) { scrollbar-gutter:stable; }
+  .sl-content > .cz-page:not([data-detail]) > .cz-header { overflow:hidden; }
 }
 .sl-content .ss-group { margin-bottom:28px; }
 .sl-content .ss-group > h3 { font-size:15px; }
@@ -82,3 +101,10 @@
    page made to fill a page of its own (Local MCP servers, h-full) sizes to its content when more follows it. */
 .sl-content > main + .ss-group:not([data-sl-untitled]) { margin-top:28px; }
 .sl-content > main.h-full:not(:last-child) { height:auto; }
+/* The official Cowork page (c71860c77: bare rows in main.gap-7, then Memory) stacked under Code read as five loose rows
+   28px apart with no title, unlike every group above it: there it is one titled group — a Cowork heading in the host
+   groups' style, the rows touching with the groups' 1px divider between them, and Memory a group of its own below. */
+.sl-content[data-entry=code] > main.gap-7 { gap:0; }
+.sl-content[data-entry=code] > main.gap-7::before { content:"Cowork"; width:fit-content; margin:0 0 var(--cds-gap-md,12px); color:var(--cds-text-primary); font-size:15px; font-weight:520; line-height:20px; }
+.sl-content[data-entry=code] > main.gap-7 > div.py-md + div.py-md { border-top:1px solid var(--cds-alpha-1); }
+.sl-content[data-entry=code] > main.gap-7 > div.py-md + section { margin-top:28px; }

@@ -98,8 +98,9 @@ export function usageCostPresentation(data, { todayKey, locale, days: rangeDays 
   const tile = (key, label, value) => ({ key, label, tokens: value.tokens, cost: value.cost, partial: value.unpricedTokens > 0 && value.cost !== null });
   const tiles = [tile("all", t("Total tokens"), all), tile("30d", t("Last 30 days"), recent), tile("today", t("Today"), today)];
   // Where the cost goes (all time): cache writes are billed as cache-miss input, so they join Input.
+  // A source with a total cost but none per category (OpenCode prices a step, not its parts) splits by tokens.
   const pricedTotal = all.cost ?? 0;
-  const categoryBasis = pricedTotal > 0 ? "cost" : "tokens";
+  const categoryBasis = pricedTotal > 0 && [all.inputCost, all.cacheReadCost, all.outputCost].some((value) => value !== null) ? "cost" : "tokens";
   const categories = [
     { key: "input", label: t("Input"), tokens: all.inputTokens + all.cacheWriteTokens, cost: all.inputCost },
     { key: "cached", label: t("Cached input"), tokens: all.cacheReadTokens, cost: all.cacheReadCost },

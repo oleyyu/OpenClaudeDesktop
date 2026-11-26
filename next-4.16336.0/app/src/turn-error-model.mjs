@@ -1,4 +1,5 @@
 import { t } from "../electron/i18n/index.mjs";
+import { isClaudeSignInText } from "./claude-signin-model.mjs";
 // Failed-turn presentation for Codex TurnError (work/codex-schema-0.155.1/ts/v2/
 // TurnError.ts {message, codexErrorInfo, additionalDetails, misalignment};
 // CodexErrorInfo.ts). A Codex TurnError is a failed model request: the desktop's API error item (c96d752d0 G2e → pK,
@@ -278,7 +279,9 @@ export function turnErrorCategory(error) {
   // nothing) whose upstream status is 401 ("unexpected status 401 Unauthorized: Missing bearer or basic
   // authentication"). That is a sign-in problem, not a network one, so it gets the auth card and its Sign in.
   if ((category === "network" || category === "unknown") && (turnErrorStatus(error?.codexErrorInfo) === 401
-    || textStatus(error?.message) === 401 || UNAUTHENTICATED.test(error?.message || "")))
+    || textStatus(error?.message) === 401 || UNAUTHENTICATED.test(error?.message || "")
+    // Claude Code (OpenCode's claude-agent) asking for a new sign-in, from a bridge that reported it as 'other'.
+    || isClaudeSignInText(error?.message)))
     return "auth";
   return category;
 }
@@ -356,6 +359,9 @@ export function normalizeTurnError(error) {
     codexErrorInfo: error.codexErrorInfo ?? null,
     additionalDetails: typeof error.additionalDetails === "string" ? error.additionalDetails : null,
     ...misalignmentOf(error),
+    // The core's sign-in to offer for it (opencode-bridge: claude-agent when Claude Code lost its sign-in).
+    ...(typeof error.codeDesktop?.signInProvider === "string" && /^[a-z0-9][a-z0-9._-]{0,63}$/.test(error.codeDesktop.signInProvider)
+      ? { codeDesktop: { signInProvider: error.codeDesktop.signInProvider } } : {}),
   };
 }
 // TurnError.misalignment (MisalignmentErrorDetails {errorType, detailedExplanation, steer: {message}}), bounded as

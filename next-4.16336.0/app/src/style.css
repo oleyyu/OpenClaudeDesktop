@@ -19,6 +19,24 @@
   background: var(--app-bg);
   -webkit-font-smoothing: antialiased;
 }
+/* round2 F3 (zh-CN control weight): CJK text falls through the design-system chain to --font-cjk-sans-sc
+   ("PingFang SC", c6a992d55 :root), whose static faces stop at 100/200/300/400/500/600. CSS matching rounds the
+   CDS in-between weights up — control 435 → Medium, header 520 / badge 540 → Semibold — so Chinese nav rows, menu
+   items and composer pills read a full step heavier than the 400 session rows, where Anthropic Sans (variable) moves
+   only slightly. This alias family gives each PingFang SC face an explicit weight range (the official Atkinson
+   Hyperlegible faces use the same range technique): 400–479 → Regular, 480–579 → Medium, 580+ → Semibold, while
+   ≤399 and the round weights 400/500/600/700 keep the faces they had. Only that slot of the chain changes; Latin is
+   covered by the fonts ahead of it, so no unicode-range is needed. The plain family stays behind it in case local()
+   finds nothing. local() takes the PostScript name first (what Chromium on macOS matches), then the full name. */
+@font-face { font-family: "OpenClaude PingFang SC"; src: local("PingFangSC-Ultralight"), local("PingFang SC Ultralight"); font-weight: 1 199; }
+@font-face { font-family: "OpenClaude PingFang SC"; src: local("PingFangSC-Thin"), local("PingFang SC Thin"); font-weight: 200 299; }
+@font-face { font-family: "OpenClaude PingFang SC"; src: local("PingFangSC-Light"), local("PingFang SC Light"); font-weight: 300 399; }
+@font-face { font-family: "OpenClaude PingFang SC"; src: local("PingFangSC-Regular"), local("PingFang SC Regular"); font-weight: 400 479; }
+@font-face { font-family: "OpenClaude PingFang SC"; src: local("PingFangSC-Medium"), local("PingFang SC Medium"); font-weight: 480 579; }
+@font-face { font-family: "OpenClaude PingFang SC"; src: local("PingFangSC-Semibold"), local("PingFang SC Semibold"); font-weight: 580 1000; }
+html:root {
+  --font-cjk-sans-sc: "OpenClaude PingFang SC", "PingFang SC";
+}
 /* ion-dist/index.html inline style: focus shadows outside main read the page
    background from the root. */
 html.cds-root {

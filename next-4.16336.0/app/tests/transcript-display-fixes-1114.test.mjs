@@ -182,19 +182,19 @@ const cardText = (errors, items = turn('t1', 'hi')) => text(render({ items, turn
 
 test('D-03 (SSR): the latest card is the official L1 headline with the 401 / 429 / 5xx hint, not "Try sending your message again"', () => {
   const unauthorized = cardText({ t1: { message: 'Invalid API key', codexErrorInfo: 'unauthorized' } });
-  assert.match(unauthorized, /Claude couldn’t process that message\|Authentication failed\. Sign in again to continue\./);
+  assert.match(unauthorized, /(?:Claude|DeepSeek) couldn’t process that message\|Authentication failed\. Sign in again to continue\./);
   const objectAuth = cardText({ t1: { message: 'bad key', codexErrorInfo: { responseStreamConnectionFailed: { httpStatusCode: 401 } } } });
-  assert.match(objectAuth, /Claude couldn’t process that message\|Authentication failed\. Sign in again to continue\./);
+  assert.match(objectAuth, /(?:Claude|DeepSeek) couldn’t process that message\|Authentication failed\. Sign in again to continue\./);
   const limited = cardText({ t1: { message: 'slow down', codexErrorInfo: 'rateLimitExceeded' } });
-  assert.match(limited, /Claude couldn’t process that message\|Rate limited\. Try again in a moment\./);
+  assert.match(limited, /(?:Claude|DeepSeek) couldn’t process that message\|Rate limited\. Try again in a moment\./);
   // A daily / plan quota: not the short-term "try again in a moment" copy (the reason is in the details box).
   const quota = cardText({ t1: { message: 'You exceeded your current quota', codexErrorInfo: 'usageLimitExceeded' } });
   assert.doesNotMatch(quota, /Rate limited/);
-  assert.match(quota, /Claude couldn’t process that message\|Try sending your message again\./);
+  assert.match(quota, /(?:Claude|DeepSeek) couldn’t process that message\|Try sending your message again\./);
   const busy = cardText({ t1: { message: 'boom', codexErrorInfo: 'internalServerError' } });
   assert.match(busy, /Service is busy\. Try again in a moment, or switch to a different model\./);
   // No status: still the generic hint (nothing invented).
-  assert.match(cardText({ t1: { message: 'boom', codexErrorInfo: 'other' } }), /Claude couldn’t process that message\|Try sending your message again\./);
+  assert.match(cardText({ t1: { message: 'boom', codexErrorInfo: 'other' } }), /(?:Claude|DeepSeek) couldn’t process that message\|Try sending your message again\./);
 });
 
 test('D-03 (SSR): an older failed turn\'s marker is a2e\'s label (401 → "Authentication failed", 429 → "Rate limited")', () => {

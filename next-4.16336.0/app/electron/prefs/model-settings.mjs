@@ -2,7 +2,7 @@
 // Pure: imported by the main process (settingsPatch, model-settings.cjs) and
 // the renderer (Settings → Models, withEffortDefaults for the model menus).
 //
-//   params   {['<coreId>:<modelId>' | modelId]: {maxTokens?, temperature?, contextWindow?, effort?, images?}}
+//   params   {['<coreId>:<modelId>' | modelId]: {maxTokens?, temperature?, contextWindow?, effort?, images?, hidden?}}
 //            Keys carry the core id (electron/cores/<id>.mjs) since Settings › Models › per-model options, so two
 //            cores' same-named models keep their own values; a bare modelId is an entry saved before that, read for
 //            every core until a core edits it (setModelParam with a coreId moves it under that core's key).
@@ -13,7 +13,10 @@
 //            effort only replaces the catalog's defaultReasoningEffort here;
 //            images: false turns image input off for the model in the composer (withModelOverrides), even where
 //            the catalog accepts images. Only false is stored: the catalog decides otherwise.
-//   prices   null (the official table) | {[modelId]: {displayName?, offPeak, peak}}
+//            hidden: true is a built-in model the user removed in Settings › Models: withModelOverrides marks it
+//            hidden (removedByUser) so every model menu drops it, and core-model.mjs never makes it the default while
+//            another model is listed. Only true is stored; it never reaches a core (modelParamsForCore).
+//   prices  null (the official table) | {[modelId]: {displayName?, offPeak, peak}}
 //            CNY per 1M tokens; account/usage/read gets it as
 //            params.codeDesktop.prices (bridge pricing.js priceTable).
 // top_p is not offered: no Harness LlmCallConfig field carries it.
@@ -79,6 +82,7 @@ export function modelParamError(field, value) {
   }
   if (field === 'effort') return typeof value === 'string' && EFFORT.test(value) ? null : t('Choose a reasoning effort.');
   if (field === 'images') return value === false ? null : t('Image input can only be turned off here.');
+  if (field === 'hidden') return value === true ? null : t('A model can only be removed here.');
   return t('Unknown model parameter.');
 }
 
@@ -88,13 +92,14 @@ export function priceError(value) {
     : t('Prices must be numbers from 0 to {max} CNY per 1M tokens.', { max: PRICE_MAX.toLocaleString('en-US') });
 }
 
-const PARAM_FIELDS = ['maxTokens', 'temperature', 'contextWindow', 'effort', 'images'];
+const PARAM_FIELDS = ['maxTokens', 'temperature', 'contextWindow', 'effort', 'images', 'hidden'];
 function paramsEntry(value, strict) {
   if (!isRecord(value)) { if (strict) throw new Error(t('Invalid model parameters.')); return null; }
   const entry = {};
   for (const field of PARAM_FIELDS) {
     const raw = value[field];
-    if (raw === undefined || raw === null || raw === '' || (field === 'images' && raw === true)) continue;
+    // images: true and hidden: false are the catalog's own state, never stored.
+    if (raw === undefined || raw === null || raw === '' || (field === 'images' && raw === true) || (field === 'hidden' && raw === false)) continue;
     const error = modelParamError(field, raw);
     if (error) { if (strict) throw new Error(error); continue; }
     entry[field] = field === 'temperature' ? round(raw, 2) : raw;
@@ -188,24 +193,37 @@ function paramsEntryFor(params, coreId, modelId) {
   if (key !== modelId && Object.hasOwn(params, key)) return params[key];
   return Object.hasOwn(params, modelId) ? params[modelId] : undefined;
 }
-/** The {maxTokens?, temperature?, contextWindow?, effort?, images?} a core's model has (an empty record when none). */
+/** The {maxTokens?, temperature?, contextWindow?, effort?, images?, hidden?} a core's model has (an empty record when none). */
 export function modelParamsFor(modelSettings, coreId, modelId) {
   return { ...(paramsEntryFor(normalize(modelSettings).params, coreId, modelId) ?? {}) };
 }
+/** A check (modelId → boolean) of whether the user removed a core's model in Settings › Models (params hidden: true). */
+export function removedModelCheck(modelSettings, coreId = null) {
+  const params = normalize(modelSettings).params;
+  return modelId => paramsEntryFor(params, coreId, modelId)?.hidden === true;
+}
 /**
- * Catalog models with the user's per-model options for a core: the default effort (withEffortDefaults) and image
- * input turned off (images: false → inputModalities without 'image', which the composer's modelAcceptsImages reads).
- * Unchanged entries keep their identity.
+ * Catalog models with the user's per-model options for a core: the default effort (withEffortDefaults), image
+ * input turned off (images: false → inputModalities without 'image', which the composer's modelAcceptsImages reads)
+ * and a removed model marked {hidden: true, removedByUser: true}: every model menu drops a hidden entry, while
+ * session rows and the model button still find its name. Unchanged entries keep their identity.
  */
 export function withModelOverrides(models, modelSettings, coreId = null) {
   const list = withEffortDefaults(models, modelSettings, coreId), params = normalize(modelSettings).params;
   if (!Object.keys(params).length) return list;
   let changed = list !== models;
   const out = list.map(model => {
-    if (!model || paramsEntryFor(params, coreId, model.model)?.images !== false) return model;
-    const modalities = Array.isArray(model.inputModalities) ? model.inputModalities.filter(item => item !== 'image') : ['text'];
+    const entry = model ? paramsEntryFor(params, coreId, model.model) : undefined;
+    const imagesOff = entry?.images === false, removed = entry?.hidden === true;
+    if (!imagesOff && !removed) return model;
     changed = true;
-    return { ...model, inputModalities: modalities.length ? modalities : ['text'], imagesOff: true };
+    const next = { ...model };
+    if (imagesOff) {
+      const modalities = Array.isArray(model.inputModalities) ? model.inputModalities.filter(item => item !== 'image') : ['text'];
+      Object.assign(next, { inputModalities: modalities.length ? modalities : ['text'], imagesOff: true });
+    }
+    if (removed) Object.assign(next, { hidden: true, removedByUser: true });
+    return next;
   });
   return changed ? out : list;
 }
@@ -258,11 +276,12 @@ export function parseNumberInput(text) {
 /**
  * Set or clear (undefined) one parameter of one model; throws a user-facing Error when invalid. With a coreId the value
  * is saved under that core's key ('<coreId>:<modelId>'), and an entry saved for the bare modelId before core ids moves
- * there with it. images takes false (off) or true / undefined (the catalog decides).
+ * there with it. images takes false (off) or true / undefined (the catalog decides); hidden takes true (removed) or
+ * false / undefined (restored).
  */
 export function setModelParam(settings, modelId, field, value, coreId = null) {
   if (!isModelId(modelId)) throw new Error(t('Invalid model.'));
-  if (field === 'images' && value === true) value = undefined;
+  if ((field === 'images' && value === true) || (field === 'hidden' && value === false)) value = undefined;
   const error = modelParamError(field, value);
   if (error) throw new Error(error);
   const current = normalize(settings), key = modelParamsKey(coreId, modelId);

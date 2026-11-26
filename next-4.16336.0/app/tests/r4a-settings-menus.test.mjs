@@ -110,8 +110,9 @@ test('settings-02 Interface font: 2.42304.0 __gb__1197194941 off branch was Code
   // (source-settings.jsx) is no longer mounted on General; it is left for the B3 Code-page pass to remove or reuse.
   assert.equal(count(local('src/generated/settings-pages-v4/general.mjs'), 'e.ok && e.headers.get("content-type")?.startsWith("text/plain")'), 1);
   assert.equal(count(settings, "r.ok&&r.headers.get('content-type')?.startsWith('text/plain')?r.text():null"), 1, 'local Font licenses keeps the text/plain check');
-  // The custom theme page points at General, where the row now is.
-  assert.equal(count(local('src/source-settings-theme.jsx'), "openButton(t('Interface font settings'), 'preferences', 'interfaceFont')"), 1);
+  // The custom theme page is drawn under that official row on Settings › Appearance (round 2 C4): no link back to it.
+  assert.equal(count(local('src/source-settings-theme.jsx'), "openButton("), 0);
+  assert.equal(count(local('src/source-settings-theme.jsx'), "t('Interface font settings')"), 0);
 });
 
 // ---------------------------------------------------------------------------------------------------- settings-12

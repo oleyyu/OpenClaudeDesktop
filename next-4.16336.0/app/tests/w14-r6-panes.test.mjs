@@ -139,7 +139,7 @@ test('r6pa-06: the loop / preview server cards are cccc2cf0a $M / tN / nN with t
   try {
     i18n.setLocale('zh-CN');
     const zh = renderToStaticMarkup(h(B.LoopCard, { loop, stopping: false, onStop() {} }));
-    assert.match(zh, /下次 <span class="text-secondary">1 分 [45] 秒<\/span>/);
+    assert.match(zh, /下次 <span class="text-secondary">1 ?分 ?[45] ?秒<\/span>/);
     assert.match(zh, /<span class="text-secondary">7 天<\/span>后结束/);
   } finally { i18n.setLocale(previous); }
   // E83: the stopping aria-label names the persona.

@@ -940,7 +940,8 @@ export function SourceSidebar({
   const intl = useStartIntl();
   const splitSides = useSplitSides();
   const openNestedIds = useMemo(() => new Set([current, ...splitSides.sides.map(side => side.current)].filter(Boolean)), [current, splitSides.sides]);
-  const bulkModels = useMemo(() => (Array.isArray(models) ? models : []).map((model) => ({ id: model?.model || model?.id, name: model?.displayName || model?.name || model?.model || model?.id }))
+  // Hidden and user-removed models (Settings › Models › Remove model) aren't offered.
+  const bulkModels = useMemo(() => (Array.isArray(models) ? models : []).filter((model) => model?.hidden !== true).map((model) => ({ id: model?.model || model?.id, name: model?.displayName || model?.name || model?.model || model?.id }))
     .filter((model) => typeof model.id === "string" && model.id), [models]);
   // Ro addSuccess / addError (sidebar-groups.js:18676-18682): row and bulk results are CDS toasts.
   const notify = (message, options) => toasts?.add(message, options);

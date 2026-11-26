@@ -2818,36 +2818,6 @@ function yy(e) {
   });
   return i.length === e.groups.length ? e.groups : i;
 }
-function by(e) {
-  switch (e) {
-    case void 0:
-      return;
-    case "custom":
-    case "none":
-      return "none";
-    case "project":
-      return "folder";
-    case "environment":
-    case "coder":
-      return "savedEnvironment";
-    case "state":
-      return "status";
-    default:
-      return "date";
-  }
-}
-function xy(e) {
-  switch (e) {
-    case "folder":
-      return "project";
-    case "savedEnvironment":
-      return "environment";
-    case "status":
-      return "state";
-    default:
-      return e;
-  }
-}
 var kx = "custom-";
 function Ax(e) {
   return e === null ? "custom-ungrouped" : `${kx}${e}`;
@@ -9574,7 +9544,6 @@ export {
   bM,
   bO,
   bg,
-  by,
   c0,
   cA,
   cC,
@@ -9690,7 +9659,6 @@ export {
   x1,
   xI,
   xO,
-  xy,
   yC,
   yD,
   yF,

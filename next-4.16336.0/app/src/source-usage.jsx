@@ -49,18 +49,21 @@ function CostTile({tile,cost}) {
 }
 function CostBreakdown({cost}) {
  const money=value=>cost.priced&&<span className="su-legend-cost">{formatMoney(value,cost.currency,getLocale())}</span>;
+ // Split by cost only when the source prices each category (categoryBasis); else by tokens, with each share in place of a cost.
+ const byCost=cost.priced&&cost.categoryBasis==='cost';
+ const percent=share=>`${Math.round(share*100).toLocaleString(getLocale())}%`;
  return <div className="su-cost-panels">
-  <section className="su-panel" aria-label={cost.priced?t('Where the cost goes'):t('Where the tokens go')}>
-   <div className="su-panel-heading"><h4 className="text-body-semibold">{cost.priced?t('Where the cost goes'):t('Where the tokens go')}</h4><span>{t('All time')}</span></div>
+  <section className="su-panel" aria-label={byCost?t('Where the cost goes'):t('Where the tokens go')}>
+   <div className="su-panel-heading"><h4 className="text-body-semibold">{byCost?t('Where the cost goes'):t('Where the tokens go')}</h4><span>{t('All time')}</span></div>
    <div className="su-stack" aria-hidden="true">{cost.categories.filter(entry=>entry.share>0).map(entry=><i key={entry.key} data-key={entry.key} style={{flexGrow:entry.share}}/>)}</div>
    <ul className="su-legend">{cost.categories.map(entry=><li key={entry.key} data-key={entry.key}>
     <span className="su-swatch" aria-hidden="true"/><span className="su-legend-name">{entry.label}</span>
-    <span className="su-legend-tokens" title={t('{count} tokens',{count:formatTokenCount(entry.tokens,getLocale())})}>{compactTokens(entry.tokens)}</span>{money(entry.cost)}
+    <span className="su-legend-tokens" title={t('{count} tokens',{count:formatTokenCount(entry.tokens,getLocale())})}>{compactTokens(entry.tokens)}</span>{byCost?money(entry.cost):<span className="su-legend-share">{percent(entry.share)}</span>}
    </li>)}</ul>
   </section>
   <section className="su-panel" aria-label={t('By model')}>
    <div className="su-panel-heading"><h4 className="text-body-semibold">{t('By model')}</h4><span>{t('All time')}</span></div>
-   <ul className="su-models">{cost.models.map(entry=><li key={entry.key}>
+   <ul className="su-models su-cost-models" data-priced={cost.priced||undefined}>{cost.models.map(entry=><li key={entry.key}>
     <span className="su-legend-name" title={entry.key}>{entry.name}</span>
     <span className="su-bar" aria-hidden="true"><i style={{width:`${(entry.share*100).toFixed(1)}%`}}/></span>
     <span className="su-legend-tokens" title={t('{count} tokens',{count:formatTokenCount(entry.tokens,getLocale())})}>{compactTokens(entry.tokens)}</span>{money(entry.cost)}

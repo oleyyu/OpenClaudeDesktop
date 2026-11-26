@@ -262,15 +262,19 @@ after(() => server?.close());
 test('Theme page: groups, rows and controls per the settings IA', () => {
   const html = render(React.createElement(Page, { config: { customTheme: { preset: 'clay', accent: '#d97757' }, codeThemeLight: 'github-light' }, desktopCall: async () => null, onSave: async () => ({}), onOpenSetting: () => {} }));
   const titles = [...html.matchAll(/<h3[^>]*>([^<]+)<\/h3>/g)].map(match => match[1]);
-  assert.deepEqual(titles, ['Theme', 'Colors', 'Typography', 'Shape', 'Code', 'Preview']);
+  assert.deepEqual(titles, ['Theme', 'Colors', 'Typography', 'Shape', 'Preview']);
   const ids = [...html.matchAll(/data-setting-id="([^"]+)"/g)].map(match => match[1]);
-  // One home per setting: light/dark (Preferences), code theme / code font / Interface font (Code) are links here.
-  assert.deepEqual(ids, ['themePreset', 'themeMode', 'themeAccent', 'themeUiFont', 'themeFontScale', 'themeDensity', 'themeRadius', 'themeCodeAppearance']);
-  // Font size and Corner radius are 160px selects (Claude keeps segments to 2–3 choices); Density stays segmented.
+  // One home per setting: light/dark, Interface font, code theme and code font are the official rows drawn above this
+  // page on Settings › Appearance; round 2 C4 dropped the rows and buttons that linked to them (themeMode,
+  // themeCodeAppearance, Interface font settings).
+  assert.deepEqual(ids, ['themePreset', 'themeAccent', 'themeUiFont', 'themeFontScale', 'themeDensity', 'themeRadius']);
+  // Font size and Corner radius are selects (Claude keeps segments to 2–3 choices); Density stays segmented.
   for (const label of ['Theme preset', 'Font size', 'Corner radius']) assert.match(html, new RegExp(`role="combobox" aria-label="${label}"`));
+  assert.ok(!html.includes('sselect-width-160'), 'every settings select is the one 224px width (source-select.css)');
   for (const label of ['Light code theme', 'Dark code theme', 'Code font family']) assert.ok(!html.includes(`aria-label="${label}"`), `${label} lives on the Code page`);
   for (const label of ['Accent color picker', 'Accent color hex', 'Custom interface font']) assert.ok(html.includes(`aria-label="${label}"`), label);
-  for (const text of ['Open General settings', 'Open Code settings', 'Interface font settings']) assert.ok(html.includes(`>${text}<`), text);
+  for (const text of ['Open General settings', 'Open Code settings', 'Interface font settings']) assert.ok(!html.includes(`>${text}<`), text);
+  assert.ok(html.includes('>Light or dark follows Theme at the top of this page.</p>'));
   for (const label of ['Density']) assert.ok(html.includes(`role="radiogroup" aria-label="${label}"`), label);
   for (const label of ['Font size', 'Corner radius']) assert.ok(!html.includes(`role="radiogroup" aria-label="${label}"`), `${label} is a select`);
   for (const text of ['Import…', 'Export…', 'Reset to default', 'Clear', '100%', 'Default', 'Comfortable']) assert.ok(html.includes(`>${text}<`), text);

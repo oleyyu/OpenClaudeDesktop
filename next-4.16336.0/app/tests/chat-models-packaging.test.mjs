@@ -117,7 +117,7 @@ test('no main-process module reaches a file the package script leaves out (the w
   assert.deepEqual(left.map((file) => `${file} (from ${edges.filter(([, to]) => to === file).map(([from]) => from).join(', ')})`), []);
   // The src/ ones are the package script's whitelist only (other folders, e.g. extensions/, ship whole).
   const outside = [...new Set(files.filter((file) => file.startsWith('src/')))].sort();
-  for (const file of outside) assert.match(file, /^src\/(?:workflow-progress-model|bridge-text-model|deliverable-records|agent-tool-titles|thread-history-model|turn-error-model)\.mjs$/, file);
+  for (const file of outside) assert.match(file, /^src\/(?:workflow-progress-model|bridge-text-model|deliverable-records|agent-tool-titles|thread-history-model|turn-error-model|claude-signin-model)\.mjs$/, file);
 });
 
 test('the Chat tools model keeps its src/ path as a re-export of the packaged store', async () => {

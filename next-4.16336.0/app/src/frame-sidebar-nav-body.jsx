@@ -6,7 +6,7 @@
 // (installFrameSidebarNavHost in frame-sidebar-nav-host.jsx) has to be installed before generated nav-body.mjs is evaluated.
 // ES modules evaluate a module's imports in order: frame-sidebar-nav-host.jsx (the table) first, then the nav body.
 import React from "react";
-import { FrameSidebarNavHost, navigateOfficialPathname, provideNavPins } from "./frame-sidebar-nav-host.jsx";
+import { FrameSidebarNavHost, navigateOfficialPathname, provideNavGroups, provideNavPins } from "./frame-sidebar-nav-host.jsx";
 import { SidebarNavBody, frameMountResets } from "./generated/frame-sidebar-nav/nav-body.mjs";
 import { PerformanceMetricsProvider } from "./generated/frame-sidebar-nav/shared-4.mjs";
 import { AppFeaturesBootstrap } from "./generated/frame-sidebar-nav/shared-23.mjs";
@@ -21,6 +21,8 @@ import { NavImportRow } from "./frame-sidebar-nav-import-row.jsx";
 // U-NAV-MENU: the official Code pins (shared-39 Vf, the persisted "dframe-starred-code" store: Kf reads a session id, Jf
 // writes it), the Pinned section's source. The host's own Pin / Unpin (session metadata `pinned`) is mirrored into them.
 import { Jf as setCodeSessionStarred, Kf as codeSessionStarred } from "./generated/frame-sidebar-nav/shared-39.mjs";
+// The Code list's group scope (Group and sort writes nothing without one) and Group by › Model (frame-sidebar-nav-groups.jsx).
+import { NAV_GROUP_ANSWERS, holdLocalGroupScope, loadModelGroupChoice } from "./frame-sidebar-nav-groups.jsx";
 
 // The frame-sidebar frameMountResets boundary (vB `useEffect(bB, [])`) is the sliced official shared-22 bB of this graph.
 provideFrameMountResets(frameMountResets);
@@ -28,6 +30,9 @@ provideFrameMountResets(frameMountResets);
 // routes through this host (officialPathToHostRoute); frame-sidebar-host.jsx keeps answering the settings routes itself.
 provideOfficialNavigation(navigateOfficialPathname);
 provideNavPins({ get: codeSessionStarred, set: setCodeSessionStarred });
+holdLocalGroupScope();
+loadModelGroupChoice();
+provideNavGroups(NAV_GROUP_ANSWERS);
 
 // The frame-sidebar SidebarNavBody slot: KR passes PI's props (coworkChecklistMounted, codeSessionListChrome,
 // classicSearchRow; official shared-22 KR `o(PI,{coworkChecklistMounted:_,codeSessionListChrome:u,classicSearchRow:de})`).

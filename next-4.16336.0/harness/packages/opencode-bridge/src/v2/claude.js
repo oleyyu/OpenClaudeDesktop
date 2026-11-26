@@ -12,8 +12,11 @@
  *   version    `claude --version` ('2.1.311 (Claude Code)'), cached per path and mtime: chats need 2.1.248 or later
  *              (claude/probe.ts MINIMUM_VERSION), older ones fail every chat
  *   sign-in    `claude auth status --json` ({loggedIn, authMethod, apiProvider, email, orgName, subscriptionType, …},
- *              Claude Code 2.1.311): whether a sign-in can work before v2's own check (a 30–60 s probe) says so
- *   login      signed out: `claude auth login --claudeai` (startLogin), which opens claude.ai's sign-in page itself
+ *              Claude Code 2.1.311; loginExpiresAt since 2.1.322, null when signed out): whether a sign-in can work
+ *              before v2's own check (a 30–60 s probe) says so, and when a claude.ai sign-in ends. Cached a minute,
+ *              dropped (forget) when a chat failed to authenticate
+ *   login      signed out, or its stored sign-in dead (past loginExpiresAt, or a chat failed to authenticate while claude
+ *              still lists it): `claude auth login --claudeai` (startLogin), which opens claude.ai's sign-in page itself
  *   ANTHROPIC_*  claude inherits serve's environment (claude/query-options.ts clears only three variables): with
  *              ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN / ANTHROPIC_BASE_URL set, Claude Code bills that key or gateway,
  *              not the subscription. Reported, never removed (removing them would also sign `anthropic` out)
@@ -60,6 +63,21 @@ export function versionAtLeast(version, minimum = CLAUDE_MIN_VERSION) {
   return index === -1 || (current[index] ?? 0) > required[index]
 }
 
+/**
+ * When a stored claude.ai sign-in ends (`loginExpiresAt`, Claude Code 2.1.322; null when there is none) → epoch ms, or
+ * null. A date string or a number (ms, or seconds when it is too small to be ms), read defensively: no signed-in value
+ * has been seen yet.
+ */
+export function parseLoginExpiry(value) {
+  let ms = null
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) ms = value < 1e11 ? value * 1000 : value
+  else if (typeof value === 'string' && value.trim()) {
+    const text = value.trim()
+    ms = /^\d+(\.\d+)?$/.test(text) ? parseLoginExpiry(Number(text)) : Date.parse(text)
+  }
+  return Number.isFinite(ms) && Math.abs(ms) <= 8.64e15 ? ms : null
+}
+
 /** `claude auth status --json` output → {loggedIn: true | false | null, …} (null: it said nothing usable). */
 export function parseAuthStatus(text) {
   let value = null
@@ -70,8 +88,12 @@ export function parseAuthStatus(text) {
     loggedIn: typeof value.loggedIn === 'boolean' ? value.loggedIn : null,
     authMethod: pick('authMethod'), apiProvider: pick('apiProvider'),
     email: pick('email'), orgName: pick('orgName'), subscriptionType: pick('subscriptionType'),
+    loginExpiresAt: parseLoginExpiry(value.loginExpiresAt),
   }
 }
+
+/** Which login a status describes (a sign-in in a terminal changes it: a new end date, another account). */
+export const loginKey = (status) => JSON.stringify([status?.loggedIn ?? null, status?.authMethod ?? null, status?.apiProvider ?? null, status?.email ?? null, status?.orgName ?? null, status?.loginExpiresAt ?? null])
 
 /** The ANTHROPIC_* variables set in an environment that make Claude Code bill a key or a gateway. */
 export const anthropicEnvIn = (env) => ANTHROPIC_ENV.filter((name) => typeof env?.[name] === 'string' && env[name].trim())
@@ -201,6 +223,9 @@ export class ClaudeCode {
     this.status = { path: found.path, at: this.now(), value }
     return value
   }
+
+  /** Drop the cached `claude auth status` (a chat just failed to authenticate, the sign-in reached its end): asked again next. */
+  forget() { this.status = null }
 
   /**
    * `claude auth login --claudeai`, the sign-in a signed-out Claude Code needs (Claude Code 2.1.322): it opens the

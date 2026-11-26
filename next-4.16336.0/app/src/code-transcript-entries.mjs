@@ -56,6 +56,7 @@ import { parseSelectedElementMessage } from "./generated/code-editor/preview-ele
 import { workflowTaskEvent } from "./task-event-model.mjs";
 import { chapterOf } from "./agent-tool-titles.mjs";
 import { demonstrationOf } from "./watch-record-model.mjs";
+import { t } from "../electron/i18n/index.mjs";
 
 // W14-code r8 R8T-02: Codex's sleep item is a tool call like imageGeneration (transcript-sdk-tools: no SDK counterpart, its
 // host name through the original rows' generic fallback, c96d752d0 K1e / m2e), so it joins the reply's tool run instead
@@ -318,7 +319,10 @@ export function codeTranscriptEntries(items, { view = "normal", responding = fal
     if (!error) return null;
     const message = str(error.message) || str(error);
     // W14-code r5 R5T-02 (c06cf64bb `...(Xn(r) !== void 0 && { apiErrorStatus: Xn(r) })`): the HTTP status, when known.
-    return { kind: "turn_error", id: `${turnId}:turn-error`, subtype: "error_during_execution", errors: message ? [message] : [],
+    // c06cf64bb `...D && {timestamp: D}`: when it failed (the host's arrival time, else the turn's end), which the card's
+    // 401 branch compares with reloginReturnedAt ($G) to settle into 'Signed in again' after a new sign-in.
+    const at = Number.isFinite(error.at) && error.at > 0 ? new Date(error.at).toISOString() : isoSeconds(turnTimes?.[turnId]?.completedAt);
+    return { kind: "turn_error", id: `${turnId}:turn-error`, ...(at ? { timestamp: at } : {}), subtype: "error_during_execution", errors: message ? [message] : [],
       ...(Number.isInteger(error.status) ? { apiErrorStatus: error.status } : {}) };
   };
   const flushed = new Set();
@@ -477,6 +481,11 @@ export function codeTranscriptEntries(items, { view = "normal", responding = fal
           const attachments = sentFileAttachments(hostItem);
           if (attachments.length) tool.toolUseResult = { attachments };
         }
+        // B6: a finished MCP call with no arguments and no result (no text, image or content block) would open on an empty
+        // panel (BOe only keeps a running / awaiting empty-input call closed); it says "(no output)" instead, the wording
+        // the official command body uses for an empty result (outside-handlers Dg pndT4iky5F).
+        if (hostItem?.type === "mcpToolCall" && tool.status === "completed" && !tool.isError && !tool.output && !tool.outputImages?.length
+          && !tool.rawResultContent?.length && !tool.resultMcpMeta && !Object.keys(tool.input ?? {}).length) tool.output = t("(no output)");
         const subagent = subagents?.get?.(tool.id);
         if (subagent?.activity && (tool.name === "Task" || tool.name === "Agent")) tool.subagentActivity = subagent.activity;
         if (!tools) {

@@ -286,7 +286,10 @@ button.cz-plugin-item:hover { background:var(--cds-surface-0); }
 .cz-plugin-server { display:flex; align-items:center; gap:8px; }
 .cz-plugin-server > :first-child { flex:1; min-width:0; }
 /* Skill folders with Open (SkillFoldersNote): a muted footnote below the table and under the empty state's Add. */
-.cz-root-row { display:flex; align-items:center; gap:8px; }
+/* The list is as wide as its longest folder and each Open sits at the row's end, so the buttons form one column
+   (each row centred on its own left them ragged in the empty state). */
+.cz-roots { width:fit-content; max-width:100%; }
+.cz-root-row { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .cz-skill-roots { color:var(--cds-text-muted); }
 .cz-empty .cz-skill-roots { align-items:center; margin:0; }
 /* Customize dialogs (Create a skill, Add custom connector, Add marketplace): the official custom connector dialog

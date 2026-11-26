@@ -879,7 +879,7 @@ function ReleaseNoteGroup({ kind, items }) {
   return (
     <div className="flex flex-col gap-xs">
       <h5 className="text-caption font-medium uppercase tracking-wide text-muted-as-secondary">{tId(RELEASE_NOTE_KIND_IDS[kind], RELEASE_NOTE_KIND_LABELS[kind])}</h5>
-      <ul className="flex list-disc flex-col gap-xs ps-lg text-body text-secondary">{shown.map((item, index) => <li key={index}><ReleaseNoteText text={item.text} /></li>)}</ul>
+      <ul className="flex list-disc flex-col gap-xs ps-lg text-body text-secondary">{shown.map((item, index) => <li key={index}><ReleaseNoteText text={t(item.text)} /></li>)}</ul>
     </div>
   );
 }

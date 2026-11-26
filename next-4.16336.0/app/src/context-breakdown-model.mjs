@@ -22,30 +22,35 @@
 // each category carries the CLI's `kind` (Fer: free / buffer / deferred / used). The CLI's "Compact buffer" (auto-compact
 // off: a fixed 3000-token reserve) is not drawn: the host only knows a core's threshold, never that a core has auto-compact
 // switched off, and an unknown threshold leaves the buffer row out (no invented reserve).
+import { t } from "../electron/i18n/index.mjs";
+
+// Each row carries a stable `id` (the newer CLI's category ids; 4.16336.0 shared-92 bK / xK / SK / CK match on `id`
+// when it is set, on the English name only without one), so `name` is free to be display text: the report's rows read
+// in the UI language (t() when the report is built, at render time — the locale is fixed for the renderer's life).
 export const CONTEXT_CATEGORY = Object.freeze({
-  systemPrompt: { name: "System prompt", color: "promptBorder" },
-  systemTools: { name: "System tools", color: "inactive" },
-  mcpTools: { name: "MCP tools", color: "cyan_FOR_SUBAGENTS_ONLY" },
-  mcpServerInstructions: { name: "MCP server instructions", color: "green_FOR_SUBAGENTS_ONLY" },
-  mcpToolsDeferred: { name: "MCP tools (deferred)", color: "inactive", isDeferred: true },
-  systemToolsDeferred: { name: "System tools (deferred)", color: "inactive", isDeferred: true },
-  customAgents: { name: "Custom agents", color: "permission" },
-  memoryFiles: { name: "Memory files", color: "claude" },
-  skills: { name: "Skills", color: "warning" },
+  systemPrompt: { id: "system_prompt", name: "System prompt", color: "promptBorder" },
+  systemTools: { id: "system_tools", name: "System tools", color: "inactive" },
+  mcpTools: { id: "mcp_tools", name: "MCP tools", color: "cyan_FOR_SUBAGENTS_ONLY" },
+  mcpServerInstructions: { id: "mcp_instructions", name: "MCP server instructions", color: "green_FOR_SUBAGENTS_ONLY" },
+  mcpToolsDeferred: { id: "mcp_tools_deferred", name: "MCP tools (deferred)", color: "inactive", isDeferred: true },
+  systemToolsDeferred: { id: "system_tools_deferred", name: "System tools (deferred)", color: "inactive", isDeferred: true },
+  customAgents: { id: "custom_agents", name: "Custom agents", color: "permission" },
+  memoryFiles: { id: "memory_files", name: "Memory files", color: "claude" },
+  skills: { id: "skills", name: "Skills", color: "warning" },
 });
 // The CLI's push order (keys of CONTEXT_CATEGORY), then Messages, the buffer and Free space.
 export const CONTEXT_CATEGORY_ORDER = Object.freeze(Object.keys(CONTEXT_CATEGORY));
-export const MESSAGES_CATEGORY = Object.freeze({ name: "Messages", color: "purple_FOR_SUBAGENTS_ONLY" });
-export const AUTOCOMPACT_BUFFER_CATEGORY = Object.freeze({ name: "Autocompact buffer", color: "inactive" });
-export const FREE_SPACE_CATEGORY = Object.freeze({ name: "Free space", color: "promptBorder" });
+export const MESSAGES_CATEGORY = Object.freeze({ id: "messages", name: "Messages", color: "purple_FOR_SUBAGENTS_ONLY" });
+export const AUTOCOMPACT_BUFFER_CATEGORY = Object.freeze({ id: "autocompact_buffer", name: "Autocompact buffer", color: "inactive" });
+export const FREE_SPACE_CATEGORY = Object.freeze({ id: "free_space", name: "Free space", color: "promptBorder" });
 
 // W14-code r5 cleanup R5DC-05: the test-only estimateTokens helper is gone (its last caller left in round 4).
 
 const count = (value) => (Number.isFinite(value) && value > 0 ? Math.round(value) : 0);
-// CLI Fer: the row's kind.
+// CLI Fer: the row's kind (by id: the name is translated below).
 function categoryKind(category) {
-  if (category.name === FREE_SPACE_CATEGORY.name) return "free";
-  if (category.name === AUTOCOMPACT_BUFFER_CATEGORY.name || category.name === "Compact buffer") return "buffer";
+  if (category.id === FREE_SPACE_CATEGORY.id) return "free";
+  if (category.id === AUTOCOMPACT_BUFFER_CATEGORY.id) return "buffer";
   if (category.isDeferred) return "deferred";
   return "used";
 }
@@ -84,7 +89,7 @@ export function buildContextUsageReport(facts) {
   categories.push({ ...FREE_SPACE_CATEGORY, tokens: Math.max(0, window - used - buffer) });
   const totalTokens = mn === null ? used : knownSum + Math.max(0, mn - knownSum);
   return {
-    categories: categories.map((c) => ({ ...c, isDeferred: c.isDeferred === true, kind: categoryKind(c) })),
+    categories: categories.map((c) => ({ ...c, name: t(c.name), isDeferred: c.isDeferred === true, kind: categoryKind(c) })),
     totalTokens,
     maxTokens: window,
     rawMaxTokens: window,

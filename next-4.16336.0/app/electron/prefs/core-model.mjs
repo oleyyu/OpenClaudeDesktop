@@ -7,7 +7,7 @@
 // renderer lookup matches. coreModels records only explicit choices (the settings case),
 // never a reconciled fallback, so a catalog that shrinks for a while (a relay outage, a key
 // that failed) brings the remembered choice back on the next full connect.
-import { withEffortDefaults } from './model-settings.mjs';
+import { removedModelCheck, withEffortDefaults } from './model-settings.mjs';
 import { STANDARD_SPEED, savedSpeed, tierForSpeed } from '../preferences.mjs';
 
 const MAX_CORES = 32;
@@ -23,10 +23,13 @@ const effortsOf = model => (model?.supportedReasoningEfforts || []).map(item => 
  * The catalog model and effort for a wanted {model, effort}: the wanted model when listed
  * (else the default, else the first), and the wanted effort when that model supports it
  * (else its default, with the user's per-model override from modelSettings). null for an
- * empty catalog.
+ * empty catalog. A model the user removed in Settings › Models (modelSettings hidden) is
+ * never picked while the catalog lists another one.
  */
 export function pickCoreModel(models, wanted, modelSettings, coreId = null) {
-  const list = withEffortDefaults(models, modelSettings, coreId).filter(model => isRecord(model) && catalogId(model));
+  const all = withEffortDefaults(models, modelSettings, coreId).filter(model => isRecord(model) && catalogId(model));
+  const removed = removedModelCheck(modelSettings, coreId), kept = all.filter(model => !removed(catalogId(model)));
+  const list = kept.length ? kept : all;
   if (!list.length) return null;
   const id = typeof wanted?.model === 'string' ? wanted.model : '';
   const chosen = (id && (list.find(model => catalogId(model) === id) || list.find(model => model.id === id)))
@@ -113,11 +116,14 @@ export function recordCoreModel(config, coreId) {
 
 /**
  * A first record for a core without one, when config.model is already listed by its catalog
- * (a profile from before coreModels): so switching cores and back keeps it. null otherwise.
+ * (a profile from before coreModels): so switching cores and back keeps it. null otherwise,
+ * and for a model the user removed (Settings › Models) while the catalog lists another.
  */
 export function seedCoreModel(config, coreId, models) {
   if (typeof coreId !== 'string' || !coreId || validateCoreModels(config?.coreModels)?.[coreId]) return null;
   if (!Array.isArray(models) || !config?.model || !models.some(model => catalogId(model) === config.model)) return null;
+  const removed = removedModelCheck(config.modelSettings, coreId);
+  if (removed(config.model) && models.some(model => isRecord(model) && catalogId(model) && !removed(catalogId(model)))) return null;
   return recordCoreModel(config, coreId) ?? null;
 }
 

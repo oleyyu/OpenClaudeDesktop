@@ -1,0 +1,8 @@
+/* SourceClaudeSignInDialog: why, which account, then the sign-in's next step (a code to paste back). */
+.claude-signin-dialog .ccs-body { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.claude-signin-dialog .ccs-text { margin: 0; color: var(--cds-text-primary); }
+.claude-signin-dialog .ccs-muted { margin: 0; color: var(--cds-text-secondary); font-size: var(--cds-font-size-footnote, 13px); }
+.claude-signin-dialog .ccs-code { display: flex; gap: 8px; align-items: center; }
+.claude-signin-dialog .ccs-code > :first-child { flex: 1 1 auto; min-width: 0; }
+.claude-signin-dialog .ccs-error { margin: 0; color: var(--cds-text-danger); overflow-wrap: anywhere; }
+.claude-signin-dialog .ccs-settings { margin-inline-end: auto; }
