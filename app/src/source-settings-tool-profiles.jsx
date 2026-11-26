@@ -12,6 +12,7 @@ import { isToolOff, newProfileId, normalizeProfiles, offCount, requiredToolOff, 
 import { t } from '../electron/i18n/index.mjs';
 import { coreName, coreSupports } from '../electron/core-registry.mjs';
 import { settingsCore } from './settings-core-copy.mjs';
+import { bootModelsCoreId, namedModels } from './model-names-model.mjs';
 import './source-profile-setting.css';
 import './commands-settings.css';
 import './tool-profiles-settings.css';
@@ -52,7 +53,8 @@ function ProfileEditor({ initial, catalog, models, onCancel, onSubmit }) {
     try { await onSubmit(form); }
     catch (failure) { setError(failure?.message || SAVE_ERROR); setSaving(false); }
   };
-  const modelItems = [{ value: '', label: t('Keep current') }, ...models.map(model => ({ value: model.model, label: model.displayName || model.model }))];
+  // Hidden and user-removed models (Settings › Models › Remove model) aren't offered, unless the profile already uses one.
+  const modelItems = [{ value: '', label: t('Keep current') }, ...models.filter(model => model.hidden !== true || model.model === initial?.model).map(model => ({ value: model.model, label: model.displayName || model.model }))];
   const tools = catalog?.tools ?? [], servers = catalog?.servers ?? [];
   return <SourceDialog open size="md" layer={SETTINGS_LAYER} title={initial?.id ? t('Edit profile') : t('New profile')} className="ccmd-dialog tprof-dialog"
     description={t('Turned-off tools are removed from the model’s tool list for sessions using this profile.')}
@@ -111,7 +113,8 @@ function summary(profile, models) {
 export function SourceToolProfilesSettings({ config, boot, desktopCall, onSave }) {
   const profiles = normalizeProfiles(config?.toolProfiles);
   const defaultId = config?.defaultToolProfile || null;
-  const models = boot?.models || [];
+  // The running core's models with the user's per-model options (names, removed models: model-names-model.mjs).
+  const models = namedModels(boot?.models || [], config, bootModelsCoreId(boot, config));
   // capabilities.toolSelection (reported, or implied by the descriptor: ZCode, OpenCode, MiMo). Without it a profile
   // is never applied (main.cjs only sends codeDesktop.tools to such a core), so nothing new can be created or made the
   // default; existing profiles can still be turned off as the default, edited or deleted.

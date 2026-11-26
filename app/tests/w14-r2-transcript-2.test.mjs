@@ -67,7 +67,7 @@ test('R2T-12: a plain failed turn is the renderer\'s turn_error card inside the 
   const html = render({ items: ITEMS, turnErrors, host: { recovery: { onRetry() {}, onCompact() {} } } });
   const shown = text(html.slice(html.indexOf('Working</p>')));
   // Inside the turn row, before the reply's MessageActions.
-  assert.match(shown, /Claude couldn’t process that message\|Service is busy\. Try again in a moment, or switch to a different model\.\|View details[^A-Za-z]*Try again/);
+  assert.match(shown, /(?:Claude|DeepSeek) couldn’t process that message\|Service is busy\. Try again in a moment, or switch to a different model\.\|View details[^A-Za-z]*Try again/);
   assert.ok(html.indexOf('Try again') < html.indexOf('data-testid="message-actions"'));
   // Read-only (archived / offline): pg offers no Try again.
   assert.doesNotMatch(render({ items: ITEMS, turnErrors, host: { recovery: { readOnly: true, onRetry() {} } } }), />Try again</);
@@ -92,11 +92,12 @@ test('R4T-08d: every host category is the renderer\'s turn_error card (E95); no 
   const turnErrors = T.rendererTurnErrors({ t1: { message: 'Usage limit reached', codexErrorInfo: 'usageLimitExceeded' } });
   const html = render({ items: ITEMS, turnErrors, host: { recovery: { onRetry() {}, onCompact() {} } } });
   const shown = text(html.slice(html.indexOf('Working</p>')));
-  assert.match(shown, /Claude couldn’t process that message\|/);
+  assert.match(shown, /(?:Claude|DeepSeek) couldn’t process that message\|/);
   assert.doesNotMatch(html, />View usage<|>Sign in|>Open settings<|>Switch model<|>Rewind<|>Review findings<|Auto-continue when limits reset/);
   // main.jsx: the renderer gets them, the host card skips the turns it draws, the recovery scope is the host's.
   const main = read('src/main.jsx');
-  assert.match(main, /const codeTurnErrors = codeRendererOn \? rendererTurnErrors\(state\.turnErrors\?\.\[current\]\) : null;/);
+  // The failure times too (turnErrorAt): the card's timestamp, which settles a 401 card after a new sign-in.
+  assert.match(main, /const codeTurnErrors = codeRendererOn \? rendererTurnErrors\(state\.turnErrors\?\.\[current\], state\.turnErrorAt\?\.\[current\]\) : null;/);
   assert.match(main, /turnErrors=\{codeTurnErrors/);
   assert.match(main, /if \(codeRendererOn && codeTranscriptRendererOn\(current\) && codeTurnErrors\?\.\[item\.turnId\]\) return null;/);
   assert.match(main, /recovery: \{ readOnly: !!session\?\.archived \|\| !boot\?\.connected,/);

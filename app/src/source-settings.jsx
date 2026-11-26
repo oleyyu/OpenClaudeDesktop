@@ -576,7 +576,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     {tab:'code',title:'Visuals',rows:[booleanRow('agentVisualize',t('Inline visualizations'),t('Allow DeepSeek to generate interactive visualizations, charts, and diagrams directly in the conversation.'),{checked:shownValue('agentVisualize',config.agentVisualize)!==false})]},
     {tab:'code',title:'Model and permissions',rows:[
       // Disabled only where the original disables: the model and effort pickers while a turn is busy.
-      row('model',t('Model'),t('Used for your next message.'),<SourceSelect label={t('Default model')} value={shownValue('model',model)} disabled={busy||!boot?.connected} items={models.map(m=>({value:m.model,label:m.displayName||m.model}))} onChange={value=>{const next=models.find(m=>m.model===value);if(next)commit('model',{model:next.model,effort:next.defaultReasoningEffort});}}/>),
+      row('model',t('Model'),t('Used for your next message.'),<SourceSelect label={t('Default model')} value={shownValue('model',model)} disabled={busy||!boot?.connected} items={models.filter(m=>m.hidden!==true||m.model===shownValue('model',model)).map(m=>({value:m.model,label:m.displayName||m.model}))} onChange={value=>{const next=models.find(m=>m.model===value);if(next)commit('model',{model:next.model,effort:next.defaultReasoningEffort});}}/>),
       // A model that reports no effort levels (a custom-provider or relay model) has nothing to pick: the row says so and
       // shows 'Model default', as the composer's effort chip does, instead of an empty list.
       ...(()=>{const shownModel=models.find(m=>m.model===shownValue('model',model))||chosen,efforts=shownModel?.supportedReasoningEfforts||[];

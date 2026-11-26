@@ -134,6 +134,11 @@ export default {
   'These release notes are included with this version of the app and may be one release behind. See the <changelogLink>online changelog</changelogLink> for the latest.': '这些发行说明随此版本的应用一同提供，可能比最新版本落后一个版本。最新内容请查看<changelogLink>在线更新日志</changelogLink>。',
   'No release notes yet.': '暂无发行说明。',
   // The bundled release notes (src/release-notes.mjs), read through t() by the What’s new dialog.
+  "With OpenCode, the model menu lists providers first (OpenCode Zen, Claude, OpenAI and the ones you added), each with its models in a submenu.": "使用 OpenCode 时，模型菜单先列出提供商（OpenCode Zen、Claude、OpenAI 和你自己添加的），各自的模型放在二级菜单里。",
+  "With OpenCode, the Code session list can be grouped by model: Group by › Model puts sessions under their provider, and each provider’s + starts a new session on one of its models.": "使用 OpenCode 时，Code 会话列表可以按模型分组：「分组方式 › 模型」把会话归到各自的提供商下，每个提供商旁的 + 用它的模型新建会话。",
+  "Models a core lists itself, such as OpenCode’s free Zen models, can be removed in Settings › Models and brought back under Removed models.": "内核自带的模型（例如 OpenCode 的免费 Zen 模型）现在可以在「设置 › 模型」中删除，并可在「已删除的模型」中恢复。",
+  "When the Claude sign-in behind OpenCode’s Claude models ends or a Claude message fails to sign in, a dialog asks you to sign in to Claude again, right there, and can resend the message.": "OpenCode 的 Claude 模型所用的 Claude 登录过期、或某条 Claude 消息登录失败时，会弹出窗口请你重新登录 Claude，登录后可重发这条消息。",
+  "Settings › Account shows which Claude account OpenCode’s Claude models use, its plan and when its sign-in ends.": "「设置 › 账户」会显示 OpenCode 的 Claude 模型使用哪个 Claude 账户、它的套餐以及登录何时到期。",
   "Settings › Usage is redesigned: tokens by category, model and day, each with its share, and the cost in US dollars for cores that report it.": "重新设计了「设置 › 用量」：按类别、模型和日期列出 token 及各自占比，内核提供费用时还会显示美元金额。",
   "Running sessions no longer add generic “exec” icons to the Dock.": "运行中的会话不会再在程序坞里多出通用的「exec」图标。",
   "Another pass over the interface: Chinese text in controls is no longer a step too bold, settings pages share one edge and one select width, and onboarding, approval cards, the side chat and the context report read better.": "又检查了一遍界面：控件里的中文不再偏粗一档，设置页对齐到同一条边、下拉框统一宽度，引导页、审批卡、侧聊和上下文报告也更好读了。",

@@ -267,6 +267,13 @@ function turnErrorFixture(thread, turn, kind) {
     }, 200);
     return;
   }
+  // "claude-auth": OpenCode's claude-agent after Claude Code's claude.ai sign-in reached its time limit (opencode-bridge
+  // errorInfoOfV2: 'unauthorized', codeDesktop.signInProvider 'claude-agent'); Claude Code 2.1.322's own text.
+  if (kind === 'claude-auth') {
+    timer = setTimeout(() => fail({ message: 'Failed to authenticate: this login reached its time limit and cannot be renewed. Run `claude auth login` to sign in again, or use `claude setup-token` and set CLAUDE_CODE_OAUTH_TOKEN for unattended jobs',
+      codexErrorInfo: 'unauthorized', additionalDetails: 'provider.unknown', misalignment: null, codeDesktop: { signInProvider: 'claude-agent' } }), 200);
+    return;
+  }
   if (kind === 'context') {
     timer = setTimeout(() => fail({ message: 'FIXTURE_CONTEXT_FULL: the conversation no longer fits the model context window.',
       codexErrorInfo: 'contextWindowExceeded', additionalDetails: 'CONTEXT_WINDOW_EXCEEDED', misalignment: null }), 200);
@@ -851,7 +858,7 @@ readline.createInterface({ input: process.stdin }).on('line', line => {
         notify('item/completed',{threadId:thread.id,turnId:turn.id,item:progress});
         awaitMarker('timestamps-complete',()=>{turn.completedAt=Math.floor(Date.now()/1000)-120;complete(thread,'TIMESTAMP_FIXTURE_REPLY');});return;
       }
-      if(['usage','other','output-limit','context','thread'].some(kind=>text==='fixture:turn-error:'+kind)){turnErrorFixture(thread,turn,text.slice(19));return;}
+      if(['usage','other','output-limit','context','thread','claude-auth'].some(kind=>text==='fixture:turn-error:'+kind)){turnErrorFixture(thread,turn,text.slice(19));return;}
       // Customize acceptance seeds autoCompleteTurns so ordinary text (with skill inputs) completes without an approval request.
       if(readCustomize()?.autoCompleteTurns){complete(thread,'CUSTOMIZE_FIXTURE_REPLY');return;}
       if(text==='fixture:plan'||text==='fixture:plan-document'){

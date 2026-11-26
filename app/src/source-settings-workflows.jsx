@@ -122,7 +122,7 @@ export function workflowSettingsGroup({ config, boot, engine, shownValue, save, 
       <SourceSelect label={t('Workflow agents’ model')} align="end" className="sselect-width-220" disabled={resolved.subagentModel.source === 'env' || !!runnerNote}
         value={resolved.subagentModel.source === 'env' ? resolved.subagentModel.value : resolved.subagentModel.value || ''}
         onChange={(value) => save('workflowSubagentModels', { ...(shown('workflowSubagentModels') || {}), [coreId]: value || null }, 'workflowSubagentModel')}
-        items={[{ value: '', label: t('Session model') }, ...models.map((model) => ({ value: model.model, label: model.displayName || model.model })),
+        items={[{ value: '', label: t('Session model') }, ...models.filter((model) => model.hidden !== true || model.model === resolved.subagentModel.value).map((model) => ({ value: model.model, label: model.displayName || model.model })),
           ...(resolved.subagentModel.source === 'env' && !models.some((model) => model.model === resolved.subagentModel.value) ? [{ value: resolved.subagentModel.value, label: resolved.subagentModel.value }] : [])]} />,
       { indent: true, searchText: t('Used unless a script picks a model for an agent.') }),
   );

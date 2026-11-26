@@ -33,7 +33,7 @@ const sameOrigin = (a, b) => { try { return new URL(String(a).trim()).origin ===
 import {
   normalize, parseNumberInput, setModelParam, modelParamsFor, effectivePrices, setPrice, addPrice, removePrice, resetPrices, priceEdited,
   PRICE_TIERS, PRICE_FIELDS, MAX_TOKENS_MIN, MAX_TOKENS_MAX, PROVIDER_PROTOCOLS, validateProvider,
-  relayBaseURLError, OFFICIAL_BASE_URL, coreTakesModelParams, parseTokenCount, CONTEXT_WINDOW_MIN, CONTEXT_WINDOW_MAX, providerForModel,
+  relayBaseURLError, OFFICIAL_BASE_URL, coreTakesModelParams, parseTokenCount, CONTEXT_WINDOW_MIN, CONTEXT_WINDOW_MAX, providerForModel, removedModelCheck,
 } from '../electron/prefs/model-settings.mjs';
 import { CODEX_LOCAL_SERVERS, codexBaseURLError, codexLocalEndpoint, parseCodexModels } from '../electron/prefs/codex-provider.mjs';
 import { fastTierForModel, speedTiersForModel } from '../electron/preferences.mjs';
@@ -43,6 +43,7 @@ import { ModelNameField, ModelOptionsEntry, defaultModelName } from './source-se
 import { customModelName } from '../electron/prefs/model-names.mjs';
 import { modelAcceptsImages } from './composer-attachments-model.mjs';
 import { bootModelsCoreId } from './model-names-model.mjs';
+import { engineMajor } from './settings-core-copy.mjs';
 import './models-settings.css';
 
 const TIER_LABELS = { offPeak: t('Off-peak'), peak: t('Peak') };
@@ -538,7 +539,7 @@ export function CodexConnectionGroup({ core, desktopCall, onReconnect, initialVi
   </form>;
 }
 
-export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, onSave, onReconnect, onQuickSetup }) {
+export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, onSave, onReconnect, onQuickSetup, onOpenSetting }) {
   const core = boot?.core ?? engine, caps = coreCapabilities(core), coreLabel = coreName(core);
   // providerSettings (the DeepSeek bridge): the API connection, providers and prices; codexProvider: the Codex endpoint.
   const deepseek = caps.providerSettings === true, codexProvider = caps.codexProvider === true;
@@ -552,18 +553,26 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
   const [official, setOfficial] = useState({ loading: deepseek, prices: null, pricingUrl: null, peakWindows: null, unsupported: !deepseek });
   const [adding, setAdding] = useState(null);
   const [providers, setProviders] = useState({ available: false, protocols: [...PROVIDER_PROTOCOLS], providers: [], changed: false, error: '' });
+  // Until the custom providers are read, no model can be told apart as one of theirs, so none offers removal yet.
+  const [providersRead, setProvidersRead] = useState(false);
   const [providerDialog, setProviderDialog] = useState(null), [providerBusy, setProviderBusy] = useState(''), [removingProvider, setRemovingProvider] = useState(null);
   const writes = useRef(0);
   const saved = normalize(config.modelSettings);
   const current = optimistic === undefined ? saved : normalize(optimistic);
   const allModels = (boot?.models || []).filter(model => model && typeof model.model === 'string');
-  // A long catalog (OpenCode with OpenRouter: hundreds of models) gets a search field; the rows follow it.
-  const [modelQuery, setModelQuery] = useState('');
-  const modelSearch = allModels.filter(model => model.hidden !== true).length > MODEL_SEARCH_THRESHOLD;
-  const models = modelSearch && modelQuery.trim() ? filterModels(allModels, modelQuery) : allModels;
-  const connected = boot?.connected !== false;
   // Per-model options are kept under the running core's id (prefs/model-names.mjs, prefs/model-settings.mjs).
   const coreId = bootModelsCoreId(boot, config);
+  // The models the core offers (its catalog's own hidden entries are never listed) and, of those, the ones removed here
+  // (params hidden, Remove model below): every model menu leaves them out until they're restored under Removed models.
+  const isRemoved = removedModelCheck(current, coreId);
+  const catalogModels = allModels.filter(model => model.hidden !== true);
+  const removedModels = catalogModels.filter(model => isRemoved(model.model));
+  const shownCount = catalogModels.length - removedModels.length;
+  // A long catalog (OpenCode with OpenRouter: hundreds of models) gets a search field; the rows and the removed list follow it.
+  const [modelQuery, setModelQuery] = useState('');
+  const modelSearch = catalogModels.length > MODEL_SEARCH_THRESHOLD, searching = modelSearch && !!modelQuery.trim();
+  const models = searching ? filterModels(catalogModels, modelQuery) : catalogModels;
+  const connected = boot?.connected !== false;
 
   useEffect(() => {
     if (!deepseek || typeof desktopCall !== 'function') { setOfficial(value => ({ ...value, loading: false, unsupported: true })); return; }
@@ -585,7 +594,7 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     let live = true;
     Promise.resolve().then(() => desktopCall('model-settings', { op: 'providers-read' })).then(result => {
       if (live && result && Array.isArray(result.providers)) setProviders(value => ({ ...value, ...result, error: '' }));
-    }).catch(error => { if (live) console.warn('Couldn’t read the custom providers:', error); });
+    }).catch(error => { if (live) console.warn('Couldn’t read the custom providers:', error); }).finally(() => { if (live) setProvidersRead(true); });
     return () => { live = false; };
   }, [customProviders]);
   const providerCall = async (key, payload) => {
@@ -651,13 +660,34 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
       setRemoved(value => new Set(value).add(model.model)); setRemoving(null);
     } catch (error) { setRowErrors(value => ({ ...value, [rowId]: error?.message || String(error) })); }
   };
+  // Any other listed model (the core's own catalog) is removed here, at once: modelSettings params hidden for this core
+  // (withModelOverrides marks it removedByUser, so every model menu drops it), restored under Removed models.
+  const zenModel = model => coreId === 'opencode' && model.model.startsWith('opencode/') && engineMajor(boot?.core) !== 1;
+  const builtInRemoveRow = (model, name) => {
+    const rowId = `model-${model.model}-remove`, last = shownCount <= 1;
+    // OpenCode 2.x's own switch for all of OpenCode Zen (opencode-bridge core-settings.js models.zen, labelled in
+    // core-settings-model.mjs): Settings › Core options › '{core} settings'.
+    const zen = zenModel(model) && <>{' '}{t('To remove every OpenCode Zen model at once, turn off “{setting}” in Settings › {page}.', { setting: t('OpenCode Zen models'), page: t('Core options') })}
+      {onOpenSetting && <>{' '}<button type="button" className="msx-link" onClick={() => onOpenSetting('advanced', 'core-models.zen')}>{t('Open {page}', { page: t('Core options') })}</button></>}</>;
+    const description = last ? t('It’s the only model left in the model menu, so it can’t be removed.')
+      : <>{t('Listed by {core}. Removing it takes it out of every model menu; you can restore it below.', { core: coreLabel })}{zen}</>;
+    return settingRow(rowId, t('Remove model'), description,
+      removing === model.model && !last ? <div className="msx-actions">
+          <SourceSettingsButton size="sm" variant="ghost" onClick={() => setRemoving(null)}>{t('Cancel')}</SourceSettingsButton>
+          <SourceSettingsButton size="sm" variant="danger" aria-label={t('Confirm removing {name}', { name })}
+            onClick={() => void commit(rowId, settings => setModelParam(settings, model.model, 'hidden', true, coreId)).then(ok => { if (ok) setRemoving(null); })}>{t('Delete')}</SourceSettingsButton>
+        </div>
+        : <SourceSettingsButton size="sm" disabled={last} title={last ? t('It’s the only model left in the model menu, so it can’t be removed.') : undefined}
+          aria-label={t('Remove {name}', { name })} onClick={() => setRemoving(model.model)}>{t('Remove…')}</SourceSettingsButton>,
+      below(rowId));
+  };
   const removeRow = (model, name) => {
     const rowId = `model-${model.model}-remove`;
     // Removed: the provider no longer lists it, but the running core does until it restarts.
     if (removed.has(model.model)) return [settingRow(rowId, t('Remove model'), <span role="status">{t('Removed. Restart the core to apply.')}</span>,
       onReconnect ? <SourceSettingsButton size="sm" variant="primary" onClick={() => { setProviders(value => ({ ...value, changed: false })); void Promise.resolve(onReconnect()).catch(() => {}); }}>{t('Restart core')}</SourceSettingsButton> : null)];
     const owner = customProviders && providerForModel(providers.providers, model);
-    if (!owner) return [];
+    if (!owner) return customProviders && !providersRead ? [] : [builtInRemoveRow(model, name)];
     const providerName = owner.provider.displayName || owner.provider.route;
     const last = owner.provider.models.length === 1, busy = providerBusy === `remove:${model.model}`;
     return [settingRow(rowId, t('Remove model'), last
@@ -697,7 +727,7 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
   };
   // A short list opens every entry; a long catalog (OpenCode through OpenRouter) opens only the models already changed.
   // U-SET-LITE: entries start closed (one line each) unless something in them was changed.
-  const listedModels = models.filter(model => model.hidden !== true), openAll = false;
+  const listedModels = models.filter(model => !isRemoved(model.model)), openAll = false;
   const modelEntries = listedModels.map(model => {
     const defaultName = defaultModelName(model), name = customModelName(config.modelNames, coreId, model.model) || defaultName;
     const efforts = effortsOf(model), speeds = speedTiersForModel(model), fast = !!fastTierForModel(model) || speeds.length > 0;
@@ -715,11 +745,23 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
           : owner && <span className="msx-badge" title={t('Added with the {provider} provider', { provider: owner.provider.displayName || owner.provider.route })}>{t('Added')}</span>}</>}
       description={model.description && <span className="msx-model-desc">{model.description}</span>}/>;
   });
-  const modelsEmpty = <p className="msx-empty">{modelQuery.trim() && modelSearch ? t('No matching models') : connected ? t('No models are available yet.') : t('Connect to load the model list.')}</p>;
+  const modelsEmpty = <p className="msx-empty">{searching ? t('No matching models') : connected ? t('No models are available yet.') : t('Connect to load the model list.')}</p>;
   const modelsSearch = modelSearch && <input type="search" data-cds="TextInput" className="cds-input cds-reset msx-model-search" aria-label={t('Search models')} placeholder={t('Search models')}
     value={modelQuery} spellCheck={false} autoComplete="off" onChange={event => setModelQuery(event.target.value)}/>;
   const modelsGroup = <SettingsGroup title={deepseek ? t('Models') : t('{core} models', { core: coreLabel })}>
     {modelEntries.length ? modelEntries : modelsEmpty}
+  </SettingsGroup>;
+  // Removed models (Remove model on a model the core lists): each one's name and id, and Restore, which puts it back in
+  // every model menu at once. Only while something is removed; a search narrows it like the entries above.
+  const matched = searching ? new Set(models) : null;
+  const removedShown = matched ? removedModels.filter(model => matched.has(model)) : removedModels;
+  const removedGroup = removedModels.length > 0 && <SettingsGroup title={t('Removed models')} rows={removedShown.map(model => {
+    const rowId = `model-${model.model}-restore`, name = customModelName(config.modelNames, coreId, model.model) || defaultModelName(model);
+    return settingRow(rowId, name, name !== model.model ? <code className="msx-name-id">{model.model}</code> : null,
+      <SourceSettingsButton size="sm" aria-label={t('Restore {name}', { name })}
+        onClick={() => void commit(rowId, settings => setModelParam(settings, model.model, 'hidden', undefined, coreId))}>{t('Restore')}</SourceSettingsButton>, below(rowId));
+  })}>
+    {!removedShown.length && <p className="msx-empty">{t('No matching models')}</p>}
   </SettingsGroup>;
 
   // ---- Pricing
@@ -828,8 +870,9 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     {codexProvider && <CodexConnectionGroup core={coreLabel} desktopCall={desktopCall} onReconnect={onReconnect}/>}
     {modelsSearch}
     {modelsGroup}
+    {removedGroup}
     {codexProvider && <CodexResponseGroup core={coreLabel} desktopCall={desktopCall} connected={connected}/>}
-    {codexProvider && <CodexSubagentsGroup core={coreLabel} desktopCall={desktopCall} connected={connected} models={allModels}/>}
+    {codexProvider && <CodexSubagentsGroup core={coreLabel} desktopCall={desktopCall} connected={connected} models={allModels.filter(model => !isRemoved(model.model))}/>}
     {!codexProvider && providerGroup}
     {!codexProvider && providerDialogNode}
     {!codexProvider && removeProviderNode}
@@ -843,6 +886,7 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     <ConnectionGroup deepseek={deepseek} desktopCall={desktopCall} onReconnect={onReconnect}/>
     {modelsSearch}
     {modelsGroup}
+    {removedGroup}
     <p className="msx-note">{t('Defaults for every DeepSeek session; changes apply from the next request. top_p is not supported by the DeepSeek Harness adapter.')}</p>
     <SourceDisclosure className="msx-advanced" triggerClassName="msx-advanced-trigger" defaultOpen={customized}
       label={<span className="msx-advanced-label"><span className="text-heading-semibold">{t('Advanced')}</span><span className="msx-advanced-hint">{t('Pricing and custom providers')}</span></span>}>

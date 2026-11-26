@@ -54,6 +54,26 @@
       "features": [
         "n === null ? v(DC, null, t) : t"
       ]
+    },
+    "SessionListRenderers": {
+      "file": "shared-22-BACJUrcb.js",
+      "local": "Sk",
+      "export": null,
+      "declarationSha256": "0411d2e970b939030dfffb9e6b9d2981d1a33a5cf84bc80819dd78d3324597e9",
+      "features": [
+        "custom: { cowork: bk, code: bk },",
+        "none: xk,"
+      ]
+    },
+    "SessionBucket": {
+      "file": "shared-22-BACJUrcb.js",
+      "local": "ET",
+      "export": null,
+      "declarationSha256": "4e4e40bda96d60b7935111e9dc1b3f4ee0a2fada2a9f6f978be2279140f6ba17",
+      "features": [
+        "groupLabel: n,",
+        "newSessionTarget: E,"
+      ]
     }
   },
   "boundaries": {
@@ -912,13 +932,53 @@
       "declarationSha256": "f209ee5a40a732c15c807e4d0c520fd7ff5c41e88fbe0d89d0a04f6ad307a875",
       "head": "function WH() {",
       "sourceSha256": "6828aa7109628e08360fd1e7b4ddc2ff022f5f369a297ce690cd4b19e4205436"
+    },
+    "shared-39-ZCs0lAwB.js#Tm": {
+      "name": "sessionsSectionGroupBy",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "f10caf70debf8782d0138d775f91868cb787b7ff4b8586d380d951946e552336",
+      "head": "function Tm(e) {",
+      "sourceSha256": "fbbdc3e3589752233fbb792abb01ef80fc15de2662c5a79456d7d44a766e7c4b"
+    },
+    "shared-39-ZCs0lAwB.js#Mm": {
+      "name": "writeListGroupBy",
+      "kind": "hook",
+      "export": "Ca",
+      "declarationSha256": "91ed533e5fa8b561e096b91c29f69bad68610c590f840e7a280a255f47a82954",
+      "head": "function Mm(e, t) {",
+      "sourceSha256": "fbbdc3e3589752233fbb792abb01ef80fc15de2662c5a79456d7d44a766e7c4b"
+    },
+    "shared-39-ZCs0lAwB.js#Nm": {
+      "name": "clearListGroupBy",
+      "kind": "hook",
+      "export": "_a",
+      "declarationSha256": "cef48663b9b00d52f20665db90612e5055ba7c40f4b2b52f67c7c8729246c9a0",
+      "head": "function Nm(e) {",
+      "sourceSha256": "fbbdc3e3589752233fbb792abb01ef80fc15de2662c5a79456d7d44a766e7c4b"
+    },
+    "shared-57-grpFrBWt.js#a_": {
+      "name": "useGroupByOptions",
+      "kind": "hook",
+      "export": "br",
+      "declarationSha256": "4c76e7f1209ee6d8f5ae09390f2a55bedb4bc75574388ad1dcbb1a436e3f87db",
+      "head": "function a_() {",
+      "sourceSha256": "d53d34b38a219049c24efcea43e9771b73b36dc69318e770de481668daeed0f3"
+    },
+    "shared-22-BACJUrcb.js#Ck": {
+      "name": "renderSessionGroups",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "8459a0ea9b17f36862d78ed27ed939f0d1ed01047ccbd0ebbaee9a1e7008c420",
+      "head": "function Ck(e, t) {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
     }
   },
   "cdsCore": {
     "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd",
     "adapterSha256": "7d63624afd6a3e7eaa2c42803aacdcf1a74ca479ffbed4d9c1f40c60e233ff1e"
   },
-  "adapterSha256": "325230efb41d6b859feffaaba9a47da69d29ea69b0d08c5b77f691156d7f3128",
+  "adapterSha256": "48b6ff291801155741f835ab880112f7ad70c797e8e8d580e7e93a8380cd404b",
   "sharedGraphImports": [
     "$5 <- shared-0-CnnWnVrT.js#$5",
     "$L <- shared-92-BOgyxePb.js#$L",
@@ -1884,7 +1944,7 @@
     "shared-25-D-aF0gt9.js": 160,
     "shared-62.mjs": 92,
     "vendor-intl.mjs": 1,
-    "shared-92.mjs": 97,
+    "shared-92.mjs": 96,
     "shared-123.mjs": 19,
     "shared-153.mjs": 3,
     "shared-183.mjs": 9,

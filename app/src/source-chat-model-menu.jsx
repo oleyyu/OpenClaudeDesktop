@@ -35,7 +35,7 @@ import React from 'react';
 import { CdsBadge, CdsDropdown, CdsSwitch, CdsTooltip } from './cds-core.mjs';
 import { useDirection } from './source-sidebar-resize-adapters.jsx';
 import { effortMenuMessages, modelSelector, modelSelectorMessages, modelSelectorPopupClass, modelSelectorSubmenuPopupClass, splitModelName } from './generated/chat-composer/model-selector.mjs';
-import { effortId, effortName, modelMenuSections } from './model-menu-model.mjs';
+import { effortId, effortName, modelMenuSections, modelProviderGroups, pickableModels, providerModelName } from './model-menu-model.mjs';
 import { t } from '../electron/i18n/index.mjs';
 
 const message = descriptor => t(descriptor.defaultMessage);
@@ -49,7 +49,8 @@ const hasText = value => typeof value === 'string' && value.trim() !== '';
  * listed model, else the default model, else the first), `main` Ce's models and `more` Ee's non-empty groups.
  */
 export function chatModelMenuGroups({ models = [], selected = null, defaultModel = null, isNewConversation = true } = {}) {
-  const listed = (Array.isArray(models) ? models : []).filter(model => typeof modelKey(model) === 'string');
+  // Hidden and user-removed models are left out (model-menu-model.mjs pickableModels), the checked one excepted.
+  const listed = pickableModels(models, selected).filter(model => typeof modelKey(model) === 'string');
   const { primary, overflow } = modelMenuSections({ models: listed, selected });
   const find = id => listed.find(model => modelKey(model) === id) ?? null;
   const legacy = !isNewConversation && !!selected && listed.length > 0 && !find(selected) ? selected : null;
@@ -76,9 +77,8 @@ function ModelRowTooltip({ content, children }) {
   return <CdsTooltip content={content} side={side} multiline>{children}</CdsTooltip>;
 }
 
-function ModelRow({ model, checked, showDescription, onPick }) {
+function ModelRow({ model, checked, showDescription, onPick, name = modelName(model) }) {
   const { menu } = modelSelector;
-  const name = modelName(model);
   const disabled = !checked && !!model.disabled;
   const badge = typeof model.badge?.message === 'string' && model.badge.message ? model.badge : null;
   const item = <CdsDropdown.Item data-testid={menu.row.testId} onClick={() => { if (!checked && !disabled) onPick?.(model); }} disabled={disabled}
@@ -91,9 +91,9 @@ function ModelRow({ model, checked, showDescription, onPick }) {
 }
 
 /** shared-8 GH (zU): one CdsDropdown Group of WH rows. */
-function ModelGroup({ models, currentId, showDescription = true, onPick }) {
+function ModelGroup({ models, currentId, showDescription = true, onPick, nameOf }) {
   return <CdsDropdown.Group>{models.map(model => <ModelRow key={modelKey(model)} model={model} checked={modelKey(model) === currentId}
-    showDescription={showDescription} onPick={onPick} />)}</CdsDropdown.Group>;
+    showDescription={showDescription} onPick={onPick} {...(nameOf ? { name: nameOf(model) } : {})} />)}</CdsDropdown.Group>;
 }
 
 /** shared-33 hE (Jx) rows as gE lists them: every thinking mode but "off" / "standard"; a toggle picks it, or none. The
@@ -157,9 +157,12 @@ function EffortSubmenu({ levels = [], value, onPick, thinking, defaultOpen = fal
  * `{effortOpen}` entry (the effort chord / slash command) opens the Effort submenu with the menu.
  */
 export function SourceChatModelMenu({ models = [], selected = null, defaultModel = null, isNewConversation = true, onSelect,
-  effort = null, thinking = null, effortOpen = false }) {
+  effort = null, thinking = null, effortOpen = false, groupByProvider = false }) {
   const { menu } = modelSelector;
   const { legacy, current, main, more } = chatModelMenuGroups({ models, selected, defaultModel, isNewConversation });
+  // OpenCode (main.jsx): the providers first, each one's models in a submenu (model-menu-model.mjs modelProviderGroups),
+  // the current model's provider hinting its name; a catalog of one provider keeps KH's layout.
+  const providers = groupByProvider ? modelProviderGroups(models, modelKey(current) ?? selected) : null;
   const currentId = modelKey(current);
   const pick = model => { if (modelKey(model) !== currentId) onSelect?.(model); };
   const levels = Array.isArray(effort?.levels) ? effort.levels : [];
@@ -167,11 +170,20 @@ export function SourceChatModelMenu({ models = [], selected = null, defaultModel
   return <CdsDropdown.Popup side="top" sideOffset={modelSelector.trigger.popupSideOffset} align={modelSelector.trigger.alignDefault}
     collisionPadding={MODEL_POPUP_COLLISION} className={modelSelectorPopupClass}>
     {legacy && <CdsDropdown.Header>{t(modelSelectorMessages.legacyModel.defaultMessage, { legacyModel: legacy, defaultModel: modelName(current) })}</CdsDropdown.Header>}
-    <ModelGroup models={main} currentId={currentId} onPick={pick} />
+    {providers
+      ? <CdsDropdown.Group>{providers.map(group => <CdsDropdown.Submenu key={group.id}>
+          <CdsDropdown.SubmenuTrigger data-model-provider={group.id} hint={group.selected ? providerModelName(group.selected) : undefined}>
+            <span className={menu.moreModelsRowClass}>{group.name}</span>
+          </CdsDropdown.SubmenuTrigger>
+          <CdsDropdown.Popup className={modelSelectorSubmenuPopupClass}>
+            <ModelGroup models={group.models} currentId={currentId} showDescription={false} onPick={pick} nameOf={providerModelName} />
+          </CdsDropdown.Popup>
+        </CdsDropdown.Submenu>)}</CdsDropdown.Group>
+      : <ModelGroup models={main} currentId={currentId} onPick={pick} />}
     {levels.length > 0
       ? <EffortSubmenu levels={levels} value={effort.value} onPick={effort.onPick} thinking={thinking} defaultOpen={effortOpen} />
       : thinking ? <><CdsDropdown.Separator /><ThinkingRows {...thinking} /></> : null}
-    {more.length > 0 && <>
+    {!providers && more.length > 0 && <>
       <CdsDropdown.Separator />
       <CdsDropdown.Submenu>
         <CdsDropdown.SubmenuTrigger data-testid={menu.moreModelsTestId}>

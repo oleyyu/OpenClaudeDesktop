@@ -17,7 +17,8 @@
  *   Claude           claude-agent's one method is external (claude-login): connecting only records that Claude Code is
  *                    used; `claude` itself holds the sign-in (v2/claude.js). Checked first here (installed, 2.1.248+,
  *                    serve started with it or restarted now: else an error with the steps, at once). Signed out per
- *                    `claude auth status`: `claude auth login` runs here and opens claude.ai's sign-in page (its manual
+ *                    `claude auth status`, or its stored login dead though listed (past loginExpiresAt, or a chat that
+ *                    failed to authenticate with it): `claude auth login` runs here and opens claude.ai's sign-in page (its manual
  *                    link is the authUrl, acceptsCode), connecting once it exits signed in. Otherwise the answer comes
  *                    back at once (openedByAgent + connecting: nothing to open) while connect/external runs, the older credentials are deleted (a new
  *                    connection is the only way to make v2 check again) and the outcome is watched for up to 120 s
@@ -26,8 +27,16 @@
  *                    35 s, at once when `claude auth status` said signed in (a signed-out claude lists models too)
  *   account/logout   DELETE /api/credential/:id of every credential but connectors' (mcp_*), or of one integration;
  *                    signing out of Claude leaves Claude Code itself signed in (`claude auth logout`)
+ *   Claude's entry   beyond v2's status (claudeStateV2): claudeVersion, email, plan, loginExpiresAt (ISO 8601, from
+ *                    `claude auth status`), checking, anthropicEnv, and with needsAuth a signInReason: missing | tooOld
+ *                    | signedOut | expired (past loginExpiresAt, claude still listing it) | authFailed (a claude-agent
+ *                    chat failed for a sign-in — v2/turns.js marks its error codeDesktop.signInProvider — while claude
+ *                    still lists the login or can't tell; v2 itself re-checks only when a chat process starts). That
+ *                    failure is remembered until a Claude sign-in completes, a claude-agent chat goes through, or
+ *                    `claude auth status` names another login
  *   account/updated  credential.updated / credential.switched / integration.updated / provider.updated, debounced: a
- *                    sign-in made in the TUI, or Claude Code's status changing, reaches the app too
+ *                    sign-in made in the TUI, or Claude Code's status changing, reaches the app too; also a chat's
+ *                    Claude auth failure, and a claude.ai sign-in's end (one timer at loginExpiresAt + 5 s)
  *
  * Every sign-in starts from GET /api/integration, never GET …/:id: integrations are what a location's plugins register
  * (claude-agent's in plugin/provider/claude-agent/integration.ts, the others' in their provider plugins and the config's
@@ -41,7 +50,8 @@
  */
 import { randomUUID } from 'node:crypto'
 import { RpcError, INVALID_PARAMS } from '../transport.js'
-import { CLAUDE_MIN_VERSION, CLAUDE_SETUP_URL } from './claude.js'
+import { CLAUDE_MIN_VERSION, CLAUDE_SETUP_URL, loginKey } from './claude.js'
+import { claudeAuthFailure } from '../projection.js'
 
 const isRecord = (value) => !!value && typeof value === 'object' && !Array.isArray(value)
 const route = (id, tail = '') => `/api/integration/${encodeURIComponent(id)}${tail}`
@@ -54,7 +64,21 @@ export const CLAUDE_INSTRUCTIONS = 'Run `claude auth login` in a terminal, then 
 export const CLAUDE_LOGIN_FAILED = 'Claude Code’s sign-in didn’t finish. Choose Claude again, or run `claude auth login` in a terminal.'
 export const CLAUDE_TIMEOUT = 'Couldn’t confirm that Claude Code is ready: it may still be checking. Make sure it’s installed and signed in (`claude auth login`), then choose Claude again in a moment.'
 export const CLAUDE_LOGOUT_NOTICE = 'Claude Code itself stays signed in: run `claude auth logout` in a terminal to sign out of your Claude account.'
-export const ACCOUNT_TIMING = Object.freeze({ claudeWaitMs: 120000, claudeSettleMs: 35000, pollMs: 1000, debounceMs: 250, oauthGraceMs: 30000 })
+export const CLAUDE_EXPIRED = 'Claude Code’s claude.ai sign-in has ended. Sign in again, or run `claude auth login` in a terminal.'
+export const CLAUDE_AUTH_FAILED = 'Claude Code couldn’t authenticate. Sign in again, or run `claude auth login` in a terminal.'
+// claudeExpiryGraceMs: how long after loginExpiresAt the account/updated that tells it comes.
+export const ACCOUNT_TIMING = Object.freeze({ claudeWaitMs: 120000, claudeSettleMs: 35000, pollMs: 1000, debounceMs: 250, oauthGraceMs: 30000, claudeExpiryGraceMs: 5000 })
+// setTimeout's longest delay (a later one fires at once).
+const MAX_TIMER_MS = 2 ** 31 - 1
+
+/** Why v2's own needs_auth status says Claude needs a sign-in (claude-agent/integration.ts problem()), when it says. */
+export function claudeReasonOfMessage(message) {
+  const text = String(message ?? '')
+  if (/Claude Code is not installed/i.test(text)) return 'missing'
+  if (/Claude Code \S+ is too old|Claude Code is too old/i.test(text)) return 'tooOld'
+  if (/Claude Code is not logged in/i.test(text)) return 'signedOut'
+  return claudeAuthFailure(text) === 'signIn' ? 'authFailed' : null
+}
 
 /**
  * The OAuth method of each sign-in the core descriptor offers (account/login/start codeDesktop.provider), by id: v2 lists
@@ -228,8 +252,10 @@ export const ACCOUNT_V2 = {
 
   /**
    * What the bridge knows of Claude Code beyond v2's status: too old for chats, signed out per `claude auth status`
-   * (v2 says nothing while it checks: after a restart until the first chat), still checking (no models yet), billed
-   * by an ANTHROPIC_* key, and the account's email and plan.
+   * (v2 says nothing while it checks: after a restart until the first chat), its claude.ai sign-in past its end
+   * (loginExpiresAt), a chat that failed to authenticate (v2 re-checks only when a chat process starts or the
+   * credential switches: it would still say nothing), still checking (no models yet), billed by an ANTHROPIC_* key, and
+   * the account's email and plan. signInReason says why whenever it needs a sign-in and the bridge can tell.
    */
   async claudeStateV2(api, entry) {
     const claude = this.v2.claude
@@ -243,17 +269,96 @@ export const ACCOUNT_V2 = {
     if (version.version) out.claudeVersion = version.version
     if (status.email) out.email = status.email
     if (status.subscriptionType) out.plan = status.subscriptionType
+    const expiresAt = Number.isFinite(status.loginExpiresAt) ? status.loginExpiresAt : null
+    if (expiresAt !== null) out.loginExpiresAt = new Date(expiresAt).toISOString()
+    const expired = status.loggedIn === true && expiresAt !== null && expiresAt <= claude.now()
+    const failure = found ? this.claudeFailureV2(status) : null
+    const reason = !found ? 'missing' : version.tooOld ? 'tooOld' : status.loggedIn === false ? 'signedOut' : expired ? 'expired' : failure ? 'authFailed' : null
     if (!entry.needsAuth) {
       if (version.tooOld) Object.assign(out, { needsAuth: true, statusMessage: `Claude Code ${version.version} is too old; ${CLAUDE_MIN_VERSION} or later is required. Run \`claude update\`.`, statusUrl: null })
       else if (status.loggedIn === false) Object.assign(out, { needsAuth: true, statusMessage: 'Claude Code is not logged in. Run `claude auth login` in a terminal.', statusUrl: null })
+      else if (expired) Object.assign(out, { needsAuth: true, statusMessage: CLAUDE_EXPIRED, statusUrl: null })
+      else if (failure) Object.assign(out, { needsAuth: true, statusMessage: failure.message || CLAUDE_AUTH_FAILED, statusUrl: null })
       else if (Array.isArray(models) && !models.some((model) => model?.providerID === CLAUDE_ID)) out.checking = true
     }
+    if (entry.needsAuth || out.needsAuth) {
+      const why = reason ?? claudeReasonOfMessage(entry.statusMessage)
+      if (why) out.signInReason = why
+    }
+    // The sign-in's end, told without a failed chat (account/updated then): only while claude still lists the login.
+    this.claudeExpiryV2(status.loggedIn === true && !expired ? expiresAt : null)
     const keys = claude.anthropicEnv()
     if (keys.length) {
       out.anthropicEnv = keys
       if (!entry.needsAuth && !out.needsAuth) out.statusMessage = `${keys.join(', ')} ${keys.length > 1 ? 'are' : 'is'} set: Claude Code uses ${keys.includes('ANTHROPIC_BASE_URL') && keys.length === 1 ? 'that gateway' : 'that key'}, billed per token, not your Claude plan.`
     }
     return out
+  },
+
+  /**
+   * The remembered Claude Code auth failure ({message, at, login}) still standing for this `claude auth status`, or
+   * null. Its login is the first status read after it (the cache was dropped then); a status that names another login
+   * (a sign-in in a terminal: a new end date, another account) clears it. A status that can't tell keeps it.
+   */
+  claudeFailureV2(status) {
+    const failure = this.v2.claudeFailure
+    if (!failure) return null
+    if (status?.loggedIn !== true && status?.loggedIn !== false) return failure
+    const login = loginKey(status)
+    if (failure.login === undefined) failure.login = login
+    else if (failure.login !== login) {
+      this.v2.claudeFailure = null
+      this.log('claude-agent: Claude Code reports another login since a chat failed to authenticate')
+      return null
+    }
+    return failure
+  },
+
+  /**
+   * A claude-agent chat failed because Claude Code needs a new sign-in (v2/turns.js; markClaudeSignIn): its cached
+   * `claude auth status` is dropped, the failure remembered (account/read: needsAuth, signInReason 'authFailed' while
+   * claude still lists the login) and the app told (account/updated).
+   */
+  claudeSignInFailedV2(message) {
+    const claude = this.v2.claude
+    claude.forget?.()
+    this.v2.claudeFailure = { message: String(message ?? '').slice(0, 1000), at: claude.now?.() ?? Date.now(), login: undefined }
+    this.log(`claude-agent: a chat failed to authenticate: ${String(message ?? '').slice(0, 200)}`)
+    this.accountUpdatedV2()
+  },
+
+  /** A claude-agent chat went through: a remembered auth failure is over. */
+  claudeTurnSucceededV2() {
+    if (!this.clearClaudeFailureV2()) return
+    this.accountUpdatedV2()
+  },
+
+  /** Forget the remembered Claude Code auth failure; whether there was one. */
+  clearClaudeFailureV2() {
+    if (!this.v2.claudeFailure) return false
+    this.v2.claudeFailure = null
+    return true
+  },
+
+  /**
+   * One account/updated when a claude.ai sign-in ends (loginExpiresAt + claudeExpiryGraceMs, the status read again
+   * then); replaced on every account/read, none for an end past or beyond setTimeout's range.
+   */
+  claudeExpiryV2(expiresAt) {
+    clearTimeout(this.v2.claudeExpiryTimer)
+    this.v2.claudeExpiryTimer = null
+    const now = this.v2.claude.now?.() ?? Date.now()
+    if (!Number.isFinite(expiresAt) || expiresAt <= now || this.closed) return
+    const delay = expiresAt - now + this.accountTimingV2().claudeExpiryGraceMs
+    if (delay > MAX_TIMER_MS) return
+    const timer = this.v2.claudeExpiryTimer = setTimeout(() => {
+      if (this.v2.claudeExpiryTimer !== timer) return
+      this.v2.claudeExpiryTimer = null
+      if (this.closed) return
+      this.v2.claude.forget?.()
+      this.notify('account/updated', { authMode: null })
+    }, delay)
+    timer.unref?.()
   },
 
   /**
@@ -494,7 +599,10 @@ export const ACCOUNT_V2 = {
     const loginId = randomUUID()
     const controller = new AbortController()
     const entry = { controller, provider: CLAUDE_ID, done: false }
-    if (status.loggedIn === false) {
+    // A stored login that can't work any more though claude still lists it (past its end, or a chat failed to
+    // authenticate with it) needs Claude Code's own sign-in as much as a signed-out one.
+    const ended = status.loggedIn === true && Number.isFinite(status.loginExpiresAt) && status.loginExpiresAt <= claude.now()
+    if (status.loggedIn === false || ended || this.claudeFailureV2(status)) {
       // Signed out: Claude Code's own sign-in opens claude.ai in the browser; its manual link (the app's "Open sign-in
       // page") ends on a code pasted back here (codeDesktop/login/code → claudeLoginCodeV2). Once it exits signed in,
       // OpenCode is connected as below.
@@ -509,13 +617,16 @@ export const ACCOUNT_V2 = {
       void login.exited.then(async ({ code, output }) => {
         if (entry.done || controller.signal.aborted) return
         const after = await claude.authStatus({ fresh: true, found })
-        if (code !== 0 || after.loggedIn === false) {
+        const stillEnded = after.loggedIn === true && Number.isFinite(after.loginExpiresAt) && after.loginExpiresAt <= claude.now()
+        if (code !== 0 || after.loggedIn === false || stillEnded) {
           entry.done = true
           this.logins.delete(loginId)
           this.log(`claude auth login exited ${code}: ${output.trim().slice(-300)}`)
           this.notify('account/login/completed', { loginId, success: false, error: CLAUDE_LOGIN_FAILED })
           return
         }
+        // Claude Code holds a new sign-in: the failure that made it necessary is over.
+        this.clearClaudeFailureV2()
         return this.claudeConnectV2(await this.v2Api(), { loginId, entry, old, signedIn: true })
       })
       return { type: 'chatgpt', loginId, authUrl: login.url, codeDesktop: { openedByAgent: true, acceptsCode: true } }
@@ -541,6 +652,7 @@ export const ACCOUNT_V2 = {
       entry.done = true
       this.logins.delete(loginId)
       this.catalog.invalidate()
+      if (success) this.clearClaudeFailureV2()
       this.notify('account/login/completed', { loginId, success, error: success ? null : error })
       // A failure keeps the new connection (as v2's desktop does): account/read shows it signed out, with why.
       this.notify('account/updated', { authMode: null })
@@ -607,6 +719,11 @@ export const ACCOUNT_V2 = {
     if (event.type === 'model.updated' || event.type === 'models-dev.refreshed') return
     // integration.updated and provider.updated are per folder: only the home folder's describe the account.
     if (event.directory && event.directory !== this.homeDir() && event.type !== 'credential.updated' && event.type !== 'credential.switched') return
+    this.accountUpdatedV2()
+  },
+
+  /** account/updated, debounced (a burst is one). */
+  accountUpdatedV2() {
     clearTimeout(this.v2.accountTimer)
     this.v2.accountTimer = setTimeout(() => { this.v2.accountTimer = null; if (!this.closed) this.notify('account/updated', { authMode: null }) }, this.accountTimingV2().debounceMs)
     this.v2.accountTimer.unref?.()

@@ -89,10 +89,19 @@ export function durableEffort(value, levels, workflowsEnabled) {
 export const MODEL_SEARCH_THRESHOLD = 12;
 export const MODEL_PRIMARY_CAP = 8;
 export const MODEL_SEARCH_LIMIT = 60;
+/** The models a model picker offers: none hidden by its catalog or removed by the user (Settings › Models › Remove model:
+ * prefs/model-settings.mjs withModelOverrides marks it {hidden, removedByUser}), except the selected one, which stays so
+ * the picker still names and checks it. The list is returned as it is when nothing in it is hidden. */
+export function pickableModels(models = [], selected = null) {
+  const list = Array.isArray(models) ? models : [];
+  if (!list.some((model) => model?.hidden === true)) return list;
+  return list.filter((model) => model?.hidden !== true || (selected !== null && selected !== undefined && modelKey(model) === selected));
+}
 // A 'deprecated' row (shapeModelCatalog's unsupported current model) follows the main rows, as shared-8 Hk
 // T = [...main, deprecated row of the current model] (:13830-13833), never in More models and never searched.
+// Hidden and user-removed models are left out (pickableModels), the selected one excepted.
 export function modelMenuSections({ models = [], fastTier = null, selected = null } = {}) {
-  const listed = (Array.isArray(models) ? models : []).filter((model) => typeof modelKey(model) === "string");
+  const listed = pickableModels(models, selected).filter((model) => typeof modelKey(model) === "string");
   const deprecated = listed.filter((model) => model.section === "deprecated" && modelKey(model) === selected);
   const result = catalogSections({ models: listed.filter((model) => model.section !== "deprecated"), fastTier, selected });
   return deprecated.length ? { ...result, primary: [...result.primary, ...deprecated] } : result;
@@ -140,4 +149,75 @@ export function filterModels(models = [], query = "") {
     scored.push({ model, score: name.startsWith(words[0]) ? 0 : name.includes(words[0]) ? 1 : 2 });
   }
   return scored.sort((a, b) => a.score - b.score).slice(0, MODEL_SEARCH_LIMIT).map((entry) => entry.model);
+}
+
+// OpenCode's catalog spans providers (its own Zen, Claude through Claude Code, OpenAI, the user's imported providers):
+// its model menus list the providers first and each one's models in a submenu, so a long catalog reads as a short list.
+// A model's provider is the bridge's `provider` id (opencode-bridge models.js codexModels), named by its `description`
+// (the provider's name); claude-agent, OpenCode's name for the user's own Claude Code, reads as plain "Claude".
+const PROVIDER_LABELS = Object.freeze({ "claude-agent": "Claude" });
+const hasText = (value) => typeof value === "string" && value.trim() !== "";
+/** A model's provider id: the catalog's `provider`, else its id's 'provider/' prefix; null when it names none. */
+export function modelProviderId(model) {
+  if (hasText(model?.provider)) return model.provider;
+  const id = modelKey(model);
+  return typeof id === "string" && id.indexOf("/") > 0 ? id.slice(0, id.indexOf("/")) : null;
+}
+/** A model's name inside its provider's submenu: the bridge's " (Provider)" suffix (a name two providers share) dropped. */
+export function providerModelName(model) {
+  const name = String(model?.displayName || model?.name || modelKey(model) || "");
+  const suffix = hasText(model?.description) ? ` (${model.description})` : "";
+  return suffix && name.endsWith(suffix) && name.length > suffix.length ? name.slice(0, -suffix.length) : name;
+}
+/**
+ * The model menu's provider groups: [{id, name, models, selected, searchable}] in catalog order (the bridge lists the
+ * providers that work first), each group's main models before its overflow ones; null when the catalog doesn't span
+ * two providers or a model names none (the flat menu then). Hidden and removed models are left out (pickableModels),
+ * the selected one excepted; a 'deprecated' row (the selected model the catalog no longer lists) is the caller's.
+ */
+export function modelProviderGroups(models = [], selected = null) {
+  const listed = pickableModels(models, selected).filter((model) => typeof modelKey(model) === "string" && model.section !== "deprecated");
+  const groups = new Map();
+  for (const model of listed) {
+    const id = modelProviderId(model);
+    if (!id) return null;
+    let group = groups.get(id);
+    if (!group) groups.set(id, group = { id, name: PROVIDER_LABELS[id] ?? (hasText(model.description) ? model.description.trim() : id), list: [] });
+    group.list.push(model);
+  }
+  if (groups.size < 2) return null;
+  return [...groups.values()].map(({ id, name, list }) => {
+    const ordered = [...list.filter((model) => model.section !== "overflow"), ...list.filter((model) => model.section === "overflow")];
+    return { id, name, models: ordered, selected: ordered.find((model) => modelKey(model) === selected) ?? null, searchable: ordered.length > MODEL_SEARCH_THRESHOLD };
+  });
+}
+/**
+ * Group by › Model (the Code sidebar under OpenCode): `of(modelId)` → a session's provider bucket {key, label, order} from
+ * its model ('provider/id', or a catalog id naming its provider), named and ordered as the model menu lists providers;
+ * null when the model names no provider (the sidebar's Other bucket).
+ */
+export function sessionProviderGroup(models = []) {
+  const list = Array.isArray(models) ? models : [], names = new Map();
+  for (const model of list) {
+    const id = modelProviderId(model);
+    if (id && !names.has(id)) names.set(id, { label: PROVIDER_LABELS[id] ?? (hasText(model.description) ? model.description.trim() : id), order: names.size });
+  }
+  return (modelId) => {
+    if (!hasText(modelId)) return null;
+    const listed = list.find((model) => modelKey(model) === modelId), cut = modelId.indexOf("/");
+    const key = listed ? modelProviderId(listed) : cut > 0 ? modelId.slice(0, cut) : null;
+    if (!key) return null;
+    const known = names.get(key);
+    return { key, label: known?.label ?? PROVIDER_LABELS[key] ?? key, order: known ? known.order : Infinity };
+  };
+}
+/**
+ * Group by › Model's "New session in {provider}": the model a new session on that provider starts with. The provider's most
+ * recent session's model while the catalog still offers it, else the provider's catalog default, else its first main model;
+ * null when the catalog offers none of the provider's models (hidden and removed ones are not offered).
+ */
+export function providerStartModel(models = [], provider = null, recent = null) {
+  const offered = pickableModels(models).filter((model) => typeof modelKey(model) === "string" && model.section !== "deprecated" && modelProviderId(model) === provider);
+  return offered.find((model) => modelKey(model) === recent) ?? offered.find((model) => model.isDefault === true)
+    ?? offered.find((model) => model.section !== "overflow") ?? offered[0] ?? null;
 }

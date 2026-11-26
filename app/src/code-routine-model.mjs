@@ -236,7 +236,8 @@ export function codeRoutineSessions(rows, { sessions = [], metadata = {}, state 
 }
 
 // The page's model list for the form (shared-1 FP: { id, name }) over the host's models.
-export const codeRoutineModels = (models) => (Array.isArray(models) ? models : []).map((model) => ({
+// Hidden and user-removed models (Settings › Models › Remove model) aren't offered.
+export const codeRoutineModels = (models) => (Array.isArray(models) ? models : []).filter((model) => model?.hidden !== true).map((model) => ({
   id: model?.model ?? model?.id ?? String(model ?? ''),
   name: model?.displayName ?? model?.name ?? model?.model ?? model?.id ?? String(model ?? ''),
 })).filter((model) => model.id);

@@ -48,7 +48,7 @@ import {createWorkflowSizeStore,pickWorkflowSizeWarning,syncWorkflowSizeStore,wo
 const workflowSizeStore = createWorkflowSizeStore();
 import { resolveWorkflowSettings } from "../electron/prefs/workflow-settings.mjs";
 import { ultracodeMatches, withoutSystemReminders } from "../electron/prefs/workflow-keyword.mjs";
-import { withUltracodeLevel, coreEffort, durableEffort, isTopTierEffort as isUltracodeTier, markDefaultEffort } from "./model-menu-model.mjs";
+import { withUltracodeLevel, coreEffort, durableEffort, isTopTierEffort as isUltracodeTier, markDefaultEffort, modelProviderGroups, providerStartModel } from "./model-menu-model.mjs";
 import {mergeWorkflow} from "./workflow-progress-model.mjs";
 import {parseWorkflowLaunch} from "./workflow-launch-model.mjs";
 import {isModelWorkflow,modelWorkflowRuns,withModelWorkflowRows,workflowTask,workflowKey} from "./model-workflow-model.mjs";
@@ -211,6 +211,10 @@ import { ClaudeImportDialog } from "./source-claude-import.jsx";
 import { ImportHistoryDialog } from "./source-import-history.jsx";
 import { isImportedTurn, mayHaveImportedPrefix, withImportedPrefix } from "./import-history-display.mjs";
 import { SourceResumeDialog } from "./source-resume-dialog.jsx";
+import { SourceClaudeSignInDialog } from "./source-claude-signin-dialog.jsx";
+// The official re-auth store (shared-104 qN): reloginReturnedAt settles the code transcript's 401 cards.
+import { qN as officialReauthStore } from "./generated/code-transcript/shared-104-CTONUSaz.mjs";
+import { CLAUDE_PROVIDER, claudeAccountEntry, claudeExpiry, claudePromptKey, claudeSignInNeed, claudeSignInPrompt, isClaudeAgentModel, isClaudeAuthFailure } from "./claude-signin-model.mjs";
 import { autoCompactHint } from "./context-usage-model.mjs";
 import { MCP_STATUS_LABELS, customizeCore } from "./customize-model.mjs";
 import { addConnectorsEntry, addPluginsEntry } from "./add-menu-model.mjs";
@@ -1979,11 +1983,17 @@ function App({ side = 0, initialSession = null }) {
   const modelNamesCore = bootModelsCoreId(boot);
   const models = useMemo(() => namedModels(boot?.models || [], boot?.config, modelNamesCore), [boot?.models, boot?.config?.modelSettings, boot?.config?.modelNames, modelNamesCore]);
   const chosen = models.find((m) => m.model === model);
+  // OpenCode's catalog spans providers (Zen, Claude, OpenAI, imported ones): its model menus list them first, each one's
+  // models in a submenu (model-menu-model.mjs modelProviderGroups).
+  const modelMenuByProvider = coreForEngine(boot?.core?.engine).id === "opencode";
   // A saved model the current core does not list (a Codex model on the DeepSeek core) or a
   // catalog that arrived after init falls back to the catalog default instead of "Default model".
+  // A model removed in Settings › Models (removedByUser) is left the same way, for the default or the first one kept.
   useEffect(() => {
-    if (!models.length || models.some((m) => m.model === model)) return;
-    const fallback = models.find((m) => m.isDefault) || models[0];
+    if (!models.length || models.some((m) => m.model === model && !m.removedByUser)) return;
+    const kept = models.filter((m) => !m.removedByUser && !m.hidden);
+    const fallback = kept.find((m) => m.isDefault) || kept[0] || models.find((m) => m.isDefault) || models[0];
+    if (fallback.model === model) return;
     setModel(fallback.model);
     setEffort((value) => fallback.supportedReasoningEfforts?.some((e) => e.reasoningEffort === value) ? value : fallback.defaultReasoningEffort || "medium");
   }, [models, model]);
@@ -6220,9 +6230,67 @@ function App({ side = 0, initialSession = null }) {
   const signInRequired = !!signInPrompt && boot.account?.requiresOpenaiAuth === true;
   // A sign-in already under way (account-operations boot.auth): Home's card shows its next step instead of Sign in.
   const signInPending = !!boot?.auth?.login && ["waiting", "cancelling"].includes(boot.auth.phase);
+  // OpenCode's Claude models run the user's own Claude Code, whose claude.ai sign-in can end between two messages
+  // (claude-signin-model.mjs). 'Sign in to Claude again' opens for a Claude turn that failed for that (every new such
+  // failure), and once per run for a Claude session whose sign-in is gone or about to end (until a Not now; a new end
+  // date asks again). Its Sign in is the core's own claude-agent sign-in (boot.auth, as in Settings › Account).
+  const [claudeSignIn, setClaudeSignIn] = useState(null);
+  const shownClaudeSignIn = useDialogRetention(claudeSignIn);
+  const claudePrompted = useRef(new Set()), claudeDismissed = useRef(false), claudeMountedAt = useRef(Date.now());
+  const openClaudeSignIn = (value) => setClaudeSignIn((open) => open ?? value);
+  useEffect(() => {
+    const errors = current ? state.turnErrors?.[current] : null, times = current ? state.turnErrorAt?.[current] : null;
+    if (!boot?.connected || !errors || !times) return;
+    let latest = null;
+    for (const [turnId, error] of Object.entries(errors)) {
+      const at = times[turnId];
+      // Only failures that arrive while this window is open: an old session's history isn't news.
+      if (!error || !Number.isFinite(at) || at < claudeMountedAt.current || !isClaudeAuthFailure(error, { model })) continue;
+      if (!latest || at > latest.at) latest = { turnId, at, error };
+    }
+    if (!latest) return;
+    const key = `turn:${current}:${latest.turnId}:${latest.at}`;
+    if (claudePrompted.current.has(key)) return;
+    claudePrompted.current.add(key);
+    const entry = claudeAccountEntry(boot.account), need = claudeSignInNeed(entry);
+    const reason = need && need.reason !== "authFailed" ? need.reason : /time limit|expired/i.test(latest.error.message || "") ? "expired" : "authFailed";
+    // The end date only once it has passed: a stored sign-in still running says nothing about why this turn failed.
+    const expiry = claudeExpiry(entry);
+    const prompt = { reason, expiresAt: expiry?.ended ? expiry.at : null, email: typeof entry?.email === "string" ? entry.email : "", threadId: current, turnId: latest.turnId };
+    openClaudeSignIn(prompt);
+  }, [state.turnErrors, state.turnErrorAt, current, model, boot?.connected]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // One window side asks for the account (a split's other side shares this renderer and account).
+    if (side !== 0 || !boot?.connected || onboarding || claudeSignIn || claudeDismissed.current) return;
+    const prompt = claudeSignInPrompt(boot.account, { model });
+    const key = claudePromptKey(prompt);
+    if (!prompt || claudePrompted.current.has(key)) return;
+    claudePrompted.current.add(key);
+    openClaudeSignIn(prompt);
+  }, [boot?.account, boot?.connected, model, onboarding, claudeSignIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A sign-in that succeeded here (any core's, account-operations signedInAt) settles the official card's older 401
+  // failures into its quiet 'Signed in again' (code-transcript $G: reloginReturnedAt newer than the item's timestamp).
+  useEffect(() => {
+    const at = boot?.auth?.signedInAt;
+    if (Number.isFinite(at) && at > (officialReauthStore.getState().reloginReturnedAt ?? 0)) officialReauthStore.setState({ reloginReturnedAt: at });
+  }, [boot?.auth?.signedInAt]);
+  const closeClaudeSignIn = () => {
+    // Signed in: later sign-in problems ask again. Otherwise this run asks again only for a new failed turn.
+    if (Number.isFinite(boot?.auth?.signedInAt) && boot.auth.signedInAt >= claudeMountedAt.current && !claudeSignInNeed(claudeAccountEntry(boot?.account))) {
+      claudeDismissed.current = false; claudePrompted.current = new Set([...claudePrompted.current].filter((key) => key.startsWith("turn:")));
+    } else claudeDismissed.current = true;
+    setClaudeSignIn(null);
+  };
   // Home card's Sign in, the composer warning's Sign in and the send gate: a native core's browser sign-in starts here,
-  // a bridge core's (one of several providers) is chosen in Settings › Account.
+  // a bridge core's (one of several providers) is chosen in Settings › Account — but a Claude session whose Claude Code
+  // sign-in is gone gets the Claude dialog, which signs in right there.
   function startCoreSignIn() {
+    const claudeNeed = isClaudeAgentModel(model) ? claudeSignInNeed(claudeAccountEntry(boot?.account)) : null;
+    if (claudeNeed && signInPrompt?.action !== "login") {
+      const entry = claudeAccountEntry(boot?.account), expiry = claudeExpiry(entry);
+      openClaudeSignIn({ reason: claudeNeed.reason, expiresAt: expiry?.ended ? expiry.at : null, email: typeof entry?.email === "string" ? entry.email : "" });
+      return;
+    }
     if (signInPrompt?.action === "login") {
       // A sign-in already under way (account-operations refuses a second start): its page opens again; one starting,
       // being cancelled or being checked is left to finish.
@@ -7563,7 +7631,7 @@ function App({ side = 0, initialSession = null }) {
   const codeRendererDraws = (row) => mode === "code" && !!current && codeTranscriptRendererOn(current) && (rendererDrawsRow(row, { officialWorkflow: codeOfficialWorkflow(row) }) || !!scheduledPromptEvent(row));
   // W14-code r2 R2T-12: the failed turns the renderer draws as its turn_error item (c96d752d0 R3 → V2 / V1, recovery from
   // pg over c227f4d5e PZ); r4 R4T-08d (E95): every failed turn, the host card only in the renderer's fallback.
-  const codeTurnErrors = codeRendererOn ? rendererTurnErrors(state.turnErrors?.[current]) : null;
+  const codeTurnErrors = codeRendererOn ? rendererTurnErrors(state.turnErrors?.[current], state.turnErrorAt?.[current]) : null;
   const codeTranscriptRows = (rows, render) => {
     if (!codeRendererOn) return mode === "chat" ? chatMessageRows(rows, render) /* chat-conversation r1-01: cc1aae219 JY's group/message-row */ : rows.map(render);
     const at = new Map(rows.map((row, index) => [row, index]));
@@ -7906,7 +7974,7 @@ function App({ side = 0, initialSession = null }) {
       modelOpen={menu?.kind === "model"}
       // chat-home r1-05: the Chat / Cowork card's model menu is shared-8 $H's own CDS Dropdown (Root / Trigger in
       // source-chat-composer.jsx); this is its Popup (KH, source-chat-model-menu.jsx), opened by the host menu state.
-      chatModelMenu={mode !== "code" ? <SourceChatModelMenu models={models} selected={model} defaultModel={boot?.config?.model || null} isNewConversation={!current}
+      chatModelMenu={mode !== "code" ? <SourceChatModelMenu models={models} selected={model} groupByProvider={modelMenuByProvider} defaultModel={boot?.config?.model || null} isNewConversation={!current}
         onSelect={m => { Promise.resolve(chooseModel({model:m.model, effort:m.defaultReasoningEffort})).catch(e=>setError(e.message)); }} effortOpen={!!menu?.data?.effortOpen}
         effort={efforts.length > 0 ? { levels: markDefaultEffort(efforts, chosen?.defaultReasoningEffort), value: effort, onPick: pickEffort } : null}
         thinking={chatThinking && { ...chatThinking, onToggle: toggleChatThinking }} /> : undefined}
@@ -8001,8 +8069,24 @@ function App({ side = 0, initialSession = null }) {
     openSettings: (tab) => { setMenu(null); setSettings(tab); },
     showSessionsPage: () => showSessionsPage(mode),
   };
+  // Group by › Model (frame-sidebar-nav-groups.jsx): the Code list's sessions by provider, offered on OpenCode while its
+  // catalog spans providers (Claude, GPT, Zen, the user's own); a provider heading's "New session in" opens the New session
+  // page on that provider's model (its most recent session's, else its default), the saved default model left as it is.
+  const modelGroups = {
+    offered: mode === "code" && modelMenuByProvider && modelProviderGroups(models, model) !== null,
+    models,
+    start: (provider, recent) => {
+      const pick = providerStartModel(models, provider, recent);
+      if (!pick) return;
+      navigate(null);
+      if (currentRef.current !== null) return; // held (unsaved file edits): the open session keeps its model
+      setModel(pick.model);
+      setEffort((value) => pick.supportedReasoningEfforts?.some((level) => level.reasoningEffort === value) ? value : pick.defaultReasoningEffort || value);
+      setTimeout(() => textarea.current?.focus(), 0);
+    },
+  };
   const sidebarNavValue = {
-    mode, section, current: splitView.open ? splitView.sides[splitView.active].current : current, routineId: routineSelection,
+    mode, section, modelGroups, current: splitView.open ? splitView.sides[splitView.active].current : current, routineId: routineSelection,
     localSessions: navLocalSessions, agentSessions: navAgentSessions,
     // The manager's load state (getSessionList waits for "loaded"; "failed" is the settled init without a list, as the
     // SourceSidebar loading / loadFailed props below read it).
@@ -8987,7 +9071,7 @@ function App({ side = 0, initialSession = null }) {
         onClose={() => { const done = bypassMode.confirmingMode === "auto" ? autoSwitchDone.current : null; autoSwitchDone.current = null; bypassMode.cancel(); done?.(false); }}/> }
       {/* w13-close-chat-composer (K4) / chat-home r1-05: the Chat / Cowork card's menu is shared-8 $H → KH (source-chat-model-menu.jsx), with the Effort submenu (shared-28 wE) and Chat's thinking rows (hE), rendered inside the card's own CDS Dropdown (renderMainComposer chatModelMenu), not here. */}
       {menu?.kind === "model" && mode !== "code" ? null
-      : menu?.kind === "model" ? <SourceModelMenu key={menu.token ?? "model"} anchor={menu.anchor} models={models} selected={model} defaultModel={boot?.config?.model || null} onSelect={m => { Promise.resolve(chooseModel({model:m.model, effort:m.defaultReasoningEffort})).catch(modelChangeFailed(model)); }} fastTier={fastTier} fastMode={fastEnabled} speedTiers={speedTiers} speed={activeTier?.key ?? STANDARD_SPEED} onSpeedChange={value=>changeSpeed(value).catch(fastModeFailed)} fastDisabled={fastSaving || sending || !boot?.connected} fastSaving={fastSaving} onFastModeChange={value=>changeFastMode(value).catch(fastModeFailed)} onClose={closeMenu} initialHighlight={menu.entry} effortOpen={!!menu.data?.effortOpen}
+      : menu?.kind === "model" ? <SourceModelMenu key={menu.token ?? "model"} anchor={menu.anchor} models={models} selected={model} groupByProvider={modelMenuByProvider} defaultModel={boot?.config?.model || null} onSelect={m => { Promise.resolve(chooseModel({model:m.model, effort:m.defaultReasoningEffort})).catch(modelChangeFailed(model)); }} fastTier={fastTier} fastMode={fastEnabled} speedTiers={speedTiers} speed={activeTier?.key ?? STANDARD_SPEED} onSpeedChange={value=>changeSpeed(value).catch(fastModeFailed)} fastDisabled={fastSaving || sending || !boot?.connected} fastSaving={fastSaving} onFastModeChange={value=>changeFastMode(value).catch(fastModeFailed)} onClose={closeMenu} initialHighlight={menu.entry} effortOpen={!!menu.data?.effortOpen}
         effort={menu.anchor?.closest?.("[data-env-bar-host], .sc-composer") && efforts.length > 0 ? { levels: markDefaultEffort(efforts, chosen?.defaultReasoningEffort), value: effort, onPick: pickEffort } : null} /> : menu?.kind === "permission" ? <SourcePermissionMenu key={menu.token ?? "permission"} anchor={menu.anchor} value={effectivePermission} defaultValue={permission} bypassEnabled={bypassMode.available} bypassKept={bypassMode.kept}
         bypassOffer={bypassOffer({ enabled: bypassOptIn && !bypassRefusal, availability: bypassOptIn ? bypassRefusal : bypassRequirements })}
         onEnableBypass={() => { closeMenu(); setSettings("code#bypass"); }} onChange={value => bypassMode.select(value)} onClose={closeMenu} onSelectComplete={() => textarea.current?.focus()} initialHighlight={menu.entry}
@@ -9170,6 +9254,13 @@ function App({ side = 0, initialSession = null }) {
           </form>
         </SourceDialog>
       )}
+      {/* 'Sign in to Claude again' (claude-signin-model.mjs): Try again resends the failed turn while its session is open. */}
+      {shownClaudeSignIn.value && <SourceClaudeSignInDialog key={`claude-signin-${shownClaudeSignIn.key}`} open={shownClaudeSignIn.open} onExited={shownClaudeSignIn.onExited}
+        prompt={shownClaudeSignIn.value} auth={boot?.auth} connected={!!boot?.connected}
+        onSignIn={() => call("login", { type: "chatgpt", codeDesktop: { provider: CLAUDE_PROVIDER } })}
+        onAccountAction={(payload) => call("account-auth", payload)}
+        onRetry={shownClaudeSignIn.value.turnId && shownClaudeSignIn.value.threadId === current ? () => retryFailedTurn(shownClaudeSignIn.value.turnId) : undefined}
+        onOpenSettings={() => setSettings("account#account")} onClose={closeClaudeSignIn} />}
     </HostFrameRoot>
   );
 }

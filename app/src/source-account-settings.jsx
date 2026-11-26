@@ -9,6 +9,7 @@ import {coreForEngine} from '../electron/core-registry.mjs';
 import {signInBrand,keyBrand} from './account-brand-model.mjs';
 import {SourceBrandLogo} from './source-brand-logo.jsx';
 import {Icon} from './icons';
+import {CLAUDE_PROVIDER,claudeAccountEntry,claudeDateText,claudeExpiry,claudeSignInNeed,claudeSignInText} from './claude-signin-model.mjs';
 import './source-account-settings.css';
 
 const PENDING_PHASES=['starting','waiting','cancelling'];
@@ -30,6 +31,25 @@ export function pendingSignIn(login,core){
   const text=login?.userCode?t('Enter this code on the sign-in page.'):login?.connecting?t('Connecting with the sign-in already on this Mac. This can take a minute.')
     :login?.openedByAgent?t('Finish signing in in the browser tab {core} opened.',{core}):t('Finish signing in in your browser.');
   return {text,reopen};
+}
+// The Claude row's state (claude-signin-model.mjs): signed in as whom and until when, or why it needs a sign-in again
+// (attention: shown under the row, and its Sign in becomes the accent 'Sign in again'). Null before Claude is connected.
+export function claudeRow(snapshot,now=Date.now()){
+  const entry=claudeAccountEntry(snapshot);
+  if(!entry)return null;
+  const need=claudeSignInNeed(entry,now),expiry=claudeExpiry(entry,now);
+  const ends=expiry?claudeDateText(expiry.at):'';
+  if(need){
+    const again=need.reason!=='missing'&&need.reason!=='tooOld';
+    return {state:need.reason,again,description:!again?t('Claude Code isn’t ready.'):need.reason==='signedOut'?t('Claude Code is signed out.'):t('Claude Code’s sign-in has ended.'),attention:claudeSignInText(need.reason,{expiresAt:expiry?.at??null})};
+  }
+  if(entry.checking)return {state:'checking',description:t('Checking Claude Code’s sign-in…')};
+  const who=typeof entry.email==='string'&&entry.email?entry.email:'';
+  // Claude Code's subscriptionType ('max', 'pro', 'team'…) as the plan's name.
+  const plan=typeof entry.plan==='string'&&entry.plan?entry.plan.charAt(0).toUpperCase()+entry.plan.slice(1):'';
+  const signed=who?(plan?t('Signed in as {email} ({plan})',{email:who,plan}):t('Signed in as {email}',{email:who})):t('Signed in with Claude Code');
+  if(expiry?.soon)return {state:'soon',again:true,description:signed,attention:claudeSignInText('soon',{expiresAt:expiry.at})};
+  return {state:'signedIn',description:ends?t('{account} · sign-in ends {date}',{account:signed,date:ends}):signed};
 }
 // A browser sign-in's device code (deviceCode: true), unless the running core's version is past deviceCodeBefore
 // (OpenCode 2.x signs in to ChatGPT in the browser only).
@@ -143,14 +163,16 @@ export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,
     for(const option of options.browser){
       const key=option.provider||option.type||'browser', row=`browser-${key}`, deviceRow=`device-${key}`;
       const deviceCode=offersDeviceCode(option,engine), pendingHere=mine(row)||(deviceCode&&mine(deviceRow));
+      // Claude (OpenCode's claude-agent, the user's own Claude Code): what its sign-in is now, from account/read.
+      const claude=key===CLAUDE_PROVIDER?claudeRow(snapshot):null;
       rows.push({id:`signin-${key}`,leading:<Mark brand={signInBrand(option,coreBrand)} glyph="User"/>,label:t(option.label),searchText:`${option.label} sign in${deviceCode?' device code':''}`,
-        description:pendingHere?next.text:t('Opens your browser to sign in.'),control:<div className="ss-account-controls">
+        description:pendingHere?next.text:claude?.description||t('Opens your browser to sign in.'),...(claude?.attention&&!pendingHere?{below:<p role="status" className="ss-account-notice" data-claude-signin={claude.state}>{claude.attention}</p>}:{}),control:<div className="ss-account-controls">
         {/* Sign in comes last, so every row's Sign in sits in one column at the right edge. */}
         {pendingHere?waitingControls:<>
           {deviceCode&&<Button size="sm" variant="ghost" busy={working===deviceRow} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(deviceRow,'chatgptDeviceCode',option.provider)}>{t('Use device code')}</Button>}
-          <Button size="sm" variant={signInVariant} busy={working===row} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(row,option.type||'chatgpt',option.provider)}>{t('Sign in')}</Button>
+          <Button size="sm" variant={claude?.attention?'primary':signInVariant} busy={working===row} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(row,option.type||'chatgpt',option.provider)}>{claude?.again?t('Sign in again'):t('Sign in')}</Button>
         </>}
-      </div>,below:<>{codeBelow(deviceRow)}{mine(row)&&pasteCode}</>});
+      </div>,...(pendingHere||!claude?.attention?{below:<>{codeBelow(deviceRow)}{mine(row)&&pasteCode}</>}:{})});
     }
     options.deviceCode.forEach((option,index)=>{
       const row=`device-${option.provider||index}`, pendingHere=mine(row);

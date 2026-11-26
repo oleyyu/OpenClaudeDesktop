@@ -17418,7 +17418,7 @@
       "target": "shared-92.mjs",
       "source": "shared-92-BOgyxePb.js",
       "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada",
-      "sha256": "6cea6f8bfddc7742756a471bc69e1a40f8472861df7f6288af950bee5dcc6a51",
+      "sha256": "4f61d43c540743a7d7a8332c838ccb9899b61795ea295c0ecc2ea0579e9c6120",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -18268,14 +18268,6 @@
         {
           "name": "yy",
           "sha256": "b5be8057082235b1b1d0d9ff93ff0f84afbd143c43b95044e58405b9444ffd02"
-        },
-        {
-          "name": "by",
-          "sha256": "80505dd0622cc16b90f2d512b4f4d4eaffb734f8daec52cf8b0a599ffe300479"
-        },
-        {
-          "name": "xy",
-          "sha256": "e9c2bd827b944fae78ad82911769052292b30ca23a2ad32c839dc02ed6a66d75"
         },
         {
           "name": "kx",
@@ -23942,7 +23934,6 @@
         "bM",
         "bO",
         "bg",
-        "by",
         "c0",
         "cA",
         "cC",
@@ -24058,7 +24049,6 @@
         "x1",
         "xI",
         "xO",
-        "xy",
         "yC",
         "yD",
         "yF",
@@ -24128,7 +24118,6 @@
         "bM",
         "bN",
         "bp",
-        "by",
         "ch",
         "cy",
         "dS",
@@ -57712,7 +57701,7 @@
       "target": "shared-39.mjs",
       "source": "shared-39-ZCs0lAwB.js",
       "sourceSha256": "fbbdc3e3589752233fbb792abb01ef80fc15de2662c5a79456d7d44a766e7c4b",
-      "sha256": "7915275d4db63d9c5bf4ae0c4a21af81aef9297c259f545fe85dad8c655d9057",
+      "sha256": "e2e8bc3a57c84becc145b689cb362e27c905ca0e5608ee5fe0eb6bc2ff19f735",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -58432,10 +58421,6 @@
           "sha256": "b2040ddb808636dc5b940eb4500fa027cdf693d170b50c3937df49c67dbea6e2"
         },
         {
-          "name": "Tm",
-          "sha256": "f10caf70debf8782d0138d775f91868cb787b7ff4b8586d380d951946e552336"
-        },
-        {
           "name": "Em",
           "sha256": "ac0da0613b2de84c871b2c290bbf221e7e74aa88d2d403fa6e5b2bff7e8a4b2e"
         },
@@ -58454,14 +58439,6 @@
         {
           "name": "Am",
           "sha256": "0053d443ffa88e9925140b0bb3616adb19535e5262373a7adc69e5ace752c427"
-        },
-        {
-          "name": "Mm",
-          "sha256": "91ed533e5fa8b561e096b91c29f69bad68610c590f840e7a280a255f47a82954"
-        },
-        {
-          "name": "Nm",
-          "sha256": "cef48663b9b00d52f20665db90612e5055ba7c40f4b2b52f67c7c8729246c9a0"
         },
         {
           "name": "Pm",
@@ -61714,6 +61691,14 @@
           "kind": "generated"
         },
         {
+          "local": "Tm",
+          "from": "../../frame-sidebar-nav-adapter.mjs",
+          "name": "sessionsSectionGroupBy",
+          "via": "shared-39-ZCs0lAwB.js#Tm",
+          "kind": "adapter",
+          "original": "Tm"
+        },
+        {
           "local": "Tn",
           "from": "./shared-123.mjs",
           "name": "wY",
@@ -62298,13 +62283,6 @@
           "original": "VB"
         },
         {
-          "local": "ea",
-          "from": "./shared-92.mjs",
-          "name": "xy",
-          "via": "shared-92-BOgyxePb.js:bv",
-          "kind": "generated"
-        },
-        {
           "local": "ei",
           "from": "./shared-183.mjs",
           "name": "vJ",
@@ -62600,13 +62578,6 @@
           "from": "./shared-0.mjs",
           "name": "Uu",
           "via": "shared-0-CnnWnVrT.js:Rx",
-          "kind": "generated"
-        },
-        {
-          "local": "li",
-          "from": "./shared-92.mjs",
-          "name": "by",
-          "via": "shared-92-BOgyxePb.js:Cv",
           "kind": "generated"
         },
         {
@@ -63237,10 +63208,8 @@
         "Lf",
         "MC",
         "Mf",
-        "Mm",
         "NC",
         "Nf",
-        "Nm",
         "Np",
         "OS",
         "Ol",
@@ -64978,7 +64947,7 @@
       "target": "shared-140.mjs",
       "source": "shared-140-DfG6VwpK.js",
       "sourceSha256": "c23715333142677854aedb06a57a4993941dbe8da6b7dba8f687d7d8428433d3",
-      "sha256": "8d0dcffb6fb86ff1e0c02957df05a7e91c493b28b5a3539e261641194b9ffb39",
+      "sha256": "d46d1ac0713d658257eb69fdf9f74fd26a85733e75e6696a386bb50d971cdcde",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -67938,10 +67907,11 @@
         },
         {
           "local": "qi",
-          "from": "./shared-39.mjs",
-          "name": "Mm",
+          "from": "../../frame-sidebar-nav-adapter.mjs",
+          "name": "writeListGroupBy",
           "via": "shared-39-ZCs0lAwB.js:Ca",
-          "kind": "generated"
+          "kind": "adapter",
+          "original": "Mm"
         },
         {
           "local": "qt",
@@ -88938,7 +88908,7 @@
       "target": "shared-57.mjs",
       "source": "shared-57-grpFrBWt.js",
       "sourceSha256": "d53d34b38a219049c24efcea43e9771b73b36dc69318e770de481668daeed0f3",
-      "sha256": "7d00d60a32a0fac877ccd8052b1a45355450cb6150145e8be0c4ba9f91217274",
+      "sha256": "c40a5dee5fc7f569c2e1009e51622f6614775a66cb23b0302c141883d12350a6",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -89636,10 +89606,6 @@
         {
           "name": "i_",
           "sha256": "f80f4a25713653fa846e17bcf75478b1ca7ce10f813df1a883c74f565449e48e"
-        },
-        {
-          "name": "a_",
-          "sha256": "4c76e7f1209ee6d8f5ae09390f2a55bedb4bc75574388ad1dcbb1a436e3f87db"
         },
         {
           "name": "o_",
@@ -92859,10 +92825,11 @@
         },
         {
           "local": "Ad",
-          "from": "./shared-39.mjs",
-          "name": "Nm",
+          "from": "../../frame-sidebar-nav-adapter.mjs",
+          "name": "clearListGroupBy",
           "via": "shared-39-ZCs0lAwB.js:_a",
-          "kind": "generated"
+          "kind": "adapter",
+          "original": "Nm"
         },
         {
           "local": "Ae",
@@ -95814,6 +95781,14 @@
           "kind": "react"
         },
         {
+          "local": "a_",
+          "from": "../../frame-sidebar-nav-adapter.mjs",
+          "name": "useGroupByOptions",
+          "via": "shared-57-grpFrBWt.js#a_",
+          "kind": "adapter",
+          "original": "a_"
+        },
+        {
           "local": "aa",
           "from": "./shared-18.mjs",
           "name": "DY",
@@ -96250,10 +96225,11 @@
         },
         {
           "local": "ed",
-          "from": "./shared-39.mjs",
-          "name": "Mm",
+          "from": "../../frame-sidebar-nav-adapter.mjs",
+          "name": "writeListGroupBy",
           "via": "shared-39-ZCs0lAwB.js:Ca",
-          "kind": "generated"
+          "kind": "adapter",
+          "original": "Mm"
         },
         {
           "local": "ee",
@@ -98621,7 +98597,6 @@
         "_w",
         "_x",
         "aA",
-        "a_",
         "aj",
         "am",
         "ax",
@@ -98712,7 +98687,7 @@
       "target": "nav-body.mjs",
       "source": "shared-22-BACJUrcb.js",
       "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e",
-      "sha256": "c1d6910ebbd9d38c8cb9663592a5570c3e7f25482cf51c57f9e8152a8e88da3d",
+      "sha256": "22fb304a9bcd69b8342869710d584c5c579774618b29da24ae8973f855e25bd3",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -99970,10 +99945,6 @@
         {
           "name": "Sk",
           "sha256": "0411d2e970b939030dfffb9e6b9d2981d1a33a5cf84bc80819dd78d3324597e9"
-        },
-        {
-          "name": "Ck",
-          "sha256": "8459a0ea9b17f36862d78ed27ed939f0d1ed01047ccbd0ebbaee9a1e7008c420"
         },
         {
           "name": "wk",
@@ -101859,6 +101830,14 @@
           "name": "zI",
           "via": "shared-62-DoCqVpIq.js:Bc",
           "kind": "generated"
+        },
+        {
+          "local": "Ck",
+          "from": "../../frame-sidebar-nav-adapter.mjs",
+          "name": "renderSessionGroups",
+          "via": "shared-22-BACJUrcb.js#Ck",
+          "kind": "adapter",
+          "original": "Ck"
         },
         {
           "local": "Cl",
@@ -107264,10 +107243,11 @@
         },
         {
           "local": "qx",
-          "from": "./shared-57.mjs",
-          "name": "a_",
+          "from": "../../frame-sidebar-nav-adapter.mjs",
+          "name": "useGroupByOptions",
           "via": "shared-57-grpFrBWt.js:br",
-          "kind": "generated"
+          "kind": "adapter",
+          "original": "a_"
         },
         {
           "local": "qy",
@@ -108421,7 +108401,9 @@
       ],
       "exports": {
         "PI": "SidebarNavBody",
-        "bB": "frameMountResets"
+        "bB": "frameMountResets",
+        "Sk": "SessionListRenderers",
+        "ET": "SessionBucket"
       },
       "sharedExports": [],
       "heldByViewTabs": []

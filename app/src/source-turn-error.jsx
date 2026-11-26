@@ -102,12 +102,16 @@ export function turnErrorText(error) {
 // (rendererTurnErrorText), which code-transcript k1 (shared-3 x3 / C3: S3 `API error:? (4xx|5xx)`) reads — the card's hint
 // (i2e: 401 "Authentication failed. Sign in again to continue.", 429 "Rate limited…", 5xx "Service is busy…") and an older
 // turn's marker (a2e: "Authentication failed", "Rate limited", …). The headline stays L1's. The host card is unchanged.
-export function rendererTurnErrors(turnErrors) {
+// turnErrorAt (state.turnErrorAt[session], ms): when each failure arrived, the turn_error item's `timestamp` (c06cf64bb
+// `...D && {timestamp: D}`), which the official card compares with reloginReturnedAt to settle into 'Signed in again'.
+export function rendererTurnErrors(turnErrors, turnErrorAt = null) {
   const out = {};
   for (const [turnId, error] of Object.entries(turnErrors && typeof turnErrors === "object" ? turnErrors : {})) {
     if (!error) continue;
     const status = apiErrorStatusOf(error);
-    out[turnId] = { message: rendererTurnErrorText(error, status), ...(status !== undefined ? { status } : {}) };
+    const at = turnErrorAt?.[turnId];
+    out[turnId] = { message: rendererTurnErrorText(error, status), ...(status !== undefined ? { status } : {}),
+      ...(Number.isFinite(at) && at > 0 ? { at } : {}) };
   }
   return out;
 }

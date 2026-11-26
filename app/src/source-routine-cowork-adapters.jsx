@@ -273,6 +273,7 @@ const hostModelEntries = models => (Array.isArray(models) ? models : []).map(mod
   description: model?.description || undefined,
   section: 'main',
   thinking: { type: 'none' },
+  ...(model?.hidden === true ? { hidden: true } : {}),
 }));
 export function useCoworkModelCatalog() {
   const { models } = useRoutineHost();
@@ -281,7 +282,9 @@ export function useCoworkModelCatalog() {
     const byId = new Map(list.map(entry => [entry.id, entry]));
     const find = id => (id ? byId.get(id) : undefined);
     const unsupported = id => ({ id: id ?? '', name: id || t('Unsupported model'), unsupported: true });
-    const fallbackModelId = list[0]?.id;
+    // Hidden and user-removed models (Settings › Models › Remove model) keep their names but aren't offered.
+    const selectable = list.some(entry => entry.hidden) ? list.filter(entry => !entry.hidden) : list;
+    const fallbackModelId = selectable[0]?.id;
     return {
       entryFor: id => find(id) ?? unsupported(id),
       nameFor: id => (find(id) ?? unsupported(id)).name,
@@ -304,9 +307,9 @@ export function useCoworkModelCatalog() {
       hasCapability: id => find(id) !== undefined,
       hasModel: id => list.length > 0 && find(id) !== undefined,
       servesModel: id => list.length > 0 && find(id) !== undefined,
-      isSelectable: id => find(id) !== undefined,
+      isSelectable: id => find(id) !== undefined && !find(id).hidden,
       models: list,
-      selectableModels: list,
+      selectableModels: selectable,
       fallbackModelId,
       cdsCatalog: undefined,
       autoCompactWindow: undefined,

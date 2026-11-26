@@ -12,8 +12,8 @@ import { EventEmitter } from 'node:events'
 import { PassThrough } from 'node:stream'
 import { FLAVORS, withApi } from '../packages/opencode-bridge/src/flavor.js'
 import { Bridge } from '../packages/opencode-bridge/src/index.js'
-import { ClaudeCode, anthropicEnvIn, parseAuthStatus, versionAtLeast, knownClaudePaths } from '../packages/opencode-bridge/src/v2/claude.js'
-import { CLAUDE_LOGOUT_NOTICE, CLAUDE_TIMEOUT, oauthAnswer, oauthMethodFor, watchLogin } from '../packages/opencode-bridge/src/v2/account.js'
+import { ClaudeCode, anthropicEnvIn, parseAuthStatus, parseLoginExpiry, versionAtLeast, knownClaudePaths } from '../packages/opencode-bridge/src/v2/claude.js'
+import { CLAUDE_EXPIRED, CLAUDE_LOGOUT_NOTICE, CLAUDE_TIMEOUT, claudeReasonOfMessage, oauthAnswer, oauthMethodFor, watchLogin } from '../packages/opencode-bridge/src/v2/account.js'
 import { createV2Fake } from './fixtures/v2-fake.mjs'
 
 const made = []
@@ -137,7 +137,7 @@ test('claude: versions, auth status JSON, ANTHROPIC_* and the installers\' place
   assert.equal(versionAtLeast('2.1.248-beta.1'), true, 'a pre-release suffix is ignored, as claude/probe.ts does')
   assert.equal(versionAtLeast('1.9.999'), false)
   assert.equal(versionAtLeast('3.0.0'), true)
-  assert.deepEqual(parseAuthStatus(SIGNED_IN), { loggedIn: true, authMethod: 'claude.ai', apiProvider: 'firstParty', email: 'me@example.com', orgName: 'Me', subscriptionType: 'max' })
+  assert.deepEqual(parseAuthStatus(SIGNED_IN), { loggedIn: true, authMethod: 'claude.ai', apiProvider: 'firstParty', email: 'me@example.com', orgName: 'Me', subscriptionType: 'max', loginExpiresAt: null })
   assert.equal(parseAuthStatus(SIGNED_OUT).loggedIn, false)
   assert.deepEqual(parseAuthStatus('Not logged in'), { loggedIn: null })
   assert.deepEqual(anthropicEnvIn({ ANTHROPIC_API_KEY: 'sk-ant-x', ANTHROPIC_BASE_URL: ' ', OTHER: '1' }), ['ANTHROPIC_API_KEY'])
@@ -684,4 +684,211 @@ test('account/updated: a burst of credential and integration events (a sign-in i
     await new Promise((resolve) => setTimeout(resolve, 30))
     assert.equal(count(), 1)
   } finally { await bridge.stop() }
+})
+
+// ---------------------------------------------------------------- Claude Code's sign-in ending or failing
+
+const CLAUDE_TIME_LIMIT = 'Failed to authenticate: this login reached its time limit and cannot be renewed. Run `claude auth login` to sign in again, or use `claude setup-token` and set CLAUDE_CODE_OAUTH_TOKEN for unattended jobs'
+const signedInUntil = (expires) => JSON.stringify({ loggedIn: true, authMethod: 'claude.ai', apiProvider: 'firstParty', email: 'me@example.com', orgName: 'Me', subscriptionType: 'max', loginExpiresAt: expires })
+// What 2.1.322 printed once its credential was cleared.
+const CLEARED = JSON.stringify({ loggedIn: false, authMethod: 'none', apiProvider: 'firstParty', loginExpiresAt: null })
+
+/** A v2 Bridge whose claude-agent connection is in use, and models listed (not checking); `status` is a function. */
+async function claudeBridge({ status, version = '2.1.322 (Claude Code)\n', files, login, credentialStatus = null } = {}) {
+  const claude = fakeClaude({ files, answers: { shell: files?.length === 0 ? '' : `${CLAUDE}\n`, version, status, login } })
+  const setup = await v2Bridge({ claude })
+  setup.bridge.v2.accountTiming = { debounceMs: 5 }
+  setup.fake.state.credentials.push({ id: 'crd_c', integrationID: 'claude-agent', label: 'Claude Agent', active: true, value: { type: 'external', methodID: 'claude-login' } })
+  if (credentialStatus) setup.fake.state.statuses.set('crd_c', credentialStatus)
+  setup.fake.state.models = [CLAUDE_MODEL]
+  const entry = async () => {
+    const fakeStat = fs.statSync
+    fs.statSync = (file, ...rest) => (file === CLAUDE ? { mtimeMs: 1 } : fakeStat(file, ...rest))
+    try { return (await setup.bridge.handle('account/read', {})).opencode.providers.find((provider) => provider.id === 'claude-agent') } finally { fs.statSync = fakeStat }
+  }
+  const statusCalls = () => claude.calls.filter((call) => call.args.join(' ') === 'auth status --json').length
+  return { ...setup, claude, entry, statusCalls }
+}
+
+test('claude: loginExpiresAt as a date string or a number (ms or seconds), else null', () => {
+  assert.equal(parseLoginExpiry('2026-12-01T10:00:00.000Z'), Date.UTC(2026, 11, 1, 10))
+  assert.equal(parseLoginExpiry('2026-12-01'), Date.UTC(2026, 11, 1))
+  assert.equal(parseLoginExpiry(Date.UTC(2026, 11, 1)), Date.UTC(2026, 11, 1))
+  assert.equal(parseLoginExpiry(Date.UTC(2026, 11, 1) / 1000), Date.UTC(2026, 11, 1), 'seconds')
+  assert.equal(parseLoginExpiry(String(Date.UTC(2026, 11, 1))), Date.UTC(2026, 11, 1))
+  for (const value of [null, undefined, '', 'soon', -5, 0, Number.NaN, {}, true]) assert.equal(parseLoginExpiry(value), null, String(value))
+  assert.equal(parseAuthStatus(signedInUntil('2026-12-01T10:00:00Z')).loginExpiresAt, Date.UTC(2026, 11, 1, 10))
+  assert.equal(parseAuthStatus(CLEARED).loginExpiresAt, null)
+  assert.equal(claudeReasonOfMessage('Claude Code is not installed. Install it, then run `claude auth login`.'), 'missing')
+  assert.equal(claudeReasonOfMessage('Claude Code 2.1.100 is too old; 2.1.248 or later is required. Run `claude update`.'), 'tooOld')
+  assert.equal(claudeReasonOfMessage('Claude Code is not logged in. Run `claude auth login` in a terminal.'), 'signedOut')
+  assert.equal(claudeReasonOfMessage(CLAUDE_TIME_LIMIT), 'authFailed')
+  assert.equal(claudeReasonOfMessage('spawn EACCES'), null)
+})
+
+test('account/read for Claude: loginExpiresAt, an ended sign-in (expired), signed out, too old, missing — each with its signInReason', async () => {
+  const future = new Date(Date.now() + 9 * 86400000)
+  const live = await claudeBridge({ status: () => signedInUntil(future.toISOString()) })
+  try {
+    const entry = await live.entry()
+    assert.equal(entry.loginExpiresAt, future.toISOString())
+    assert.equal(entry.needsAuth, undefined)
+    assert.equal(entry.signInReason, undefined)
+    assert.ok(live.bridge.v2.claudeExpiryTimer, 'its end is watched')
+  } finally { await live.bridge.stop() }
+
+  const past = '2026-11-20T08:00:00.000Z'
+  const ended = await claudeBridge({ status: () => signedInUntil(past) })
+  try {
+    const entry = await ended.entry()
+    assert.deepEqual({ needsAuth: entry.needsAuth, signInReason: entry.signInReason, statusMessage: entry.statusMessage, statusUrl: entry.statusUrl, loginExpiresAt: entry.loginExpiresAt },
+      { needsAuth: true, signInReason: 'expired', statusMessage: CLAUDE_EXPIRED, statusUrl: null, loginExpiresAt: past })
+    assert.equal(ended.bridge.v2.claudeExpiryTimer, null)
+    const read = await ended.bridge.handle('account/read', {})
+    assert.equal(read.account, null, 'no Claude account while its sign-in has ended')
+  } finally { await ended.bridge.stop() }
+
+  const out = await claudeBridge({ status: () => CLEARED })
+  try {
+    const entry = await out.entry()
+    assert.deepEqual([entry.needsAuth, entry.signInReason, entry.loginExpiresAt], [true, 'signedOut', undefined])
+    assert.match(entry.statusMessage, /not logged in/)
+  } finally { await out.bridge.stop() }
+
+  const old = await claudeBridge({ status: () => SIGNED_IN, version: '2.1.100 (Claude Code)\n' })
+  try { assert.equal((await old.entry()).signInReason, 'tooOld') } finally { await old.bridge.stop() }
+
+  // Not found here, and v2 says so: missing. v2's own needs_auth keeps its message.
+  const missing = await claudeBridge({ files: [], status: () => SIGNED_IN, credentialStatus: { status: 'needs_auth', message: 'Claude Code is not installed. Install it, then run `claude auth login`.', url: 'https://code.claude.com/docs/en/setup' } })
+  try {
+    const entry = await missing.entry()
+    assert.deepEqual([entry.needsAuth, entry.signInReason, entry.statusUrl], [true, 'missing', 'https://code.claude.com/docs/en/setup'])
+    assert.match(entry.statusMessage, /not installed/)
+  } finally { await missing.bridge.stop() }
+
+  // Found, signed in per claude, but v2's probe failed with Claude Code's text: authFailed from v2's message.
+  const probed = await claudeBridge({ status: () => SIGNED_IN, credentialStatus: { status: 'needs_auth', message: 'OAuth token revoked · Run `claude auth login` in a terminal' } })
+  try { assert.equal((await probed.entry()).signInReason, 'authFailed') } finally { await probed.bridge.stop() }
+})
+
+test('account/read for Claude: one account/updated when the sign-in ends (the status read again then), the timer replaced on each read, none out of range', async () => {
+  let status = signedInUntil(new Date(Date.now() + 60).toISOString())
+  const { bridge, notes, entry, statusCalls } = await claudeBridge({ status: () => status })
+  try {
+    bridge.v2.accountTiming = { debounceMs: 5, claudeExpiryGraceMs: 20 }
+    await entry()
+    const first = bridge.v2.claudeExpiryTimer
+    await entry()
+    assert.notEqual(bridge.v2.claudeExpiryTimer, first, 'replaced')
+    const before = notes.filter((note) => note.method === 'account/updated').length
+    await until(() => notes.filter((note) => note.method === 'account/updated').length > before, 'account/updated at the end', 2000)
+    await new Promise((resolve) => setTimeout(resolve, 80))
+    assert.equal(notes.filter((note) => note.method === 'account/updated').length, before + 1, 'once')
+    const calls = statusCalls()
+    const after = await entry()
+    assert.equal(statusCalls(), calls + 1, 'claude auth status asked again (the cache dropped)')
+    assert.equal(after.signInReason, 'expired')
+    // Out of setTimeout's range (30 days): no timer.
+    status = signedInUntil(new Date(Date.now() + 30 * 86400000).toISOString())
+    bridge.v2.claude.forget()
+    await entry()
+    assert.equal(bridge.v2.claudeExpiryTimer, null)
+  } finally { await bridge.stop() }
+})
+
+test('account/read for Claude: a chat\'s sign-in failure is authFailed while claude still lists the login (or can\'t tell); another login, a Claude chat that goes through or a sign-in clears it', async () => {
+  const expires = new Date(Date.now() + 5 * 86400000).toISOString()
+  let status = signedInUntil(expires)
+  const { bridge, notes, entry, statusCalls } = await claudeBridge({ status: () => status })
+  try {
+    assert.equal((await entry()).needsAuth, undefined)
+    const calls = statusCalls()
+    let from = notes.length
+    bridge.claudeSignInFailedV2(CLAUDE_TIME_LIMIT)
+    await until(() => notes.slice(from).some((note) => note.method === 'account/updated'), 'account/updated')
+    let claude = await entry()
+    assert.equal(statusCalls(), calls + 1, 'the cached status was dropped')
+    assert.deepEqual([claude.needsAuth, claude.signInReason, claude.statusMessage, claude.statusUrl], [true, 'authFailed', CLAUDE_TIME_LIMIT, null])
+    assert.equal(claude.loginExpiresAt, expires)
+    // A status that can't tell keeps it.
+    status = 'not json'
+    bridge.v2.claude.forget()
+    assert.equal((await entry()).signInReason, 'authFailed')
+    // The same login again: still failed.
+    status = signedInUntil(expires)
+    bridge.v2.claude.forget()
+    assert.equal((await entry()).signInReason, 'authFailed')
+    // A sign-in in a terminal (a new end date): over.
+    status = signedInUntil(new Date(Date.now() + 20 * 86400000).toISOString())
+    bridge.v2.claude.forget()
+    claude = await entry()
+    assert.deepEqual([claude.needsAuth, claude.signInReason], [undefined, undefined])
+    assert.equal(bridge.v2.claudeFailure, null)
+
+    // Claude Code cleared its credential (the user's case): signedOut, not authFailed.
+    bridge.claudeSignInFailedV2(CLAUDE_TIME_LIMIT)
+    status = CLEARED
+    claude = await entry()
+    assert.deepEqual([claude.needsAuth, claude.signInReason], [true, 'signedOut'])
+
+    // A Claude chat that went through ends it (account/updated).
+    status = signedInUntil(expires)
+    bridge.claudeSignInFailedV2(CLAUDE_TIME_LIMIT)
+    await entry()
+    from = notes.length
+    bridge.claudeTurnSucceededV2()
+    assert.equal(bridge.v2.claudeFailure, null)
+    await until(() => notes.slice(from).some((note) => note.method === 'account/updated'), 'account/updated after a good chat')
+    assert.equal((await entry()).needsAuth, undefined)
+    from = notes.length
+    bridge.claudeTurnSucceededV2()
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    assert.equal(notes.slice(from).filter((note) => note.method === 'account/updated').length, 0, 'nothing to clear: no notification')
+  } finally { await bridge.stop() }
+})
+
+test('Claude Sign in after a chat\'s sign-in failure or past loginExpiresAt runs `claude auth login` though claude still lists the login; its success clears the failure', async () => {
+  const URL = 'https://claude.com/cai/oauth/authorize?code=true&client_id=x'
+  const expires = new Date(Date.now() + 5 * 86400000).toISOString()
+  const renewed = new Date(Date.now() + 30 * 86400000).toISOString()
+  let status = signedInUntil(expires)
+  const { bridge, fake, notes, claude, entry } = await claudeBridge({
+    status: () => status,
+    login: { url: URL, onCode: (child, text) => { if (text === 'the-code\n') { status = signedInUntil(renewed); setImmediate(() => child.finish(0)) } } },
+  })
+  try {
+    bridge.v2.clock = undefined
+    bridge.v2.accountTiming = { debounceMs: 5, pollMs: 5 }
+    bridge.claudeSignInFailedV2(CLAUDE_TIME_LIMIT)
+    assert.equal((await entry()).signInReason, 'authFailed')
+    const start = await bridge.handle('account/login/start', { type: 'chatgpt', codeDesktop: { provider: 'claude-agent' } })
+    assert.deepEqual(start, { type: 'chatgpt', loginId: start.loginId, authUrl: URL, codeDesktop: { openedByAgent: true, acceptsCode: true } })
+    assert.deepEqual(claude.logins[0].args, ['auth', 'login', '--claudeai'])
+    assert.equal(requests(fake, 'POST', /connect\/external$/).length, 0, 'nothing connected before Claude Code is signed in again')
+    assert.deepEqual(await bridge.handle('codeDesktop/login/code', { loginId: start.loginId, code: 'the-code' }), { status: 'submitted' })
+    await until(() => completed(notes).length === 1, 'completed')
+    assert.deepEqual(completed(notes)[0].params, { loginId: start.loginId, success: true, error: null })
+    assert.equal(bridge.v2.claudeFailure, null)
+    const after = await entry()
+    assert.deepEqual([after.needsAuth, after.signInReason, after.loginExpiresAt], [undefined, undefined, renewed])
+  } finally { await bridge.stop() }
+
+  // Past loginExpiresAt: the same flow; a claude that still lists the ended login after exiting fails it.
+  const ended = await claudeBridge({ status: () => signedInUntil('2026-11-20T08:00:00.000Z'), login: { url: URL } })
+  try {
+    const start = await ended.bridge.handle('account/login/start', { type: 'chatgpt', codeDesktop: { provider: 'claude-agent' } })
+    assert.deepEqual(start.codeDesktop, { openedByAgent: true, acceptsCode: true })
+    assert.equal(ended.claude.logins.length, 1)
+    ended.claude.logins[0].child.finish(0)
+    await until(() => completed(ended.notes).length === 1, 'failed')
+    assert.equal(completed(ended.notes)[0].params.success, false)
+  } finally { await ended.bridge.stop() }
+
+  // Signed in with a sign-in still good and nothing failed: connecting only, no `claude auth login`.
+  const fine = await claudeBridge({ status: () => signedInUntil(expires) })
+  try {
+    const start = await fine.bridge.handle('account/login/start', { type: 'chatgpt', codeDesktop: { provider: 'claude-agent' } })
+    assert.deepEqual(start.codeDesktop, { openedByAgent: true, connecting: true })
+    assert.equal(fine.claude.logins.length, 0)
+  } finally { await fine.bridge.stop() }
 })

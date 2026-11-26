@@ -6,7 +6,7 @@ import { SourceTooltip } from "./source-tooltip";
 // host-wiring/chat (4.16336.0): the rows' Badges, the reason mirror and the search field in the host menu are the cds-core
 // graph's (shared-frame-CJdE5Ria vh → Pu Badge, Al HiddenReasonText, ww TextInput).
 import { CdsBadge, CdsHiddenReasonText, CdsTextInput } from "./cds-core.mjs";
-import { effortId, effortName, filterModels, isHighestEffort, modelMenuSections, shapeModelCatalog } from "./model-menu-model.mjs";
+import { effortId, effortName, filterModels, isHighestEffort, modelMenuSections, modelProviderGroups, providerModelName, shapeModelCatalog } from "./model-menu-model.mjs";
 import "./source-model-menu.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -124,6 +124,9 @@ export function SourceModelMenu({
   effortOpen = false,
   // c227f4d5e R$ fastModeUnavailableRow ({type, line, reason, cta:{copy, intent, run}, onShown}); none on the host.
   fastUnavailableRow = null,
+  // OpenCode (main.jsx): the providers first, each one's models in a submenu (model-menu-model.mjs modelProviderGroups);
+  // a catalog of one provider keeps the flat menu.
+  groupByProvider = false,
 }) {
   const blockedRow = fastUnavailableRow && typeof fastUnavailableRow === "object" ? fastUnavailableRow : null;
   // R$ `zn(t&&b!==void 0,te)`: an open menu with a row reports it once.
@@ -133,6 +136,7 @@ export function SourceModelMenu({
   void defaultModel;
   const shaped = useMemo(() => shapeModelCatalog({ models, selected }), [models, selected]);
   const { primary, overflow, showFast, searchable } = useMemo(() => modelMenuSections({ models: shaped, fastTier, selected }), [shaped, fastTier, selected]);
+  const groups = useMemo(() => (groupByProvider ? modelProviderGroups(shaped, selected) : null), [groupByProvider, shaped, selected]);
   const primaryDigits = useMemo(() => {
     const digits = new Map();
     let digit = 1;
@@ -167,13 +171,30 @@ export function SourceModelMenu({
       <ModelName name={modelName(model)} badge={model.badge} />
     </SourceMenu.Item>);
   };
+  // A provider's row: its name, the selected model's name when it is this provider's, and its models in a submenu (with
+  // the search field of a long list: OpenRouter's hundreds).
+  // Inside its provider's submenu a model's name drops the bridge's " (Provider)" suffix.
+  const groupRow = (model) => row({ ...model, displayName: providerModelName(model) }, false);
+  const providerRow = (group) => <SourceMenu.Submenu key={group.id}>
+    <SourceMenu.SubmenuTrigger className="sm-model-item" label={group.name} hint={group.selected ? providerModelName(group.selected) : undefined}
+      data-model-provider={group.id} data-current={group.selected ? "" : undefined}>{group.name}</SourceMenu.SubmenuTrigger>
+    {group.searchable
+      ? <OverflowSearch overflow={group.models} row={groupRow} pick={pick} onClose={onClose} label={group.name} />
+      : <SourceMenu.Popup label={group.name} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu">
+          <SourceMenu.Group>{group.models.map(groupRow)}</SourceMenu.Group>
+        </SourceMenu.Popup>}
+  </SourceMenu.Submenu>;
+  // The selected model the catalog no longer lists (shapeModelCatalog's disabled 'Unsupported model' row) stays on top.
+  const unlisted = groups ? primary.filter((model) => model.section === "deprecated") : [];
 
   return <SourceMenu.Popup anchor={anchor} side="top" align="end" label={t("Models")} dataCds="ModelSelector"
     className="sm-model-menu" onClose={onClose} initialHighlight={initialHighlight}>
-    <SourceMenu.Group>{primary.map((model) => row(model, true))}</SourceMenu.Group>
+    {groups
+      ? <SourceMenu.Group>{unlisted.map((model) => row(model, false))}{groups.map(providerRow)}</SourceMenu.Group>
+      : <SourceMenu.Group>{primary.map((model) => row(model, true))}</SourceMenu.Group>}
     {!primary.length && !overflow.length && <div className="sm-model-empty" role="status">{t("No models available")}</div>}
     {effort ? <EffortSection {...effort} open={effortOpen} /> : null}
-    {overflow.length > 0 && <>
+    {!groups && overflow.length > 0 && <>
       <SourceMenu.Separator />
       <SourceMenu.Submenu>
         <SourceMenu.SubmenuTrigger className="sm-model-item" label={t("More models")}>{t("More models")}</SourceMenu.SubmenuTrigger>
@@ -242,7 +263,7 @@ function EffortSection({ levels = [], value, onPick, open = false }) {
 /** shared-8 Hk overflowSearch: a long catalog (OpenCode with OpenRouter: 400+ models) keeps its capped main list
  * and searches inside the "More models" child (vo searchLabel "Search models", rows filtered by yk, "No matches").
  * Enter picks the first match; Escape clears the query before it closes the child. */
-function OverflowSearch({ overflow, row, pick, onClose }) {
+function OverflowSearch({ overflow, row, pick, onClose, label = t("More models") }) {
   const [query, setQuery] = useState(""), searchRef = useRef(null);
   const searching = query.trim() !== "";
   const shown = useMemo(() => (searching ? filterModels(overflow, query) : overflow), [searching, overflow, query]);
@@ -263,7 +284,7 @@ function OverflowSearch({ overflow, row, pick, onClose }) {
   </>;
   // U-32: shared-frame PD (SearchablePopup) defaults stableWhileOpen to true: the side settled on open is kept while
   // the rows narrow, so "No matches" does not flip the child across the parent menu.
-  return <SourceMenu.Popup label={t("More models")} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu" initialHighlight={null} onKeyDown={keyDown} header={header} stableWhileOpen>
+  return <SourceMenu.Popup label={label} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu" initialHighlight={null} onKeyDown={keyDown} header={header} stableWhileOpen>
     {shown.length > 0
       ? <SourceMenu.Group>{shown.map((model) => row(model, false))}</SourceMenu.Group>
       : <div className="sm-model-empty" role="status">{t("No matches")}</div>}

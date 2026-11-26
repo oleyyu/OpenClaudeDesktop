@@ -183,7 +183,7 @@ test('SSR: the official rows — UserMessage, AssistantMessage with alluvium pro
 
 test('SSR: a turn error is the official card (c96d752d0 turn_error, error_during_execution)', () => {
   const html = strip(render({ turnErrors: { t2: { message: 'Something broke' } } }));
-  assert.match(html, /Claude couldn’t process that message/);
+  assert.match(html, /(?:Claude|DeepSeek) couldn’t process that message/);
   assert.match(html, /Try sending your message again\./);
   assert.match(html, /View details/);
 });

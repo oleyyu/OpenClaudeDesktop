@@ -211,7 +211,16 @@ login shell or the installers' places, handed to serve as `OPENCODE_CLAUDE_PATH`
 Claude Code is an error with the steps at once); the bridge then connects it, deletes the older connection and waits up
 to 120 s for v2's own check (a `needs_auth` status fails it, Claude models with no status succeed: at once when `claude
 auth status` said signed in, else after 35 s, as v2 lists its saved Claude models before its check ran). A Claude Code
-installed after serve started restarts serve first; while a chat runs, the sign-in is refused until it ends. `ANTHROPIC_API_KEY` /
+installed after serve started restarts serve first; while a chat runs, the sign-in is refused until it ends. A chat that
+fails because Claude Code needs a new sign-in (its own texts — "Login expired · …", "Failed to authenticate: this login
+reached its time limit …" — arrive as `provider.unknown`) is `unauthorized` with `codeDesktop.signInProvider:
+'claude-agent'` on its error (live and stored); the bridge then drops its cached `claude auth status`, remembers the
+failure and sends `account/updated`, as v2 itself re-checks only when a chat process starts. Claude Code's temporary
+auth failures (another process refreshing, a full disk, the network, a gateway) stay retryable. Claude's `account/read`
+entry carries `loginExpiresAt` (ISO 8601) and, with `needsAuth`, `signInReason`: `missing` | `tooOld` | `signedOut` |
+`expired` (past `loginExpiresAt`) | `authFailed` (the remembered failure, until a Claude sign-in completes, a Claude chat
+goes through or `claude auth status` names another login); one `account/updated` comes at `loginExpiresAt` + 5 s. An
+expired or failed login runs `claude auth login` on Sign in, as a signed-out one does. `ANTHROPIC_API_KEY` /
 `_AUTH_TOKEN` / `_BASE_URL` in the environment make Claude Code bill them: reported, not removed. Signing out of Claude
 leaves Claude Code signed in (`claude auth logout`). A 1.x core refuses the Claude sign-in naming its program and
 version. Extensions (`extensions.js`): `GET /api/config` answers the config documents, never one merged config, so the

@@ -55,6 +55,14 @@ export function openNavSessionMenu(id, at) { return live?.openSessionMenu?.(id, 
 // The official Code pins ({ get, set }: shared-39 Kf / Jf), provided by frame-sidebar-nav-body.jsx once the nav graph is loaded.
 let navPins = null;
 export function provideNavPins(pins) { navPins = pins; }
+// Group by › Model (frame-sidebar-nav-groups.jsx NAV_GROUP_ANSWERS), provided by frame-sidebar-nav-body.jsx once the nav graph
+// is loaded: the answers read nav exports, so this module (installed before the nav evaluates) reaches them at call time.
+let navGroups = null;
+export function provideNavGroups(answers) { navGroups = answers; }
+const groupAnswer = (name) => (...args) => {
+  if (!navGroups) throw Error(`frame-sidebar-nav host capability ${name}: frame-sidebar-nav-groups.jsx is not provided`);
+  return navGroups[name](...args);
+};
 // Host → official: a record whose isStarred (metadata `pinned`) changed is written to the official pins; on the first list,
 // only the host's pinned rows are (a row pinned in the official store alone stays pinned).
 function syncNavPins(previous, next) {
@@ -548,6 +556,12 @@ export const HOST_ANSWERS = {
   apiRequest: ["gap", apiFetcher],
   signedTriggerEdit: ["gap", notShipped("cc6b8c296 (trigger signing)")],
   listServedRoutineRuns: ["gap", async () => ({ unavailable: "unreachable" })], // the official chunk-missing answer of lm
+  // Group by › Model (frame-sidebar-nav-groups.jsx): the Code list's groupBy read / write / reset, its options and its body.
+  sessionsSectionGroupBy: ["host", groupAnswer("sessionsSectionGroupBy")], // shared-39 Tm
+  writeListGroupBy: ["host", groupAnswer("writeListGroupBy")], // shared-39 Mm
+  clearListGroupBy: ["host", groupAnswer("clearListGroupBy")], // shared-39 Nm
+  useGroupByOptions: ["host", groupAnswer("useGroupByOptions")], // shared-57 a_
+  renderSessionGroups: ["host", groupAnswer("renderSessionGroups")], // shared-22 Ck
 };
 // Lazily loaded official chunks (scripts/extract-frame-sidebar-nav.mjs "lazily loaded official chunks"): components draw
 // nothing, entries' load and loader functions reject, handles never load. (round-4 navfix: the lazy overlays — W$ results
@@ -582,6 +596,7 @@ export function FrameSidebarNavHost({ value, children }) {
   useEffect(() => { syncAgentSessions(value); }, [value.localSessionsState, value.agentSessions]);
   useEffect(() => { syncSupportedFeatures(value.supportedFeatures); }, [value.supportedFeatures]);
   useEffect(() => { syncUnread(value.sessionMetadata); }, [value.sessionMetadata]);
+  useEffect(() => { navGroups?.offerModelGroups(value.modelGroups?.offered === true); }, [value.modelGroups?.offered]);
   return (
     <FrameSidebarNavHostContext.Provider value={value}>
       <QueryClientProvider client={navQueryClient}>{children}</QueryClientProvider>
