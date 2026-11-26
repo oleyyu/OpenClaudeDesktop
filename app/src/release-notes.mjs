@@ -6,8 +6,19 @@
 // OpenClaude Desktop is a frame for many agent cores, so the notes are core-neutral: DeepSeek Harness appears only as
 // the built-in core (a product name), never as "the assistant" every user runs.
 // Every shipped version needs its entry (scripts/verify-release-notes.mjs fails the build otherwise), or the What’s new
-// nudge never comes back after an update.
+// nudge never comes back after an update. The dialog shows each item through t(), so every item also needs its zh-CN
+// line in electron/i18n/zh-CN/app.mjs (tests/release-notes-zh.test.mjs).
 export const RELEASE_NOTES = Object.freeze([
+  {
+    version: "0.3.3",
+    date: "2026-11-26",
+    items: [
+      { kind: "improvement", text: "Settings › Usage is redesigned: tokens by category, model and day, each with its share, and the cost in US dollars for cores that report it." },
+      { kind: "fix", text: "Running sessions no longer add generic “exec” icons to the Dock." },
+      { kind: "improvement", text: "Another pass over the interface: Chinese text in controls is no longer a step too bold, settings pages share one edge and one select width, and onboarding, approval cards, the side chat and the context report read better." },
+      { kind: "improvement", text: "More of the interface is in Simplified Chinese, including What’s new, durations and the context report." },
+    ],
+  },
   {
     version: "0.3.2",
     date: "2026-11-19",

@@ -56,6 +56,7 @@ import { parseSelectedElementMessage } from "./generated/code-editor/preview-ele
 import { workflowTaskEvent } from "./task-event-model.mjs";
 import { chapterOf } from "./agent-tool-titles.mjs";
 import { demonstrationOf } from "./watch-record-model.mjs";
+import { t } from "../electron/i18n/index.mjs";
 
 // W14-code r8 R8T-02: Codex's sleep item is a tool call like imageGeneration (transcript-sdk-tools: no SDK counterpart, its
 // host name through the original rows' generic fallback, c96d752d0 K1e / m2e), so it joins the reply's tool run instead
@@ -477,6 +478,11 @@ export function codeTranscriptEntries(items, { view = "normal", responding = fal
           const attachments = sentFileAttachments(hostItem);
           if (attachments.length) tool.toolUseResult = { attachments };
         }
+        // B6: a finished MCP call with no arguments and no result (no text, image or content block) would open on an empty
+        // panel (BOe only keeps a running / awaiting empty-input call closed); it says "(no output)" instead, the wording
+        // the official command body uses for an empty result (outside-handlers Dg pndT4iky5F).
+        if (hostItem?.type === "mcpToolCall" && tool.status === "completed" && !tool.isError && !tool.output && !tool.outputImages?.length
+          && !tool.rawResultContent?.length && !tool.resultMcpMeta && !Object.keys(tool.input ?? {}).length) tool.output = t("(no output)");
         const subagent = subagents?.get?.(tool.id);
         if (subagent?.activity && (tool.name === "Task" || tool.name === "Agent")) tool.subagentActivity = subagent.activity;
         if (!tools) {

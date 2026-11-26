@@ -108,7 +108,7 @@ function SideChatUserMessage({ text }) {
   </div>;
 }
 
-function SideChatMessages({ threadId, messages, status, interrupting, thinkingSince, progress, assistantName, cwd, onOpenFileRef }) {
+function SideChatMessages({ threadId, messages, status, interrupting, thinkingSince, progress, error, assistantName, cwd, onOpenFileRef }) {
   const list = useRef(null), scrollState = useRef(emptySideChatScroll);
   // Our transport reserves an empty assistant slot before its first delta. The
   // reference does not insert that turn until streaming begins, so omit the slot
@@ -135,7 +135,11 @@ function SideChatMessages({ threadId, messages, status, interrupting, thinkingSi
       : <div key={index} className="select-text">
         <SourceMarkdown text={message.text} isStreaming={index === streamingIndex} sessionKey={`btw-${threadId}`} itemId={`btw-${index}`} cwd={cwd} onOpenFileRef={onOpenFileRef}/>
       </div>)}
-    <SourceSideChatStatus key={threadId} status={status} interrupting={interrupting} thinkingSince={thinkingSince} progress={progress} awaitingAnswer={!messages.at(-1)?.text} assistantName={assistantName}/>
+    {/* B10: a failed question's error stands where its answer would (the idle working line's spark is the answered turn's
+        mark, so it is left out), not 150px lower against the composer as UF's Ze p. */}
+    {error && status !== 'thinking'
+      ? <p className="text-footnote text-danger select-text" data-side-error="">{error}</p>
+      : <SourceSideChatStatus key={threadId} status={status} interrupting={interrupting} thinkingSince={thinkingSince} progress={progress} awaitingAnswer={!messages.at(-1)?.text} assistantName={assistantName}/>}
   </div>;
 }
 
@@ -216,8 +220,8 @@ export function SourceSideChat({ threadId, open, onClose, rpc, assistantName = '
   // UF Xe / Ze / nt inside `div.flex flex-col flex-1 min-h-0` (pt). Ze is one bare p with the store's error: no role, no
   // Retry, and nothing for an empty answer (CF appends whatever `response` came back and sets no error).
   const body = <div className="flex flex-col flex-1 min-h-0">
-    <SideChatMessages cwd={cwd} onOpenFileRef={onOpenFileRef} assistantName={assistantName} threadId={threadId} messages={messages} status={status} interrupting={state.interrupting} thinkingSince={state.thinkingSince} progress={state.progress}/>
-    {error && <p className="px-lg pb-1.25 text-footnote text-danger select-text shrink-0">{error}</p>}
+    <SideChatMessages cwd={cwd} onOpenFileRef={onOpenFileRef} assistantName={assistantName} threadId={threadId} messages={messages} status={status} interrupting={state.interrupting} thinkingSince={state.thinkingSince} progress={state.progress} error={error}/>
+    {error && !messages.length && <p className="px-lg pb-1.25 text-footnote text-danger select-text shrink-0">{error}</p>}
     <SideChatComposer searchFiles={searchFiles} mentions={state.draftMentions} mentionActions={{ ...mentionActions, layerBase: 440 }} portalRef={root} stagedContext={state.stagedContext} onRemoveContext={() => sideChatStore.clearStagedContext(threadId)} threadId={threadId} inputRef={input} busy={thinking} interrupting={state.interrupting} value={state.draft}
       onChange={draft => sideChatStore.setDraft(threadId, draft)} onStop={() => void stopSideQuestion({ rpc, threadId })} placeholder={messages.length ? t('Follow up…') : t('Ask a quick question…')}
       onSubmit={question => void askSideQuestion({ rpc, threadId, question, useStagedContext: true })}/>

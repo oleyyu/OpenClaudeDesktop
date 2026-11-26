@@ -159,7 +159,10 @@ function ConnectCard({ desktopCall, onDone, onBack, onOpenExternal }) {
           <label className="sob-field"><span className="sob-label">{t("Context window")}</span>
             <input data-cds="TextInput" className="cds-input cds-reset" value={form.contextWindow} maxLength={16} spellCheck={false} autoCapitalize="off" autoComplete="off"
               placeholder={t("Default (262K)")} disabled={!!busy} onChange={event => set({ contextWindow: event.target.value })} />
-            <span className="sob-muted">{t("How many tokens {model} can read, such as 200K or 1M. Empty: the core assumes 262,144 and may compact too late for a smaller model.", { model: form.model.trim() ? modelDisplayName(form.model.trim()) : t("the model") })}</span>
+            {/* No model typed yet: its own sentence, as "{model}" filled with "the model" read "该模型 能读取…" in zh-CN. */}
+            <span className="sob-muted">{form.model.trim()
+              ? t("How many tokens {model} can read, such as 200K or 1M. Empty: the core assumes 262,144 and may compact too late for a smaller model.", { model: modelDisplayName(form.model.trim()) })
+              : t("How many tokens the model can read, such as 200K or 1M. Empty: the core assumes 262,144 and may compact too late for a smaller model.")}</span>
           </label>
           <label className="sob-field"><span className="sob-label">{t("Provider id")}</span>
             <input data-cds="TextInput" className="cds-input cds-reset" value={form.route} maxLength={32} spellCheck={false} autoCapitalize="off" disabled={!!busy}
@@ -406,7 +409,8 @@ export function SourceOnboarding({ desktopCall, onDone, onSkip, onCoreChosen, on
   // view, not the previous step's scroll offset), with focus on its heading so a screen reader announces it.
   useLayoutEffect(() => {
     if (shell.current) shell.current.scrollTop = 0;
-    if (step === "welcome") start.current?.focus();
+    // focusVisible:false: focus lands on Get started for Return, without drawing its focus ring before any key is pressed.
+    if (step === "welcome") start.current?.focus({ focusVisible: false });
     else heading.current?.focus({ preventScroll: true });
   }, [step]);
   // A modal takeover: the app behind it is inert while it shows (Tab and screen readers stay inside), focus that

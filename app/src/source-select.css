@@ -31,5 +31,6 @@
 .sselect-option[data-disabled] { opacity:var(--cds-opacity-disabled,.4);pointer-events:none; }
 .sselect-check { flex-shrink:0;color:var(--cds-text-accent); }
 .sselect-empty { padding:6px var(--cds-pad-md);color:var(--cds-text-muted);user-select:none; }
-.ss-control>.sselect { width:220px;max-width:100%; }
-.ss-control>.sselect.sselect-width-160 { width:160px; }
+/* One width for every settings-row select: the official Code appearance fields' w-56 (224px), so the selects, the
+   Code font and Custom interface font fields of a page share one left edge (220 and 160 left three edges). */
+.ss-control>.sselect { width:224px;max-width:100%; }

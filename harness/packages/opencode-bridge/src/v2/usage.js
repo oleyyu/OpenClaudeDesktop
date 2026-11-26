@@ -43,7 +43,7 @@ export function foldSessionV2(messages, info = {}) {
     }
     if (message.type !== 'user' && message.type !== 'assistant') continue
     first ??= created
-    const day = days[localDayKey(created)] ??= { tokens: 0, messages: 0, sessions: 0, toolCalls: 0, hours: {}, models: {}, modelUsage: {}, costUsd: 0 }
+    const day = days[localDayKey(created)] ??= { tokens: 0, messages: 0, sessions: 0, toolCalls: 0, hours: {}, models: {}, modelUsage: {}, modelCostUsd: {}, costUsd: 0 }
     day.messages++
     const hour = new Date(created).getHours()
     day.hours[hour] = (day.hours[hour] ?? 0) + 1
@@ -58,6 +58,7 @@ export function foldSessionV2(messages, info = {}) {
     day.tokens += total
     day.costUsd += num(message.cost)
     const model = typeof message.model?.id === 'string' ? `${message.model.providerID}/${message.model.id}` : 'unknown'
+    day.modelCostUsd[model] = (day.modelCostUsd[model] ?? 0) + num(message.cost)
     day.models[model] = (day.models[model] ?? 0) + total
     const usage = day.modelUsage[model] ??= { inputTokens: 0, outputTokens: 0, cacheReadInputTokens: 0, cacheCreationInputTokens: 0 }
     usage.inputTokens += input

@@ -523,6 +523,17 @@ test('usage folds: daily buckets, streaks, stats by model and hour', () => {
   assert.equal(usage.summary.currentStreakDays, 1)
   assert.equal(usage.summary.longestRunningTurnSec, 61)
   assert.equal(usage.opencode.costUsd, 0.5)
+  // breakdown (Settings › Usage tiles, panels and days): reasoning counts as output, the model by its own id.
+  const { breakdown } = usage
+  assert.equal(breakdown.priced, true)
+  assert.deepEqual(breakdown.allTime, { tokens: 135, inputTokens: 100, cacheReadTokens: 20, cacheWriteTokens: 0, outputTokens: 15, unpricedTokens: 0, costUsd: 0.5 })
+  assert.deepEqual(breakdown.today, breakdown.allTime)
+  assert.deepEqual(breakdown.models, [{ model: 'p/m', displayName: 'm', tokens: 135, costUsd: 0.5 }])
+  assert.deepEqual(breakdown.daily, [{ date: localDayKey(day), tokens: 135, costUsd: 0.5 }])
+  // Every step free: tokens only.
+  const free = accountUsage([foldSession([{ info: { id: 'a2', role: 'assistant', time: { created: day }, providerID: 'opencode', modelID: 'x-free', cost: 0, tokens: { input: 5, output: 1 } }, parts: [] }])], localDayKey(day))
+  assert.equal(free.breakdown.priced, false)
+  assert.deepEqual(free.breakdown.models, [{ model: 'opencode/x-free', displayName: 'x-free', tokens: 6, costCny: null }])
   const stats = codeStats([fold])
   assert.deepEqual(stats.dailyActivity, [{ date: localDayKey(day), messageCount: 2, sessionCount: 1, toolCallCount: 1 }])
   assert.equal(stats.modelUsage['p/m'].cacheReadInputTokens, 20)

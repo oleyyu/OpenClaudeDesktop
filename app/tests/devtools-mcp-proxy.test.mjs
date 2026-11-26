@@ -285,7 +285,7 @@ test('the launch: the pinned chrome-devtools-mcp of the harness, its flags, Code
   const endpoint = await mcp.start();
   const definition = mcp.serverDefinition();
   assert.equal(definition.name, 'chrome-devtools');
-  assert.deepEqual(definition.args, [script, '--wsEndpoint', endpoint.wsEndpoint, '--no-usage-statistics', '--no-performance-crux']);
+  assert.deepEqual(definition.args, [path.join(path.dirname(require.resolve('../electron/devtools-mcp/index.cjs')), 'launch.mjs'), script, '--wsEndpoint', endpoint.wsEndpoint, '--no-usage-statistics', '--no-performance-crux']);
   assert.deepEqual(definition.env, { ELECTRON_RUN_AS_NODE: '1', CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: '1', CHROME_DEVTOOLS_MCP_NO_CONFIG_DISCOVERY: '1', CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: '1' });
   assert.deepEqual(JSON.parse(mcp.launchEnv().CODE_DESKTOP_DEVTOOLS_MCP_SERVER), definition);
   const args = mcp.codexArgs();

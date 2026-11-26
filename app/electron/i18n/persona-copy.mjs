@@ -20,6 +20,7 @@ export const PERSONA_COPY = Object.freeze({
   'HTML, images, PDFs, and videos Claude writes open in the Preview pane.': 'HTML, images, PDFs, and videos DeepSeek writes open in the Preview pane.',
   'Tell Claude what to change': 'Tell DeepSeek what to change', // pierre-changes K15bjS+2Xf
   'Claude keeps its existing memory but won’t use memory or make new memories.': 'DeepSeek keeps its existing memory but won’t use memory or make new memories.', // Your Claude › Turn off memory
+  'Claude couldn’t process that message': 'DeepSeek couldn’t process that message', // code-transcript L1 turn-error headline (source-turn-error.jsx)
   'Add instructions for Claude to follow in all Cowork sessions...': 'Add instructions for DeepSeek to follow in all Cowork sessions...', // cowork-settings-v4 rEz5yyruud
   'Claude is waiting in {count, plural, one {# session} other {# sessions}}': 'DeepSeek is waiting in {count, plural, one {# session} other {# sessions}}', // code-start-v4 umMTo8rxHY
   'Claude is waiting in {count, plural, one {# more session} other {# more sessions}}': 'DeepSeek is waiting in {count, plural, one {# more session} other {# more sessions}}', // S2KZFZjbFN

@@ -9,7 +9,7 @@ export default Object.freeze({
   assistant: "OpenCode",
   // Logo key (src/brand-logos.mjs) and the one plain sentence setup shows under the name.
   brand: "opencode",
-  tagline: "Open-source agent for Claude and almost any other model.",
+  tagline: "Open-source agent for Claude and most other models.",
   name: "OpenCode",
   vendor: "OpenCode",
   engine: "opencode",

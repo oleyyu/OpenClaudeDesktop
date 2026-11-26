@@ -487,7 +487,8 @@ export function approvalCardModel(request, item) {
   // launch.json dev server in the preview, a dynamic workflow; the app answers it, not the core.
   if (kind === "command" && plainObject(params.codeDesktop?.agentTool)) return agentToolCard(params);
   const context = [];
-  const add = (key, text) => { if (nonempty(text)) context.push({ key, text }); };
+  // `value` marks a path inside the sentence: the card keeps the label on one line and lets only the path wrap.
+  const add = (key, text, value) => { if (nonempty(text)) context.push(value ? { key, text, value } : { key, text }); };
   // approval-current.js:15275-15284 decision reason: its own block, not context.
   // A bridge's fixed English reason ('Ask permissions mode is on.') reads in the UI language when the dictionary has it.
   const reason = nonempty(params.reason) ? t(nonempty(params.reason)) : null;
@@ -499,14 +500,14 @@ export function approvalCardModel(request, item) {
   const derived = kind === "command" && params.kind !== "writeStdin"
     ? itemHeading(item, params.command ?? item?.command) : null;
   const cwd = nonempty(params.cwd) ?? nonempty(item?.cwd);
-  if (cwd && !derived) add("cwd", t("Working directory: {cwd}", { cwd }));
+  if (cwd && !derived) add("cwd", t("Working directory: {cwd}", { cwd }), cwd);
   if (kind === "command" && params.networkApprovalContext) {
     const { protocol, host } = params.networkApprovalContext;
     const target = [nonempty(protocol), nonempty(host)].filter(Boolean).join("://");
     if (target) add("network", t("Network access: {target}", { target }));
   }
   if (kind === "file" && nonempty(params.grantRoot))
-    add("grant-root", t("Requested write root: {root}", { root: params.grantRoot }));
+    add("grant-root", t("Requested write root: {root}", { root: params.grantRoot }), params.grantRoot);
   if (kind === "permissions") add("scope", t("Applies to this turn only."));
 
   let detail = null;

@@ -919,10 +919,10 @@ export default {
   'Recommended': '推荐',
   'Coming soon': '即将推出',
   'Have an extension pack for another agent?': '有其他智能体的扩展包？',
-  'Fast and affordable. Also runs GLM, Kimi, Qwen and other models you add.': '速度快、价格低，还能接入 GLM、Kimi、通义千问等你添加的模型。',
+  'Fast and affordable. Also runs GLM, Kimi, Qwen and more.': '速度快、价格低，还能接入 GLM、Kimi、通义千问等模型。',
   'OpenAI’s coding agent. Sign in with your ChatGPT account or an OpenAI key.': 'OpenAI 的编程智能体，用 ChatGPT 账号或 OpenAI 密钥登录。',
   'Z.ai’s coding agent, made for GLM models.': '智谱 Z.ai 的编程智能体，专为 GLM 模型打造。',
-  'Open-source agent for Claude and almost any other model.': '开源智能体，支持 Claude 和几乎所有其他模型。',
+  'Open-source agent for Claude and most other models.': '开源智能体，支持 Claude 和几乎所有其他模型。',
   'Xiaomi’s coding agent, made for MiMo models.': '小米的编程智能体，专为 MiMo 模型打造。',
   'Moonshot’s coding agent, made for Kimi models.': '月之暗面的编程智能体，专为 Kimi 模型打造。',
   'Alibaba’s coding agent, made for Qwen models.': '阿里巴巴的编程智能体，专为通义千问模型打造。',
@@ -1452,6 +1452,7 @@ export default {
   "Default (262K)": "默认（262K）",
   "How many tokens {model} can read, such as 200K or 1M. Empty: the core assumes 262,144 and may compact too late for a smaller model.": "{model} 能读取多少 token，例如 200K 或 1M。留空时内核按 262,144 计算，对上下文更小的模型可能压缩得太晚。",
   "the model": "该模型",
+  "How many tokens the model can read, such as 200K or 1M. Empty: the core assumes 262,144 and may compact too late for a smaller model.": "模型能读取多少 token，例如 200K 或 1M。留空时内核按 262,144 计算，对上下文更小的模型可能压缩得太晚。",
   "and {count} more": "等另外 {count} 个",
   // B23 (shared-19 ZC/BC, c71860c77-C_7Gqn1u Qn, c71860c77-DzP8HoeV Kr/hr/cr, cdc95db1a f): This computer › System,
   // the Browser group and Prompt suggestions.
@@ -1477,6 +1478,7 @@ export default {
   'Choose System, Light or Dark under Theme on the General page.': '在“通用”页面的“主题”中选择跟随系统、浅色或深色。',
   'Open General settings': '打开通用设置',
   'Light and dark mode follow the Theme setting on the General page. Pop-out windows keep the default theme.': '浅色和深色模式跟随“通用”页面中的主题设置。弹出窗口保持默认主题。',
+  'Light or dark follows Theme at the top of this page.': '浅色或深色跟随本页顶部的「主题」。',
   // Storage › Clean up inactive sessions, Clear cache and restart (B36; c71860c77-C_7Gqn1u Kt/Jt/bn, main Pfa)
   'Clean up inactive sessions': '清理不活跃的会话',
   'Clean up inactive sessions…': '清理不活跃的会话…',

@@ -105,7 +105,7 @@ test('approval card: single-file heading has two text-primary spans and the line
 
 test('approval card: the reason is its own clamped block before the context, unlabelled until it scrolls (cc32965c2 Z_ ce, so + C_)', () => {
   const html = card({ request: { ...command, params: { ...command.params, reason: 'Needs danger-full-access: write /x', cwd: '/w' } } });
-  assert.ok(html.includes('<div class="flex flex-col gap-[12px]"><div class="epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus text-body text-secondary select-text break-words max-h-[calc(3*var(--cds-leading-body))] overflow-y-auto [unicode-bidi:plaintext]">Needs danger-full-access: write /x</div><p data-context="cwd" class="text-body text-secondary select-text break-words [unicode-bidi:plaintext]">Working directory: /w</p>'));
+  assert.ok(html.includes('<div class="flex flex-col gap-[12px]"><div class="epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus text-body text-secondary select-text break-words max-h-[calc(3*var(--cds-leading-body))] overflow-y-auto [unicode-bidi:plaintext]">Needs danger-full-access: write /x</div><p data-context="cwd" class="text-body text-secondary select-text break-words [unicode-bidi:plaintext]"><span class="whitespace-nowrap">Working directory: </span><span class="break-all">/w</span></p>'));
   assert.equal(count(html, 'data-context="reason"'), 0);
   // The "Reason" label is only the accessible name of an overflowing (focusable) region: no visible text.
   assert.equal(count(html, '>Reason<'), 0);

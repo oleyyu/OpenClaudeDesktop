@@ -135,7 +135,7 @@ const tabs = [
   {id:'theme',label:'Theme',icon:'Palette',group:'Settings',keywords:['accent','colors','font size','corner radius','density','appearance'],page:SourceThemeSettings},
   {id:'code',label:'Code',icon:'Code',group:'Settings'},
   // w13-coworkui-settings: shared-46 pushes Cowork (id cowork, icon Fp = Tasks) right after Claude Code (c71860c77 De).
-  {id:'cowork',label:'Cowork',icon:'Tasks',group:'Settings',keywords:['global instructions','cowork files','trusted cowork folders','use memory in sessions','allowed sites'],page:SourceCoworkSettings},
+  {id:'cowork',label:'Cowork',icon:'Tasks',group:'Settings',keywords:['global instructions','cowork files','trusted cowork folders','use memory in sessions','allowed sites','open links in built-in browser'],page:SourceCoworkSettings},
   {id:'instructions',label:'Instructions',icon:'BookText',group:'Settings',keywords:['custom instructions','system prompt','agents.md','project instructions'],page:SourceInstructionsSettings},
   {id:'commands',label:'Commands',icon:'SlashShortcutCommand',group:'Settings',keywords:['slash commands','prompt templates','custom commands'],page:SourceCommandsSettings},
   {id:'models',label:'Models',icon:'Lightning',group:'Settings',keywords:['api key','relay','base url','proxy','max tokens','temperature','pricing','prices','cost','display name','rename model'],page:SourceModelsSettings},
@@ -429,12 +429,14 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const keepAwake=[booleanRow('keepAwake',t('Keep computer awake while DeepSeek works'),t('Prevent your computer from sleeping while a Code session is running, so long tasks can finish. Your display can still turn off. Closing the laptop lid will still put it to sleep.'),{checked:awake('keepAwake')}),...(awake('keepAwake')?[booleanRow('keepAwakeOnBattery',t('Keep awake on battery power'),'',{indent:true,checked:awake('keepAwakeOnBattery')})]:[])];
   // c71860c77:2240-2275: per-type items, unset reads as Banners, no disabled item.
   const level=id=>notificationLevel(shownValue(id,config[id]));
-  const levelRow=(id,label,description)=>row(id,label,description,<SourceSelect label={t('{setting} notification level',{setting:label})} value={level(id)} align="end" className="sselect-width-160" onChange={value=>save(id,value)} items={NOTIFICATION_LEVEL_ITEMS[id]}/>);
+  const levelRow=(id,label,description)=>row(id,label,description,<SourceSelect label={t('{setting} notification level',{setting:label})} value={level(id)} align="end" onChange={value=>save(id,value)} items={NOTIFICATION_LEVEL_ITEMS[id]}/>);
   // The running core's account, or the chosen core's while disconnected ("DeepSeek account" only on DeepSeek Harness).
   const accountTitle=accountGroupTitle(accountCore(boot,config));
   // Kr: Browser tools gates its two sub-rows. The links choice is the Preview pane's store (config.previewLinks); the
   // cookie mode is read from the preview service (preview-storage-read), falling back to the saved config.
   const browserTools=shownValue('agentPreview',config.agentPreview)!==false;
+  // The official Cowork page is listed (and drawn on the Code page) only while Cowork is on (navTabs above).
+  const coworkOnCodePage=navTabs.some(entry=>entry.id==='cowork');
   // cdc95db1a m (B39): Allowed sites › Manage opens the Allowed sites dialog over Settings (the settings layer).
   const [allowedSites,setAllowedSites]=useState(false);
   const desktopCallRef=useRef(desktopCall);desktopCallRef.current=desktopCall;
@@ -496,14 +498,14 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     {tab:'code',title:'Sessions',official:'claude-code-local',rows:[
       row('bypass',t('Allow bypass permissions mode'),<>{t('Bypass all permission checks and let DeepSeek work uninterrupted. This works well for workflows like fixing lint errors or generating boilerplate code. Letting DeepSeek run arbitrary commands is risky and can result in data loss, system corruption, or data exfiltration (e.g., via prompt injection attacks).')}{!bypass.allowed && !bypassChecking && <span className="ss-bypass-reason"> {t(bypass.reason)}</span>}</>,<SettingSwitch label={t('Allow bypass permissions mode')} checked={shownValue('allowBypassPermissions',config.allowBypassPermissions)===true} disabled={!config.allowBypassPermissions && (!boot?.connected || (!bypass.allowed && !bypassChecking))} onChange={value=>save('allowBypassPermissions',value,'bypass')}/>,t('Bypass all permission checks and let DeepSeek work uninterrupted.')),
       ...keepAwake,
-      row('archiveInactiveDays',t('Archive inactive sessions'),t('Automatically archive local sessions after a period of no activity. Sessions that are running or have background work are never archived, and a worktree with uncommitted changes is kept on disk.'),<SourceSelect label={t('Archive inactive sessions')} align="end" className="sselect-width-160" value={shownValue('archiveInactiveDays',config.archiveInactiveDays)||0} onChange={value=>save('archiveInactiveDays',Number(value))} items={[0,1,2,7,14,30].map(d=>({value:d,label:d?tn(d,'{count} day','{count} days'):t('Never')}))}/>),
+      row('archiveInactiveDays',t('Archive inactive sessions'),t('Automatically archive local sessions after a period of no activity. Sessions that are running or have background work are never archived, and a worktree with uncommitted changes is kept on disk.'),<SourceSelect label={t('Archive inactive sessions')} align="end" value={shownValue('archiveInactiveDays',config.archiveInactiveDays)||0} onChange={value=>save('archiveInactiveDays',Number(value))} items={[0,1,2,7,14,30].map(d=>({value:d,label:d?tn(d,'{count} day','{count} days'):t('Never')}))}/>),
       row('worktreeLocation',t('Worktree location'),t('Where to store Git worktrees for isolated coding sessions on this computer.'),<div className="ss-worktree-control"><SourceSelect label={t('Worktree location')} align="end" value={shownValue('worktreeLocation',config.worktreeLocation)||'project'} title={config.worktreeLocation==='custom'?config.worktreeDirectory:'.code/worktrees'} onChange={value=>value==='custom'?commit('worktreeLocation',{},async()=>{const c=await desktopCall('desktop-worktree-folder');if(c)await onSave({worktreeLocation:c.worktreeLocation});setDesktopRevision(n=>n+1);}):save('worktreeLocation','project')} items={[{value:'project',label:t('Inside project'),description:'.code/worktrees'},{value:'custom',label:t('Custom…')}]}/>{config.worktreeLocation==='custom'&&config.worktreeDirectory&&<div className="ss-worktree-path" title={config.worktreeDirectory}>{config.worktreeDirectory}</div>}</div>),
     ]},
     {tab:'code',title:'On this computer',official:'claude-code-notifications',rows:[
       levelRow('permissionNotifications',t('Permission requests'),t('DeepSeek needs your approval to use a tool.')),
       levelRow('questionNotifications',t('Questions'),t('DeepSeek is asking you to choose between options.')),
       levelRow('completeNotifications',t('Task complete'),t('DeepSeek finished and is waiting for your input.')),
-      row('notificationSound',t('Notification sound'),t('Played when an OS banner is shown.'),<SourceSelect label={t('Notification sound')} align="end" className="sselect-width-160" value={shownValue('notificationSound',config.notificationSound)||'system'} onChange={value=>save('notificationSound',value)} items={[{value:'system',label:t('System sound')},{value:'none',label:t('None')}]}/>),
+      row('notificationSound',t('Notification sound'),t('Played when an OS banner is shown.'),<SourceSelect label={t('Notification sound')} align="end" value={shownValue('notificationSound',config.notificationSound)||'system'} onChange={value=>save('notificationSound',value)} items={[{value:'system',label:t('System sound')},{value:'none',label:t('None')}]}/>),
       booleanRow('drawAttention',t('Draw attention on notifications'),t('Bounce the Dock icon when DeepSeek needs your attention and the app isn’t focused.'),{disabled:drawAttentionDisabled({permissionNotifications:level('permissionNotifications'),questionNotifications:level('questionNotifications')})}),
     ]},
     // Round 4 (settings lane general): the code looks are the Claude Code page's on desktop, not General's. shared-1 Vd is
@@ -550,18 +552,22 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     // w12c-wiring (w12b-settings-dialogs S4): Browser tools' description is Or's off-branch idMrSFp0DS (c71860c77-C3tXoNVw
     // `"Claude can start dev servers, open a live preview, and verify code changes with screenshots, snapshots, and DOM
     // inspection."`), Claude named DeepSeek as elsewhere here.
+    // The Code page also draws the official Cowork page (SETTINGS_NAV code hosts code + cowork), whose rows include the
+    // same two preferences (cdc95db1a f / p: Open links in built-in browser, Allowed sites), always shown. While Cowork is
+    // on the page the Browser group leaves them to it, so each row appears once whether Browser tools is on or off; without
+    // Cowork (CODE_DESKTOP_COWORK=0) they stay here under Browser tools.
     {tab:'code',title:'Browser',rows:[
       booleanRow('agentPreview',t('Browser tools'),t('DeepSeek can start dev servers, open a live preview, and verify code changes with screenshots, snapshots, and DOM inspection.'),{checked:browserTools}),
       ...(browserTools?[
-        row('previewLinks',t('Open links in built-in browser'),t('Links open in the built-in browser instead of your default browser.'),<SettingSwitch label={t('Open links in built-in browser')} checked={linksInPreview} onChange={value=>previewLinksStore.set(value)}/>),
+        ...(coworkOnCodePage?[]:[row('previewLinks',t('Open links in built-in browser'),t('Links open in the built-in browser instead of your default browser.'),<SettingSwitch label={t('Open links in built-in browser')} checked={linksInPreview} onChange={value=>previewLinksStore.set(value)}/>)]),
         // 3.6556.2 c71860c77-C3tXoNVw Or: Auto-open files Claude writes, right before Keep cookies (`checked: u, disabled: !d,
         // onCheckedChange: mn`); the Preview pane copy 4uNKbBb+5S, as frontend_preview_external_domains is off here (D36).
         ...(autoOpenFiles.shown?[{...row('launchAutoOpenFiles',t('Auto-open files Claude writes'),t('HTML, images, PDFs, and videos Claude writes open in the Preview pane.'),<SettingSwitch label={t('Auto-open files Claude writes')} checked={autoOpenFiles.checked} disabled={autoOpenFiles.disabled} onChange={value=>autoOpenFilesStore.set(value)}/>),className:autoOpenFiles.invisible?'invisible':undefined}]:[]),
         row('previewStorage',t('Keep cookies'),t('Browser tabs keep cookies and logins across restarts in one saved browser shared by every session and Cowork. Per session gives each Code session its own copy instead, so sessions never see each other’s logins.'),
           <SourceSelect label={t('Keep cookies')} align="end" value={shownValue('previewStorage',previewStorage)} items={PREVIEW_STORAGE_ITEMS}
             onChange={value=>{if(PREVIEW_STORAGE_ITEMS.some(item=>item.value===value))commit('previewStorage',{previewStorage:value},async()=>{const next=await desktopCall('preview-storage',{mode:value});setPreviewStorage(previewStorageChoice(next?.previewStorage,value!=='none'));});}}/>),
-        row('previewAllowedSites',t('Allowed sites'),t('Sites where DeepSeek can use its Browser tools without a permission prompt.'),
-          <SourceSettingsButton variant="secondary" size="sm" onClick={()=>setAllowedSites(true)}>{t('Manage')}</SourceSettingsButton>),
+        ...(coworkOnCodePage?[]:[row('previewAllowedSites',t('Allowed sites'),t('Sites where DeepSeek can use its Browser tools without a permission prompt.'),
+          <SourceSettingsButton variant="secondary" size="sm" onClick={()=>setAllowedSites(true)}>{t('Manage')}</SourceSettingsButton>)]),
       ]:[]),
     ]},
     // R4i-mcp MC1: the visualize group (agent-tools/visualize.mjs, config.agentVisualize; unset reads as on, D35). The
@@ -579,7 +585,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
           : row('effort',t('Reasoning effort'),t('Available levels come from the selected model.'),<SourceSelect label={t('Default reasoning effort')} value={shownValue('effort',effort)} disabled={busy||!chosen} items={efforts.map(e=>({value:e.reasoningEffort,label:effortName(e.reasoningEffort)}))} onChange={value=>save('effort',value)}/>)];})(),
       // Several faster tiers (Fast, Ultrafast): a Speed select of Standard and each tier in place of the Fast switch.
       speeds.length>1
-        ? row('fast',t('Speed'),t('Faster tiers answer sooner and use more of your plan. Applies to your next message.'),<SourceSelect label={t('Speed')} align="end" className="sselect-width-160" disabled={!boot?.connected||busy}
+        ? row('fast',t('Speed'),t('Faster tiers answer sooner and use more of your plan. Applies to your next message.'),<SourceSelect label={t('Speed')} align="end" disabled={!boot?.connected||busy}
             value={tierForSpeed(chosen,shownValue('speed',savedSpeed(config)))?.key??STANDARD_SPEED} onChange={value=>save('speed',value,'fast')}
             items={[{value:STANDARD_SPEED,label:t('Standard')},...speeds.map(tier=>({value:tier.key,label:tier.name,...(tier.description?{description:tier.description}:{})}))]}/>)
         : row('fast',t('Fast mode'),fast ? t('{description}. Applies to your next message.',{description:fast.description || t('Uses the model’s Fast service tier')}) : t('Not available for this model.'),<SettingSwitch label={t('Enable fast mode')} checked={!!fast&&!!shownValue('fastMode',config.fastMode)} disabled={!fast||!boot?.connected||busy} onChange={value=>save('fastMode',value,'fast')}/>),
@@ -888,7 +894,9 @@ function SlDedupeHeadings() {
     const content=mark.current?.parentElement;if(!content)return undefined;
     // A heading whose text already titles the page or an earlier section is hidden (the page title over its first group of the
     // same name; Code appearance's own "Appearance" block on the Appearance page), its rows staying under that section.
-    const run=()=>{const seen=new Set();for(const heading of content.querySelectorAll('h2,h3')){if(heading.closest('[role=dialog]')!==content.closest('[role=dialog]'))continue;const text=heading.textContent.trim();const dup=!heading.classList.contains('sl-page-title')&&seen.has(text);if(dup)heading.setAttribute('data-sl-dup','');else heading.removeAttribute('data-sl-dup');seen.add(text);}};
+    // A tabbed page (Customize) seeds the selected subtab's label: a page header repeating it (Skills, Connectors,
+    // Plugins, Hooks, Commands) is hidden like a repeated heading.
+    const run=()=>{const seen=new Set(),selected=content.querySelector(':scope > .sl-subtabs > [aria-selected=true]');if(selected)seen.add(selected.textContent.trim());for(const heading of content.querySelectorAll('h2,h3')){if(heading.closest('[role=dialog]')!==content.closest('[role=dialog]'))continue;const text=heading.textContent.trim();const dup=!heading.classList.contains('sl-page-title')&&seen.has(text);if(dup)heading.setAttribute('data-sl-dup','');else heading.removeAttribute('data-sl-dup');seen.add(text);}};
     run();const observer=new MutationObserver(run);observer.observe(content,{childList:true,subtree:true,characterData:true});return ()=>observer.disconnect();
   },[]);
   return <span ref={mark} hidden/>;

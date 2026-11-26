@@ -86,7 +86,7 @@
 .sob-agent-copy { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
 .sob-agent-head { display:flex; align-items:center; gap:8px; min-width:0; }
 .sob-agent-name { font-size:.9375rem; line-height:1.3rem; font-weight:var(--cds-font-weight-medium, 500); white-space:nowrap; }
-.sob-agent-tagline { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.sob-agent-tagline { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); line-height:1.4; text-wrap:pretty; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
 .sob-agent-side { display:flex; align-items:center; gap:12px; flex-shrink:0; }
 .sob-agent-status { color:var(--cds-text-muted); font-size:11.5px; white-space:nowrap; }
 .sob-radio { width:18px; height:18px; border-radius:50%; box-shadow:inset 0 0 0 1.5px var(--cds-border-strong, var(--cds-border)); transition:box-shadow var(--cds-dur-fast, 100ms); }

@@ -431,7 +431,9 @@ export function SourceChatComposer({ editorNode, attachments, draft, scope, curr
       onOpenChange={next => { if (next !== addMenuOpen) onMenu('add', addAnchor.current); }}>{addMenu}</ChatAddMenu>
     : <ChatAddTrigger aria-haspopup="menu" aria-expanded={addMenuOpen} isMenuOpen={addMenuOpen} disabled={sending} onClick={open('add')} />;
   const replyLeading = addControl;
-  const leading = mode === 'cowork' && <Button variant="ghost" size="xs" className="surface-folder-trigger" aria-label={t('Project or folder')}
+  // A4: the chin's leading slot is shared-shell `flex items-center self-start` (top-aligned), so the folder trigger takes the
+  // control height (sm: 28px, the model trigger's) to sit on the row's centre line; sm's 14px is LY's text-[14px] too.
+  const leading = mode === 'cowork' && <Button variant="ghost" size="sm" className="surface-folder-trigger" aria-label={t('Project or folder')}
     aria-haspopup="menu" aria-expanded={!!folderAnchor} disabled={sending}
     onClick={event => setFolderAnchor(folderAnchor ? null : event.currentTarget)}>
     <span>{folderLabel || (workdir ? workdir.split('/').pop() : t('Project or folder'))}</span><Icon name="CaretDown" size={12} />

@@ -246,7 +246,9 @@ test('Models: capability-driven — the DeepSeek bridge keeps its connection and
 // B23: c71860c77-C_7Gqn1u Qn — the System page's group is 'System'; c71860c77-DzP8HoeV hr — 'Sessions'; Kr — 'Browser'
 // with Browser tools, then (while on) Open links in built-in browser (cdc95db1a f) and the 220px Keep cookies select (Wr).
 test('Code › Browser: Browser tools gates Open links and Keep cookies; Sessions heading; System heading', () => {
-  const html = page('code', { previewStorage: 'session' });
+  // Without Cowork on the Code page (CODE_DESKTOP_COWORK=0) the Browser group carries Open links and Allowed sites.
+  const noCowork = { boot: { connected: true, models: [], coworkEnabled: false } };
+  const html = page('code', { previewStorage: 'session' }, noCowork);
   const headings = [...html.matchAll(/<h3[^>]*>([^<]+)<\/h3>/g)].map(match => match[1]);
   assert.ok(headings.includes('Sessions') && headings.includes('Browser'));
   for (const gone of ['Local sessions', 'Preview']) assert.equal(headings.includes(gone), false, gone);
@@ -266,9 +268,14 @@ test('Code › Browser: Browser tools gates Open links and Keep cookies; Session
   const cookies = /<div class="sselect[^"]*"[^>]*>(?:(?!<\/div>)[\s\S])*?aria-label="Keep cookies"[\s\S]*?<\/button>/.exec(html)?.[0] ?? '';
   assert.match(cookies, /data-value="session"/);
   assert.match(cookies, /Per session/);
-  const off = page('code', { agentPreview: false });
+  const off = page('code', { agentPreview: false }, noCowork);
   assert.match(control(off, 'Browser tools'), /aria-checked="false"/);
   assert.equal(['previewLinks', 'previewStorage', 'previewAllowedSites'].some(id => settingIds(off).includes(id)), false);
+  // Round 2 C3: the Code page also draws the official Cowork page, whose rows include the same two preferences (cdc95db1a
+  // f / p) whether Browser tools is on or off; there the Browser group leaves them out, so each shows once.
+  const cowork = settingIds(page('code', { previewStorage: 'session' }));
+  assert.deepEqual(cowork.slice(cowork.indexOf('agentPreview'), cowork.indexOf('agentPreview') + 3), ['agentPreview', 'launchAutoOpenFiles', 'previewStorage']);
+  assert.equal(['previewLinks', 'previewAllowedSites'].some(id => cowork.includes(id)), false);
   // An older saved keep-cookies switch reads as Shared until the preview service answers.
   assert.match(/aria-label="Keep cookies"[\s\S]*?<\/button>/.exec(page('code', { previewKeepCookies: true }))?.[0] ?? '', /data-value="shared"/);
   assert.match(page('general'), /<h3[^>]*>System<\/h3>/);

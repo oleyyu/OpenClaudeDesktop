@@ -72,10 +72,13 @@ test('USD costs from any source keep their currency; a bare all-time spend is re
  // The DeepSeek source keeps CNY, its Platform link and wins over a breakdown.
  const deepseek=usageCostPresentation({tokenUsage:{deepseek:{allTime:{tokens:1,costCny:1},last30Days:{tokens:1,costCny:1},today:{tokens:0,costCny:0}},breakdown}});
  assert.deepEqual([deepseek.source,deepseek.currency,typeof deepseek.usageUrl],['deepseek','CNY','string']);
- // OpenCode / MiMo: account/usage/read carries only `opencode: {costUsd}`.
+ // OpenCode / MiMo: account/usage/read carries a USD `breakdown` (tiles, panels, days) beside `opencode: {costUsd}`.
  const {accountUsage}=await import('../../harness/packages/opencode-bridge/src/usage.js');
- const tokenUsage=accountUsage([{days:{'2026-09-30':{tokens:900,costUsd:0.0123}},longestTurnSec:3}],'2026-09-30');
- assert.equal(usageCostPresentation({tokenUsage}),null,'no breakdown: the limits layout stays');
+ const tokenUsage=accountUsage([{days:{'2026-09-30':{tokens:900,costUsd:0.0123,modelUsage:{'p/m':{inputTokens:800,outputTokens:100,cacheReadInputTokens:0,cacheCreationInputTokens:0}},modelCostUsd:{'p/m':0.0123}}},longestTurnSec:3}],'2026-09-30');
+ const opencode=usageCostPresentation({tokenUsage},{todayKey:'2026-09-30',locale:'en-US'});
+ assert.deepEqual([opencode.source,opencode.currency,opencode.priced,opencode.tiles[0].cost,opencode.models[0].name,opencode.models[0].cost,opencode.daily[0].cost],['breakdown','USD',true,0.0123,'m',0.0123,0.0123]);
+ assert.equal(opencode.categoryBasis,'tokens','a step price has no per-category cost: the split is by tokens');
+ assert.deepEqual(opencode.categories.map(c=>[c.key,c.tokens]),[['input',800],['cached',0],['output',100]]);
  assert.deepEqual(usageSpendPresentation({tokenUsage}),{key:'opencode',currency:'USD',allTime:0.0123});
  for(const data of [null,{},{tokenUsage:{summary:{lifetimeTokens:5}}},{tokenUsage:{opencode:{costUsd:null}}},{tokenUsage:{zcode:{totals:{tokens:5}}}},{tokenUsage:{x:{costUsd:-1}}}])
   assert.equal(usageSpendPresentation(data),null,JSON.stringify(data));

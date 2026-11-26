@@ -15,7 +15,7 @@ test("command details retain exact text; the reason has its own slot beside cwd 
   // approval-current.js:15275-15284: the decision reason is its own block, never context.
   assert.equal(model.reason, "Needs a real API response");
   assert.deepEqual(model.context, [
-    { key: "cwd", text: "Working directory: /tmp/project with spaces" },
+    { key: "cwd", text: "Working directory: /tmp/project with spaces", value: "/tmp/project with spaces" },
     { key: "network", text: "Network access: https://example.test:8443" },
   ]);
   assert.equal(request.params.command, raw);

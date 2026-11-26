@@ -1,6 +1,9 @@
 /* Standalone layout: user Usage reference, with shared-22 cw panel tokens.
    Meter: c17c9c40b Track/Indicator sm and shared-14 gT thresholds. */
 .ss-settings-dialog[data-usage=true]{flex-direction:column}
+/* The standalone dialog is as tall as its content, up to the Settings dialog's cap: a core with no plan limits (OpenCode)
+   has ~270px of copy, which sat at the top of a fixed 780px box with the rest left empty. */
+.ss-dialog.ss-settings-dialog[data-usage=true]{height:auto;max-height:min(780px,calc(100dvh - 2rem))}
 .ss-usage-header{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;min-height:calc(2.75rem * var(--cds-rem-scale,1));padding-inline:calc(.875rem * var(--cds-rem-scale,1));border-bottom:1px solid var(--cds-border);background:var(--cds-surface-1)}
 .ss-usage-header h2{margin:0}
 .ss-usage-header .ss-close{position:static;flex-shrink:0}
@@ -76,6 +79,7 @@ html[data-reduce-motion="true"] .su-indicator { transition: none; }
 .su-legend-name{min-width:0;color:var(--cds-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .su-legend-tokens{color:var(--cds-text-muted);text-align:end;white-space:nowrap}
 .su-legend-cost{color:var(--cds-text-primary);text-align:end;white-space:nowrap}
+.su-legend-share{color:var(--cds-text-secondary);text-align:end;white-space:nowrap}
 .su-bar{display:block;height:6px;min-width:0;overflow:hidden;border-radius:9999px;background:var(--cds-alpha-1)}
 .su-bar i{display:block;height:100%;min-width:3px;border-radius:inherit;background:var(--su-bar)}
 .su-days-section{margin-top:calc(2rem * var(--cds-rem-scale,1))}
@@ -141,3 +145,20 @@ p.su-credit-limit{color:var(--cds-text-secondary)}
 /* c71860c77-29nOu6oI W: the Chart metric and Time range segmented controls (size sm) above the per-day rows. */
 .su-days-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--cds-gap-sm,8px);margin-top:var(--cds-gap-sm,8px)}
 .su-days-controls>.su-range{margin-inline-start:auto}
+/* By model (cost view): one column grid for every row (li display:contents), so each bar starts at the same x whatever
+   the model name's width (as the counted-on-this-Mac list); a long name is cut with an ellipsis, its id in the tooltip. */
+.su-models.su-cost-models{display:grid;grid-template-columns:fit-content(calc(11rem * var(--cds-rem-scale,1))) minmax(calc(2.5rem * var(--cds-rem-scale,1)),1fr) auto;align-items:center;column-gap:8px;row-gap:6px}
+.su-models.su-cost-models[data-priced]{grid-template-columns:fit-content(calc(11rem * var(--cds-rem-scale,1))) minmax(calc(2.5rem * var(--cds-rem-scale,1)),1fr) auto calc(4.75rem * var(--cds-rem-scale,1))}
+.su-models.su-cost-models li{display:contents}
+/* Settings › Usage under its nav page: the page title already says Usage, so "Your usage" under it only repeated it;
+   the plan (when the core names one) stays as the page's first line. With no limit rows the empty note sits right
+   under the title instead of under a bare rule. The standalone Usage dialog (no page title) keeps the heading. */
+.sl-content>.sl-page-title~.source-usage>.su-heading>h3{display:none}
+.sl-content>.sl-page-title~.source-usage>.su-heading:not(:has(>span)){display:none}
+.sl-content>.sl-page-title~.source-usage>.su-limits:has(>.su-empty:only-child){border-top:0}
+.sl-content>.sl-page-title~.source-usage>.su-limits>.su-empty:only-child{padding-top:0}
+/* The same with no limit rows in the standalone dialog (its heading stays): no bare rule under "Your usage" with 32px of
+   space above it; the note sits under the heading at the gap-md step (16px). */
+.source-usage>.su-heading:has(~.su-limits>.su-empty:only-child){margin-bottom:var(--cds-gap-md,16px)}
+.source-usage>.su-limits:has(>.su-empty:only-child){border-top:0}
+.source-usage>.su-limits>.su-empty:only-child{padding-top:0}
